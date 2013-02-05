@@ -1,0 +1,5 @@
+useDynLib(GROseq)
+import(MASS)
+export(CountReadsInInterval, CountMappableReadsInInterval, PausingIndex,  WindowAnalysis, AssociateWithInterval, ExpressedGenes,
+	MetaGene, MetaGeneMatrix, MetaGene_nL, AveragePlot, DetectTranscripts, DetectTranscriptsEM, DetectTranscriptsUTS, PolymeraseWave, 
+	WriteWiggle, RgammaMLE, Rnorm, Rnorm.exp, tlsLoess, tlsSvd, tlsDemming, DetectPeaks, DetectTranscriptsTSSPeakCalls, PolymeraseWaveTryNorm)

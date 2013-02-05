@@ -1,0 +1,83 @@
+Version 2.0.6 -- Date:6-6-12
+-- Meta-Gene (and most windowing functions) should now work with strand -- CAUTION: IT'S STILL UNTESTED!!
+-- Added a (non-optional) pseudocount of 1 read to gene body in pausing index calculation.
+-- PausingIndex function now returns counts used to calculate Fisher's exact (as well as Fisher's Exact).
+-- A few bugfixes.
+
+Version 2.0.5 -- Date:24-4-12
+-- Added a calculation of confidence intervals (assuming a Poisson random variable) to pausing index measurements.
+
+Version 2.0.4 -- Date:11-3-11
+-- Changed PDF function wrappers to include an arbitrary number of arguments.  This will make it compatable with the 4 parameter a*norm+(1-a)*expr.
+-- Implemented: a*norm+(1-a)*expr emission model.  Fit using conjugate gradient method.
+-- Implemented compatability for missing data in emissions (EXCEPT for a*NORM+(1-a)*EXP).  These should be set to NaN in R and all emissions distributions will return 0.
+
+Version 2.0.3 -- Date:8-18-11
+-- Added vect2bed() function in DecayAlgorithm.cpp that generalizes getTranscriptPositions().  getTranscriptPositions() remains, but carries a depricated tag.
+-- Fixed a number of VERY important indexing bugs when using multiple sets of emissions.
+
+Version 2.0.2 -- Date:6-13-11
+-- Update HMM emissions functions to return actual probabilities of a descritised probability distribution rather values of the density function.
+-- Backward algorithm bugfix.
+
+Version 2.0.1 -- Date:5-13-11
+-- Update EM source to optionally return posteriors over states.
+
+Version 2.0.0 -- Date:5-13-11
+-- Update HMM source code to support >1 set of emissions parameters.
+-- Added experimental gene models that take into account reads on the + and - strand.
+
+Version 1.0.2 -- Date:4-4-11
+-- Added functions for total least squares for a line by SVD and Demming regression.
+-- Added apprxoimate total least squares LOESS fit using a rough data transform approach.
+
+Version 1.0.1 -- Date:2-7-11
+-- Added GPL v.3 to each file prior to first release w/ publication of first GRO-seq papaer.
+
+Version 1.0.0 -- Date:12-3-10
+-- Added meta-gene function for data that is a continuous, real value given over positions in the genome (e.g. 
+	tiling array data, or a wiggle file).
+
+Version 0.9.9 -- Date:8-27-10
+-- Added function to generate matrix of counts - rows represent streches of DNA, and columns represent
+	positions relative to a feature set of interest.
+
+Version 0.9.8 -- Date:7-30-10
+-- Added to CountReadsInInterval: Optinally, p can be a two-column data.frame with columns representing chrom, 
+	chromStart.  In this case strand is ignored.
+
+Version 0.9.7 -- Date:5-8-10
+-- Added R function: MetaGene_nL, which takes a meta-gene scaling all internal windows to a fixed total length.
+-- Added option for UCSC header line for wiggle tracks, so that they can be uploaded without conversion to bigWig.
+-- Added option to normalize read counts in WriteWiggle.
+-- Added CountMappableReadsInInterval function to CountReadsInInterval.R
+
+Version 0.9.6 -- Date:2-23-10
+-- Added 'ExpressedGenes' function, which detects whether a list of genes is expressed using
+	the ideas presented in Core, Waterfall, Lis; Science 2008.
+
+Version 0.9.5 -- Date:1-26-10
+-- Modified PolymeraseWave.R to use full EM, rather than Viterbi Training, for parameter estimation 
+	when detecting the edge polymerase wave.
+
+Version 0.9.1 -- Date:12-2-09
+-- Added hmmEM.cpp   -> Implementatiaon of full Baum-Welch EM for an HMM.
+-- Added hmmFwBk.cpp -> Implementatiaon of the forward backward algorithms.
+-- Added many other functions in several files that are useful/necessary for hmm implementation.
+
+Version 0.9.0 --Date: 11-23-09
+-- Added functions for MLE estimation of gamma distribution.  Takes sufficient stats, so useful for 
+	updating gamma paremeters in the context of Baum Welch.
+-- Added R-wrapper to said function, useful for MLE in the R enviroment (soon to drop MASS dependency).
+-- Significant cleanup for files in R directory.  Moved PolymeraseWaveStunnenberg to PolymeraseWave directory.
+
+Version 0.8.4 --Date: 10-20-09
+-- Now using Viterbi training for polymerase wave segmentation; in the context of full 3-state HMM.
+
+Version 0.8.2 --Date: 10-10-09
+-- Added function for wave segmentation by KL-divergence.
+
+Version 0.8.0 --Date: 9-9-09
+-- Integrated Andre's Viterbi implementation in HMM.c.
+-- Added this CHANGELOG.
+

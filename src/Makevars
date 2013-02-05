@@ -1,0 +1,23 @@
+MYCXXFLAGS=-O0
+
+%.o: %.cpp
+	$(CXX) $(ALL_CPPFLAGS) $(ALL_CXXFLAGS) $(MYCXXFLAGS) -c $< -o $@
+
+PKG_CPPFLAGS=\
+ -D_USE_MEM_MAPPING_\
+ -D_MSC_VER
+
+PKG_SOURCES = \
+	RegisterRRoutines.cpp\
+	AnnotateProbes.cpp\
+	Windowing.cpp\
+	DecayAlgorithm.cpp\
+	MLEfit.cpp\
+	hmmMiscFunctions.cpp\
+	hmmViterbi.cpp\
+	hmmFwBw.cpp\
+	hmmEM.cpp
+
+OBJECTS=$(PKG_SOURCES:.cpp=.o)
+
+all: $(SHLIB)

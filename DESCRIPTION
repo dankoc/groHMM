@@ -1,0 +1,16 @@
+Package: GROseq
+Version: 2.0.6
+Date: 2009-05-07
+Title: GRO-seq Analysis Pipeline.
+Author: Charles G. Danko <dankoc@gmail.com>, Andre Martins <alm253@cornell.edu>
+Maintainer: Charles G. Danko <dankoc@gmail.com>
+Depends: R (>= 2.6), MASS
+LinkingTo:
+Suggests:
+Description: This package is an analysis pipeline for the analysis of GRO-seq data.
+License: GPL version 3 or newer
+Collate: CountReadsInInterval.R PausingIndex.R AssociateWithInterval.R MetaGene.R 
+	WindowAnalysis.R DetectTranscripts.R WriteWiggle.R PolymeraseWave.R 
+	FitDistributions.R ExpressedGenes.R tlsFits.R zzz.R
+biocViews: Preprocessing, Sequencing, Analysis
+LazyLoad: yes
