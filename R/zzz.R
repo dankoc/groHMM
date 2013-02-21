@@ -21,14 +21,14 @@
 
 
 .First.lib <-
-    function(libname, pkgname, where)
-    library.dynam("GROseq", pkgname, libname)
+    function(libname, pkgname)
+    library.dynam("groHMM", pkgname, libname)
 
 .Last.lib <-
     function(libpath)
     dyn.unload(file.path(libpath,
                          "libs",
-                         paste("GROseq",
+                         paste("groHMM",
                                .Platform$"dynlib.ext",
                                sep = "")))
 

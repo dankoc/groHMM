@@ -1,5 +1,7 @@
-useDynLib(GROseq)
+useDynLib(groHMM)
 import(MASS)
-export(CountReadsInInterval, CountMappableReadsInInterval, PausingIndex,  WindowAnalysis, AssociateWithInterval, ExpressedGenes,
-	MetaGene, MetaGeneMatrix, MetaGene_nL, AveragePlot, DetectTranscripts, DetectTranscriptsEM, DetectTranscriptsUTS, PolymeraseWave, 
-	WriteWiggle, RgammaMLE, Rnorm, Rnorm.exp, tlsLoess, tlsSvd, tlsDemming, DetectPeaks, DetectTranscriptsTSSPeakCalls, PolymeraseWaveTryNorm)
+export(countReadsInInterval, countMappableReadsInInterval, pausingIndex,  windowAnalysis, associateWithInterval, expressedGenes,
+	metaGene, metaGeneMatrix, metaGene_nL, averagePlot, detectTranscripts, detectTranscriptsEM, detectTranscriptsUTS, polymeraseWave, 
+	writeWiggle, RgammaMLE, Rnorm, Rnorm.exp, tlsLoess, tlsSvd, tlsDemming, detectPeaks, detectTranscriptsTSSPeakCalls, polymeraseWaveTryNorm,
+	makeConsensusAnnotations, evaluateHMM, plotTranscripts, plotTHistogram, breakTranscriptsOnGenes, combineTranscripts,
+	runMetaGene, limitToXkb)
