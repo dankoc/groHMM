@@ -22,7 +22,7 @@
 
 #######################################################################################################
 ##
-##	DetectTranscripts, DetectTranscriptsEM, DetectTranscriptsV.
+##	detectTranscripts, detectTranscriptsEM, detectTranscriptsV.
 ##	Date: 2009-07-17
 ##
 ##	Detects transcripts using a two-state HMM representing transcribed, and nontranscribed.
@@ -30,7 +30,7 @@
 ######################################################################################################
 
 ## Sets up the HMM by translating the initList into vector over emission prob. for fitting paremeters.
-SetupInitialHMMVars <- function(initList, str, size, CHR, F, debug) {
+setupInitialHMMVars <- function(initList, str, size, CHR, F, debug) {
 #######	## Set up HMM vars...
 	if(debug) print("Fitting assuming that initList represents transcripts.")
 	nstates <- as.integer(2)
@@ -110,10 +110,11 @@ SetupInitialHMMVars <- function(initList, str, size, CHR, F, debug) {
 
 ######################################################################################################
 ##
-##	DetectTranscripts -- soon to be DetectTranscriptsV
+##	detectTranscripts -- soon to be detectTranscriptsV
 ##
 ##	Arguments:
-##	p	-> data.frame of: CHR, START, END, STRAND.
+##	pgr	-> GRanges 
+##	(deprecated: p	-> data.frame of: CHR, START, END, STRAND.)
 ##	initList-> BED file containing coordinates of training set (i.e. likely transcribed regions).
 ##	str	-> Character; Strand of the probes to count, or "N" for ignore strand.
 ##	size	-> The size of the moving window.  Defaults to consecutive, non-inclusive windows.
@@ -128,14 +129,14 @@ SetupInitialHMMVars <- function(initList, str, size, CHR, F, debug) {
 ##	(3) Use EM to detect transcripts ... 
 ##
 ######################################################################################################
-DetectTranscripts <- function(p, initList, str="N", size=50, debug=TRUE) {
+detectTranscripts <- function(pgr, initList, strand="N", size=50, debug=TRUE) {
 	## Setup/Window Analysis/Casting.
-	F <- WindowAnalysis(p=p, str=str, ssize=size, debug=FALSE)
+	F <- windowAnalysis(pgr=pgr, strand=strand, ssize=size, debug=FALSE)
 	CHR <- as.character(names(F))
 	size <- as.integer(size)
 	ANS <- NULL
 
-	HMM <- SetupInitialHMMVars(initList, str, size, CHR, F, debug)
+	HMM <- setupInitialHMMVars(initList, strand, size, CHR, F, debug)
 
 	## Cast counts to a real.
 	for(i in 1:NROW(F))
@@ -148,13 +149,13 @@ DetectTranscripts <- function(p, initList, str="N", size=50, debug=TRUE) {
 			print(paste("Running Viterbi:", CHR[i],sep=" "))
 		}
 		viterbi <- .Call("Rviterbi", as.real(F[[CHR[i]]]), as.integer(NROW(F[[CHR[i]]])), as.integer(1), HMM$nstates, 
-						HMM$ePrDist, HMM$ePrVars, HMM$tProb, HMM$iProb, PACKAGE="GROseq")
+						HMM$ePrDist, HMM$ePrVars, HMM$tProb, HMM$iProb, PACKAGE="groHMM")
 
 		## Use get transcript positions to convert state paths into BED files.
 		if(debug) {
 			print(paste("Getting Positions:", CHR[i],sep=" "))
 		}
-		ans <- .Call("getTranscriptPositions", as.real(viterbi), as.real(0.5), size, PACKAGE="GROseq")
+		ans <- .Call("getTranscriptPositions", as.real(viterbi), as.real(0.5), size, PACKAGE="groHMM")
 		ANS <- rbind(ANS, data.frame(Chr =rep(CHR[i], NROW(ans$Start)), Start =ans$Start, End =ans$End))
 	}
 
@@ -163,23 +164,23 @@ DetectTranscripts <- function(p, initList, str="N", size=50, debug=TRUE) {
 
 ############################################################################
 ##
-##	DetectTranscriptsEM -- Runs full Baum-Welch EM to detect transcript
+##	detectTranscriptsEM -- Runs full Baum-Welch EM to detect transcript
 ##	 positions and distribution paremeters in the same algorithm.
 ##
 ##	TODO: Make more general (for POLII ChIP-seq): 
 ##		strand="B", denotes both +/-; "N", denotes no information??
 ##
 ############################################################################
-DetectTranscriptsEM <- function(p=NULL, Fp=NULL, Fm=NULL, LtProbA=-5, LtProbB=-5, UTS=5, size=50, thresh=0.1, debug=TRUE) {
+detectTranscriptsEM <- function(pgr=NULL, Fp=NULL, Fm=NULL, LtProbA=-5, LtProbB=-5, UTS=5, size=50, thresh=0.1, debug=TRUE) {
 
-    stopifnot(!is.null(p)|(!is.null(Fp) & !is.null(Fm)))
+	stopifnot(!is.null(pgr)|(!is.null(Fp) & !is.null(Fm)))
 
 	## Setup/Window Analysis/Casting.
 	epsilon <- 0.001
 	
 	if(is.null(Fp) & is.null(Fm)) { ## Allow equilavent form of Fp and Fm to be spcified in the function automatically.
-	 Fp <- WindowAnalysis(p=p, str="+", ssize=size, debug=FALSE)
-	 Fm <- WindowAnalysis(p=p, str="-", ssize=size, debug=FALSE)
+	 Fp <- windowAnalysis(pgr=pgr, strand="+", ssize=size, debug=FALSE)
+	 Fm <- windowAnalysis(pgr=pgr, strand="-", ssize=size, debug=FALSE)
 	}
 	
 	nFp <- NROW(Fp)
@@ -214,26 +215,32 @@ DetectTranscriptsEM <- function(p=NULL, Fp=NULL, Fm=NULL, LtProbA=-5, LtProbB=-5
 	## Run EM algorithm.
 	BWem <- .Call("RBaumWelchEM", HMM$nstates, F, as.integer(1),
 				HMM$ePrDist, HMM$ePrVars, HMM$tProb, HMM$iProb, 
-				as.real(thresh), c(TRUE, FALSE), c(FALSE, TRUE), as.integer(1), TRUE, PACKAGE="GROseq")
+				as.real(thresh), c(TRUE, FALSE), c(FALSE, TRUE), as.integer(1), TRUE, PACKAGE="groHMM")
 						# Update Transitions, Emissions.
 
 	## Translate these into transcript positions.
 	for(i in 1:NROW(CHRp)) {
-		ans <- .Call("getTranscriptPositions", as.real(BWem[[3]][[i]]), as.real(0.5), size, PACKAGE="GROseq")
+		ans <- .Call("getTranscriptPositions", as.real(BWem[[3]][[i]]), as.real(0.5), size, PACKAGE="groHMM")
 		Nrep <- NROW(ans$Start)
-		ANS <- rbind(ANS, data.frame(chrom =rep(CHRp[i], Nrep), chromStart =ans$Start, chromEnd =ans$End, 
-			name =rep("N", Nrep), score =rep("1", Nrep), strand =rep("+", Nrep)))
+		# ANS <- rbind(ANS, data.frame(chrom =rep(CHRp[i], Nrep), chromStart =ans$Start, chromEnd =ans$End, 
+		#	name =rep("N", Nrep), score =rep("1", Nrep), strand =rep("+", Nrep)))
+        	ANS <- rbind(ANS, data.frame(chrom =rep(CHRp[i], Nrep), start=ans$Start, end =ans$End, strand =rep("+", Nrep)))
 	}
 
 	for(i in 1:NROW(CHRm)) {
-		ans <- .Call("getTranscriptPositions", as.real(BWem[[3]][[i+nFp]]), as.real(0.5), size, PACKAGE="GROseq")
+		ans <- .Call("getTranscriptPositions", as.real(BWem[[3]][[i+nFp]]), as.real(0.5), size, PACKAGE="groHMM")
 		Nrep <- NROW(ans$Start)
-		ANS <- rbind(ANS, data.frame(chrom =rep(CHRm[i], NROW(ans$Start)), chromStart =ans$Start, chromEnd =ans$End,
-			name =rep("N", Nrep), score =rep("1", Nrep), strand =rep("-", Nrep)))
+		# ANS <- rbind(ANS, data.frame(chrom =rep(CHRm[i], NROW(ans$Start)), chromStart =ans$Start, chromEnd =ans$End,
+		# 	name =rep("N", Nrep), score =rep("1", Nrep), strand =rep("-", Nrep)))
+        	ANS <- rbind(ANS, data.frame(chrom =rep(CHRm[i], NROW(ans$Start)), start=ans$Start, end=ans$End, strand =rep("-", Nrep)))
 	}
 
-	BWem[[4]] <- ANS
-	names(BWem) <- c("EmisParams", "TransParams", "ViterbiStates", "Transcripts")
+	#BWem[[4]] <- ANS
+	#names(BWem) <- c("EmisParams", "TransParams", "ViterbiStates", "Transcripts")
+
+	BWem[[4]] <- GRanges(seqnames = Rle(ANS$chrom), ranges = IRanges(ANS$start, ANS$end-1), # ANS$end -1
+                 		strand = Rle(strand(ANS$strand)), type=Rle("tx",NROW(ANS)), ID=paste(ANS$chrom, "_", ANS$start, ANS$strand, sep=""))
+    	names(BWem) <- c("emisParams", "transParams", "viterbiStates", "transcripts")
 
 	if(debug) {
 		print(BWem[[1]])
@@ -246,27 +253,28 @@ DetectTranscriptsEM <- function(p=NULL, Fp=NULL, Fm=NULL, LtProbA=-5, LtProbB=-5
 
 ############################################################################
 ##
-##	DetectTranscriptsUTS -- Detects transcript positions using information
-##                          from the plus and minus strand (GROseq data).
+##	detectTranscriptsUTS -- Detects transcript positions using information
+##                          from the plus and minus strand (groHMM data).
 ##                          The model is given in my notebook on 5/16/2011.
 ##
 ##  Arguments:
-##         p         --> Sorted GRO-seq data (chrom, start, end, and strand).
+##         pgr       --> Sorted GRO-seq data in GRanges 
+##         (deprecated: p         --> Sorted GRO-seq data (chrom, start, end, and strand).)
 ##         GENES     --> Sets the location of genes in teh dataset. (chrom, start, end, and strand).
 ##         ENH       --> Sets the location of putative enhancers in the dataset. (chrom and max).
 ##         UTS       --> Varience for the un-transcribed state.  Try setting this using EM?!
 ##
 ############################################################################
-DetectTranscriptsUTS <- function(p=NULL, Fp=NULL, Fm=NULL, GENES, ENH, UTS=5, size=50, thresh=0.1, debug=TRUE) {
+detectTranscriptsUTS <- function(pgr=NULL, Fp=NULL, Fm=NULL, GENES, ENH, UTS=5, size=50, thresh=0.1, debug=TRUE) {
 
-    stopifnot(!is.null(p)|(!is.null(Fp) & !is.null(Fm)))
+    stopifnot(!is.null(pgr)|(!is.null(Fp) & !is.null(Fm)))
 
 	## Setup/Window Analysis/Casting.
 	epsilon <- 0.001
 	
 	if(is.null(Fp) & is.null(Fm)) { ## Allow equilavent form of Fp and Fm to be spcified in the function automatically.
-	 Fp <- WindowAnalysis(p=p, str="+", ssize=size, debug=FALSE)
-	 Fm <- WindowAnalysis(p=p, str="-", ssize=size, debug=FALSE)
+	 Fp <- windowAnalysis(pgr=pgr, strand="+", ssize=size, debug=FALSE)
+	 Fm <- windowAnalysis(pgr=pgr, strand="-", ssize=size, debug=FALSE)
 	}
 	
 	nFp <- NROW(Fp)
@@ -337,7 +345,8 @@ DetectTranscriptsUTS <- function(p=NULL, Fp=NULL, Fm=NULL, GENES, ENH, UTS=5, si
 	 genesPauseHigh <- c(genesPauseHigh, F[[which(CHRp==c)]][indxp], F[[which(CHRm==c)+nFp]][indxm])
 	 genesDivHigh   <- c(genesDivHigh,   F[[which(CHRm==c)+nFp]][indxp], F[[which(CHRp==c)]][indxm])
 	 
-	 for(count in 1:ceiling(fitSize/sz)) {
+	 #for(count in 1:ceiling(fitSize/sz)) {  Minho: changed sz to size 2/11/13
+	 for(count in 1:ceiling(fitSize/size)) { 
                                         ## Index for F represent strand of reads.  
                                                               ## indxp/m represent strand of the gene.
 	   genesPauseHigh <- c(genesPauseHigh, F[[which(CHRp==c)]][indxp+count]) ## Genes on the plus strand...
@@ -417,19 +426,19 @@ DetectTranscriptsUTS <- function(p=NULL, Fp=NULL, Fm=NULL, GENES, ENH, UTS=5, si
 	##
 	BWem <- .Call("RBaumWelchEM", HMM$nstates, F, HMM$nemis,
 				HMM$ePrDist, HMM$ePrVars, HMM$tProb, HMM$iProb, 
-				as.real(thresh), HMM$updateTrans, HMM$updateEmis, as.integer(1), TRUE, PACKAGE="GROseq")
+				as.real(thresh), HMM$updateTrans, HMM$updateEmis, as.integer(1), TRUE, PACKAGE="groHMM")
 						# Update Transitions, Emissions.
 
 	## Translate these into transcript positions.
 	for(i in 1:NROW(CHRp)) {
-		ans <- .Call("getTranscriptPositions", as.real(BWem[[3]][[i]]), as.real(0.5), size, PACKAGE="GROseq")
+		ans <- .Call("getTranscriptPositions", as.real(BWem[[3]][[i]]), as.real(0.5), size, PACKAGE="groHMM")
 		Nrep <- NROW(ans$Start)
 		ANS <- rbind(ANS, data.frame(chrom =rep(CHRp[i], Nrep), chromStart =ans$Start, chromEnd =ans$End, 
 			name =rep("N", Nrep), score =rep("1", Nrep), strand =rep("+", Nrep)))
 	}
 
 	for(i in 1:NROW(CHRm)) {
-		ans <- .Call("getTranscriptPositions", as.real(BWem[[3]][[i+nFp]]), as.real(0.5), size, PACKAGE="GROseq")
+		ans <- .Call("getTranscriptPositions", as.real(BWem[[3]][[i+nFp]]), as.real(0.5), size, PACKAGE="groHMM")
 		Nrep <- NROW(ans$Start)
 		ANS <- rbind(ANS, data.frame(chrom =rep(CHRm[i], NROW(ans$Start)), chromStart =ans$Start, chromEnd =ans$End,
 			name =rep("N", Nrep), score =rep("1", Nrep), strand =rep("-", Nrep)))
@@ -451,19 +460,19 @@ DetectTranscriptsUTS <- function(p=NULL, Fp=NULL, Fm=NULL, GENES, ENH, UTS=5, si
 ##	DetectDecreaseIncrease -- Identifies systematic increase in the GRO-seq data.
 ##
 ##  Arguments:
-##         p         --> Sorted GRO-seq data (chrom, start, end, and strand).
+##         pgr         --> Sorted GRO-seq data in GRanges
+##         (deprecated:	p         --> Sorted GRO-seq data (chrom, start, end, and strand).
 ##         GENES     --> Sets the location of genes in teh dataset. (chrom, start, end, and strand).
 ##         size      --> Size of the sliding window (bp).
 ##         localRegion   --> The half-life of the upstream/downstream window used to form the background information (bp).
 ##
 ############################################################################
 
-DetectDecreaseIncrease <- function(p=NULL, Fp=NULL, Fm=NULL, size=50, localRegion=50000, debug=TRUE) {
-
-	stopifnot(!is.null(p)|(!is.null(Fp) & !is.null(Fm)))
+detectDecreaseIncrease <- function(pgr=NULL, Fp=NULL, Fm=NULL, size=50, localRegion=50000, debug=TRUE) {
+	stopifnot(!is.null(pgr)|(!is.null(Fp) & !is.null(Fm)))
 	if(is.null(Fp) & is.null(Fm)) { ## Allow equilavent form of Fp and Fm to be spcified in the function automatically.
-	 Fp <- WindowAnalysis(p=p, str="+", ssize=size, debug=FALSE)
-	 Fm <- WindowAnalysis(p=p, str="-", ssize=size, debug=FALSE)
+	 Fp <- windowAnalysis(pgr=pgr, strand="+", ssize=size, debug=FALSE)
+	 Fm <- windowAnalysis(pgr=pgr, strand="-", ssize=size, debug=FALSE)
 	}
 
 	nFp <- NROW(Fp)
@@ -523,10 +532,11 @@ DetectDecreaseIncrease <- function(p=NULL, Fp=NULL, Fm=NULL, size=50, localRegio
 
 ############################################################################
 ##
-##	DetectPeaks -- Identifies peaks in the GRO-seq data.
+##	detectPeaks -- Identifies peaks in the GRO-seq data.
 ##
 ##  Arguments:
-##         p         --> Sorted GRO-seq data (chrom, start, end, and strand).
+##         pg        --> Sorted GRO-seq data in GRanges 
+##         (deprecated: p         --> Sorted GRO-seq data (chrom, start, end, and strand).)
 ##         size      --> Size of the sliding window (bp).
 ##         localRegion   --> The half-life of the upstream/downstream window used to form the background information (bp).
 ##
@@ -537,12 +547,12 @@ DetectDecreaseIncrease <- function(p=NULL, Fp=NULL, Fm=NULL, size=50, localRegio
 ##
 ############################################################################
 
-DetectPeaks <- function(p=NULL, Fp=NULL, Fm=NULL, size=50, localRegion=10000, debug=TRUE) {
+detectPeaks <- function(pgr=NULL, Fp=NULL, Fm=NULL, size=50, localRegion=10000, debug=TRUE) {
 
-	stopifnot(!is.null(p)|(!is.null(Fp) & !is.null(Fm)))
+	stopifnot(!is.null(pgr)|(!is.null(Fp) & !is.null(Fm)))
 	if(is.null(Fp) & is.null(Fm)) { ## Allow equilavent form of Fp and Fm to be spcified in the function automatically.
-	 Fp <- WindowAnalysis(p=p, str="+", ssize=size, debug=FALSE)
-	 Fm <- WindowAnalysis(p=p, str="-", ssize=size, debug=FALSE)
+	 Fp <- windowAnalysis(pgr=pgr, strand="+", ssize=size, debug=FALSE)
+	 Fm <- windowAnalysis(pgr=pgr, strand="-", ssize=size, debug=FALSE)
 	}
 
 	nFp <- NROW(Fp)
@@ -665,28 +675,29 @@ DetectPeaks <- function(p=NULL, Fp=NULL, Fm=NULL, size=50, localRegion=10000, de
 
 ############################################################################
 ##
-##	DetectTranscriptsPeaks -- Detects transcript positions and enhancers/ TSS
+##	detectTranscriptsPeaks -- Detects transcript positions and enhancers/ TSS
 ##                            using information on which windows contain peaks 
-##                            in the GROseq data. The model is given in my 
+##                            in the groHMM data. The model is given in my 
 ##                            notebook on 5/17/2011 and 5/19/2011.
 ##
 ##  Arguments:
-##         p         --> Sorted GRO-seq data (chrom, start, end, and strand).
+##         pgr       --> Sorted GRO-seq data in GRanges 
+##         (deprecatd: p         --> Sorted GRO-seq data (chrom, start, end, and strand).)
 ##         GENES     --> Sets the location of genes in teh dataset. (chrom, start, end, and strand).
 ##         ENH       --> Sets the location of putative enhancers in the dataset. (chrom and max).
 ##         UTS       --> Varience for the un-transcribed state.  Try setting this using EM?!
 ##
 ############################################################################
-DetectTranscriptsPeaks <- function(p=NULL, Fp=NULL, Fm=NULL, GENES, ENH, UTS=5, size=50, thresh=0.1, debug=TRUE) {
+detectTranscriptsPeaks <- function(pgr=NULL, Fp=NULL, Fm=NULL, GENES, ENH, UTS=5, size=50, thresh=0.1, debug=TRUE) {
 
-    stopifnot(!is.null(p)|(!is.null(Fp) & !is.null(Fm)))
+    stopifnot(!is.null(pgr)|(!is.null(Fp) & !is.null(Fm)))
 
 	## Setup/Window Analysis/Casting.
 	epsilon <- 0.001
 	
 	if(is.null(Fp) & is.null(Fm)) { ## Allow equilavent form of Fp and Fm to be spcified in the function automatically.
-	 Fp <- WindowAnalysis(p=p, str="+", ssize=size, debug=FALSE)
-	 Fm <- WindowAnalysis(p=p, str="-", ssize=size, debug=FALSE)
+	 Fp <- windowAnalysis(pgr=pgr, strand="+", ssize=size, debug=FALSE)
+	 Fm <- windowAnalysis(pgr=pgr, strand="-", ssize=size, debug=FALSE)
 	}
 	
 	nFp <- NROW(Fp)
@@ -848,19 +859,19 @@ hist(Fp[[1]][floor(GENES[14,2]/size):ceiling(GENES[14,3]/size)])
 	##
 	BWem <- .Call("RBaumWelchEM", HMM$nstates, F, HMM$nemis,
 				HMM$ePrDist, HMM$ePrVars, HMM$tProb, HMM$iProb, 
-				as.real(thresh), HMM$updateTrans, HMM$updateEmis, TRUE, PACKAGE="GROseq")
+				as.real(thresh), HMM$updateTrans, HMM$updateEmis, TRUE, PACKAGE="groHMM")
 						# Update Transitions, Emissions.
 
 	## Translate these into transcript positions.
 	for(i in 1:NROW(CHRp)) {
-		ans <- .Call("getTranscriptPositions", as.real(BWem[[3]][[i]]), as.real(0.5), size, PACKAGE="GROseq")
+		ans <- .Call("getTranscriptPositions", as.real(BWem[[3]][[i]]), as.real(0.5), size, PACKAGE="groHMM")
 		Nrep <- NROW(ans$Start)
 		ANS <- rbind(ANS, data.frame(chrom =rep(CHRp[i], Nrep), chromStart =ans$Start, chromEnd =ans$End, 
 			name =rep("N", Nrep), score =rep("1", Nrep), strand =rep("+", Nrep)))
 	}
 
 	for(i in 1:NROW(CHRm)) {
-		ans <- .Call("getTranscriptPositions", as.real(BWem[[3]][[i+nFp]]), as.real(0.5), size, PACKAGE="GROseq")
+		ans <- .Call("getTranscriptPositions", as.real(BWem[[3]][[i+nFp]]), as.real(0.5), size, PACKAGE="groHMM")
 		Nrep <- NROW(ans$Start)
 		ANS <- rbind(ANS, data.frame(chrom =rep(CHRm[i], NROW(ans$Start)), chromStart =ans$Start, chromEnd =ans$End,
 			name =rep("N", Nrep), score =rep("1", Nrep), strand =rep("-", Nrep)))
@@ -885,16 +896,16 @@ hist(Fp[[1]][floor(GENES[14,2]/size):ceiling(GENES[14,3]/size)])
 ##		strand="B", denotes both +/-; "N", denotes no information??
 ##
 ############################################################################
-DetectTranscriptsTSSPeakCalls <- function(p=NULL, Fp=NULL, Fm=NULL, TSSEmis, LtProbA=-5, LtProbB=-50, UTS=5, size=100, thresh=0.1, debug=TRUE) {
+detectTranscriptsTSSPeakCalls <- function(pgr=NULL, Fp=NULL, Fm=NULL, TSSEmis, LtProbA=-5, LtProbB=-50, UTS=5, size=100, thresh=0.1, debug=TRUE) {
 
-    stopifnot(!is.null(p)|(!is.null(Fp) & !is.null(Fm)))
+    stopifnot(!is.null(pgr)|(!is.null(Fp) & !is.null(Fm)))
 
 	## Setup/Window Analysis/Casting.
 	epsilon <- 0.001
 	
 	if(is.null(Fp) & is.null(Fm)) { ## Allow equilavent form of Fp and Fm to be spcified in the function automatically.
-	 Fp <- WindowAnalysis(p=p, str="+", ssize=size, debug=FALSE)
-	 Fm <- WindowAnalysis(p=p, str="-", ssize=size, debug=FALSE)
+	 Fp <- windowAnalysis(pgr=pgr, strand="+", ssize=size, debug=FALSE)
+	 Fm <- windowAnalysis(pgr=pgr, strand="-", ssize=size, debug=FALSE)
 	}
 	
 	nFp <- NROW(Fp)
@@ -948,32 +959,32 @@ DetectTranscriptsTSSPeakCalls <- function(p=NULL, Fp=NULL, Fm=NULL, TSSEmis, LtP
 	## Run EM algorithm.
 	BWem <- .Call("RBaumWelchEM", HMM$nstates, F, HMM$nemis,
 				HMM$ePrDist, HMM$ePrVars, HMM$tProb, HMM$iProb, 
-				as.real(thresh), HMM$updateTrans, HMM$updateEmis, as.integer(1), TRUE, PACKAGE="GROseq")
+				as.real(thresh), HMM$updateTrans, HMM$updateEmis, as.integer(1), TRUE, PACKAGE="groHMM")
 						# Update Transitions, Emissions.
 
 	## Translate these into transcript positions.
 	for(i in 1:NROW(CHRp)) {
-		ans <- .Call("getTranscriptPositions", as.real(BWem[[3]][[i]]), as.real(0.5), size, PACKAGE="GROseq")
+		ans <- .Call("getTranscriptPositions", as.real(BWem[[3]][[i]]), as.real(0.5), size, PACKAGE="groHMM")
 		Nrep <- NROW(ans$Start)
 		ANS <- rbind(ANS, data.frame(chrom =rep(CHRp[i], Nrep), chromStart =ans$Start, chromEnd =ans$End, 
 			name =rep("N", Nrep), score =rep("1", Nrep), strand =rep("+", Nrep)))
 	}
 
 	for(i in 1:NROW(CHRm)) {
-		ans <- .Call("getTranscriptPositions", as.real(BWem[[3]][[i+nFp]]), as.real(0.5), size, PACKAGE="GROseq")
+		ans <- .Call("getTranscriptPositions", as.real(BWem[[3]][[i+nFp]]), as.real(0.5), size, PACKAGE="groHMM")
 		Nrep <- NROW(ans$Start)
 		ANS <- rbind(ANS, data.frame(chrom =rep(CHRm[i], NROW(ans$Start)), chromStart =ans$Start, chromEnd =ans$End,
 			name =rep("N", Nrep), score =rep("1", Nrep), strand =rep("-", Nrep)))
 	}
 	
 	for(i in 1:NROW(CHRp)) {
-		ans <- .Call("getTranscriptPositions", as.real(BWem[[3]][[i]]), as.real(1.5), size, PACKAGE="GROseq")
+		ans <- .Call("getTranscriptPositions", as.real(BWem[[3]][[i]]), as.real(1.5), size, PACKAGE="groHMM")
 		Nrep <- NROW(ans$Start)
 		ANS2 <- rbind(ANS2, data.frame(chrom =rep(CHRp[i], Nrep), chromStart =ans$Start, chromEnd =ans$End, 
 			name =rep("N", Nrep), score =rep("1", Nrep), strand =rep("+", Nrep)))
 	}
 	for(i in 1:NROW(CHRm)) {
-		ans <- .Call("getTranscriptPositions", as.real(BWem[[3]][[i+nFp]]), as.real(1.5), size, PACKAGE="GROseq")
+		ans <- .Call("getTranscriptPositions", as.real(BWem[[3]][[i+nFp]]), as.real(1.5), size, PACKAGE="groHMM")
 		Nrep <- NROW(ans$Start)
 		ANS2 <- rbind(ANS2, data.frame(chrom =rep(CHRm[i], NROW(ans$Start)), chromStart =ans$Start, chromEnd =ans$End,
 			name =rep("N", Nrep), score =rep("1", Nrep), strand =rep("-", Nrep)))

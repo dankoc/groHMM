@@ -82,7 +82,7 @@ approx.ratios.CI <- function(num.counts, denom.counts, alpha=0.05) {
 ##			This is likely useful for rate; perhaps for identifying internal paused-peaks...
 ##
 ########################################################################
-PausingIndex <- function(f, p, size=50, up=1000, down=1000, UnMAQ=NULL, method="CoreWaterfallLis", debug=FALSE) {
+pausingIndex <- function(f, p, size=50, up=1000, down=1000, UnMAQ=NULL, method="CoreWaterfallLis", debug=FALSE) {
 	C <- sort(as.character(unique(f[[1]])))
 	Pause <- rep(0,NROW(f))
 	Body  <- rep(0,NROW(f))
@@ -169,7 +169,7 @@ PausingIndex <- function(f, p, size=50, up=1000, down=1000, UnMAQ=NULL, method="
 			}
 			HPause <- .Call("NumberOfReadsInMaximalSlidingWindow", FeatureTSS, FeatureStr, 
 							PROBEStart, PROBEEnd, PROBEStr, 
-							size, up, down, PACKAGE = "GROseq")
+							size, up, down, PACKAGE = "groHMM")
 
 			## Run the calculate on the gene body...
 			if(debug) {
@@ -203,7 +203,7 @@ PausingIndex <- function(f, p, size=50, up=1000, down=1000, UnMAQ=NULL, method="
 
 				## Count unMAQable regions, and size of everything ... 
 				nonmappable <- .Call("CountUnMAQableReads", FeatureStart, FeatureEnd, 
-						UnMAQ[[2]], CHRSTART, CHRSIZE, PACKAGE = "GROseq")
+						UnMAQ[[2]], CHRSTART, CHRSIZE, PACKAGE = "groHMM")
 
 				## Adjust size of gene body.
 				Difference <- Difference - nonmappable + 1 ## Otherwise, get -1 for some.

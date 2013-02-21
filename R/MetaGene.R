@@ -22,7 +22,7 @@
 
 ########################################################################
 ##
-##	MetaGene
+##	metaGene
 ##	Date: 2009-05-27
 ##
 ##	Returns a histogram of the number of reads in each section of a
@@ -32,8 +32,10 @@
 ##			Name changed to avoid confusion with new WindowAnalysis function, which is much more general.
 ##
 ##	Arguments:
-##	f	-> data.frame of: CHR, START, STRAND.
-##	p	-> data.frame of: CHR, START, END, STRAND.
+##	fgr	-> GRanges whose length is 1 
+##	(deprecated: f	-> data.frame of: CHR, START, STRAND.)
+##	pgr	-> GRanges 
+##	(deprecated: p	-> data.frame of: CHR, START, END, STRAND.)
 ##	size	-> The size of the moving window.
 ##	up	-> Distance upstream of each f to align and histogram.
 ##	down	-> Distance downstream of each f to align and histogram (NULL).
@@ -46,7 +48,10 @@
 ##	(2) ...
 ##
 ########################################################################
-MetaGene <- function(f, p, size, up, down=NULL, debug=FALSE) {
+metaGene <- function(fgr, pgr, size, up, down=NULL, debug=FALSE) {
+    	f <- data.frame(as.character(seqnames(fgr)), start(fgr), as.character(strand(fgr)))
+    	p <- data.frame(as.character(seqnames(pgr)), start(pgr), end(pgr), as.character(strand(pgr)))
+
 	if(is.null(down)) {
 		down <- up
 	}
@@ -88,7 +93,7 @@ MetaGene <- function(f, p, size, up, down=NULL, debug=FALSE) {
 			}
 			Hprime <- .Call("HistogramOfReadsByFeature", FeatureStart, FeatureStr, 
 							PROBEStart, PROBEEnd, PROBEStr, 
-							size, up, down, PACKAGE = "GROseq")
+							size, up, down, PACKAGE = "groHMM")
 
 			H <- H + as.integer(Hprime)
 		}
@@ -119,7 +124,7 @@ MetaGene <- function(f, p, size, up, down=NULL, debug=FALSE) {
 ##	Assumptions: Same as MetaGene
 ##
 ########################################################################
-MetaGeneMatrix <- function(f, p, size, up, down=NULL, debug=FALSE) {
+metaGeneMatrix <- function(f, p, size, up, down=NULL, debug=FALSE) {
 	if(is.null(down)) {
 		down <- up
 	}
@@ -161,7 +166,7 @@ MetaGeneMatrix <- function(f, p, size, up, down=NULL, debug=FALSE) {
 			}
 			Hprime <- .Call("MatrixOfReadsByFeature", FeatureStart, FeatureStr, 
 							PROBEStart, PROBEEnd, PROBEStr, 
-							size, up, down, PACKAGE = "GROseq")
+							size, up, down, PACKAGE = "groHMM")
 
 			H <- rbind(H, Hprime)
 		}
@@ -177,7 +182,7 @@ MetaGeneMatrix <- function(f, p, size, up, down=NULL, debug=FALSE) {
 
 ########################################################################
 ##
-##	MetaGene_nL
+##	metaGene_nL
 ##	Date: 2010-07-05
 ##
 ##	Returns a histogram of the number of reads in each section of a
@@ -197,7 +202,7 @@ MetaGeneMatrix <- function(f, p, size, up, down=NULL, debug=FALSE) {
 ##	(2) ...
 ##
 ########################################################################
-MetaGene_nL <- function(f, p, res=1000, debug=FALSE) {
+metaGene_nL <- function(f, p, res=1000, debug=FALSE) {
 	C <- sort(as.character(unique(f[[1]])))
 	H <- rep(0,res)
 	for(i in 1:NROW(C)) {
@@ -241,7 +246,7 @@ MetaGene_nL <- function(f, p, res=1000, debug=FALSE) {
 				DataByOne <- .Call("WindowAnalysis", PROBEStart, PROBEEnd, PROBEStr, FeatureStr[iFeatures],
 								as.integer(1), as.integer(1), 
 								FeatureStart[iFeatures], FeatureEnd[iFeatures], 
-								PACKAGE = "GROseq")
+								PACKAGE = "groHMM")
 
 				if(debug) {
 					print(paste("DataByOne size:",NROW(DataByOne)))
@@ -271,7 +276,7 @@ MetaGene_nL <- function(f, p, res=1000, debug=FALSE) {
 
 ########################################################################
 ##
-##	AverageGene
+##	averageGene
 ##	Date: 2010-12-03
 ##
 ##	Returns the average profile of tiling array probe intensity values or wiggle-like count data centered on a set of genomic positions.
@@ -286,7 +291,7 @@ MetaGene_nL <- function(f, p, res=1000, debug=FALSE) {
 ##	(2) ...
 ##
 ########################################################################
-AveragePlot <- function(ProbeData, Peaks, size=50, bins= seq(-1000,1000,size)) {
+averagePlot <- function(ProbeData, Peaks, size=50, bins= seq(-1000,1000,size)) {
 
 	## For each chromsome.  
 	ProbeData$minDist <- rep(999)
@@ -308,4 +313,62 @@ AveragePlot <- function(ProbeData, Peaks, size=50, bins= seq(-1000,1000,size)) {
 	## Make bins.  Take averages and all that...
 	means <- unlist(lapply(c(1:NROW(bins)), function(i){mean(ProbeData[(ProbeData$minDist >= (bins[i]-size) & ProbeData$minDist < bins[i]),3])}))
 	return(data.frame(windowCenter= bins+(size/2), means))
+}
+
+
+
+runMetaGene <- function(fgr, pgr, size=100, up=10000, down=NULL, normCounts=1, sampling=FALSE, nSampling=1000, debug=FALSE) {
+	if (sampling) {
+		plus <- samplingMetaGene(fgr=fgr, pgr=pgr, size=size, up=up, down=down, normCounts=normCounts, 
+			nSampling=nSampling, debug=debug)
+    	} else {
+		plus <- metaGene(fgr=fgr, pgr=pgr, size=size, up=up, down=down, debug=debug)
+		plus <- plus / NROW(fgr)
+		plus <- plus*normCounts / NROW(pgr)
+    	}
+
+	fgrRev <- fgr
+	strand(fgrRev) <- rev(strand(fgr))
+	f <- data.frame(as.character(seqnames(fgrRev)), start(fgrRev), as.character(strand(fgrRev)))
+	if (sampling) {
+		minus <- samplingMetaGene(fgr=fgr, pgr=pgr, size=size, up=up, down=down, normCounts=normCounts, 
+			nSampling=nSampling, debug=debug)
+	} else {
+		minus <- metaGene(fgr=fgr, pgr=pgr, size=size, up=up, down=down, debug=debug)
+		minus <- minus / NROW(fgr)
+		minus <- minus*normCounts / NROW(pgr)
+	}
+	return(list(sense=plus, antisense=minus))
+}
+
+
+samplingMetaGene <- function(fgr, pgr, size=100, up=10000, down=NULL, normCounts=1, nSampling=1000, debug=FALSE) {
+	if (is.null(down))
+		down <- up
+
+	read_vector <- NULL
+	tss_vector <- NULL
+	samplingSize <- round(NROW(fgr)*.1)
+
+	print("Preparing...")
+	pb <- txtProgressBar(min=0, max=NROW(fgr), style=3)
+	for(i in 1:NROW(fgr)) {
+		tss_vector <- rbind(tss_vector, metaGene(fgr=fgr[i,], pgr=pgr, size=size, up=up, down=down))
+		setTxtProgressBar(pb, i)
+	}
+	cat("\n")
+
+	print("Sampling...")
+	pb <- txtProgressBar(min=0, max=nSampling, style=3)
+	M <- matrix(0, nrow=nSampling, ncol=(up+down+1))
+	for(i in 1:nSampling) {
+		setTxtProgressBar(pb, i)
+		sampInx <- sample(1:NROW(fgr), size=samplingSize, replace=TRUE)
+		M[i,] <- apply(tss_vector[sampInx,], 2, sum)
+	}
+	cat("\n")
+
+	result <- apply(M, 2, median)*normCounts / NROW(pgr)
+	result <- result/samplingSize
+	return(result)
 }

@@ -32,12 +32,16 @@
 ##	f -- features;	chrom, chromStart, chromEnd
 ##	p -- probes;	chrom, chromStart, chromEnd
 ##
-##	2009-05-23 Added to package GROseq from AffyTiling.
+##	2009-05-23 Added to package groHMM from AffyTiling.
 ##	2009-02-06 Updated to allow assocation of features with arbitrary length.
 ##
 ########################################################################
-AssociateWithInterval <- function(f, p) {
- 
+associateWithInterval <- function(fgr, pgr) {
+        f <- data.frame(chrom=as.character(seqnames(fgr)), start=as.integer(start(fgr)),
+                                        end=as.integer(end(fgr)), strand=as.character(strand(fgr)))
+        p <- data.frame(chrom=as.character(seqnames(pgr)), start=as.integer(start(pgr)),
+                                end=as.integer(end(pgr)), strand=as.character(strand(pgr))) 
+
     C <- as.character(unique(p[[1]]))
     F <- rep(NA, NROW(p))
     for(i in 1:NROW(C)) {
@@ -58,7 +62,7 @@ AssociateWithInterval <- function(f, p) {
             dim(FeatureEnd) <- c(NROW(FeatureEnd), NCOL(FeatureEnd))
             dim(PROBELength) <- c(NROW(PROBELength), NCOL(PROBELength))
          
-            Fprime <- .Call("AssociateRegionWithFeatures", FeatureStart, FeatureEnd, PROBEStart, PROBELength, PACKAGE = "GROseq")
+            Fprime <- .Call("AssociateRegionWithFeatures", FeatureStart, FeatureEnd, PROBEStart, PROBELength, PACKAGE = "groHMM")
  
             F[indxPrb] <- as.character(f[[4]][indxF][as.vector(Fprime)])
         }

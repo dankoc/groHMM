@@ -22,7 +22,7 @@
 
 ########################################################################
 ##
-##	CountReadsInInterval; also contains: CountMappableReadsInInterval (below).
+##	countReadsInInterval; also contains: countMappableReadsInInterval (below).
 ##	Date: 2009-05-07
 ##
 ##	This function takes two matricies -- both are essentially a BED file.
@@ -42,7 +42,12 @@
 ##	(2) ...
 ##
 ########################################################################
-CountReadsInInterval <- function(f, p) {
+countReadsInInterval <- function(fgr, pgr) {
+	f <- data.frame(chrom=as.character(seqnames(fgr)), start=as.integer(start(fgr)),
+					end=as.integer(end(fgr)), strand=as.character(strand(fgr)))
+	p <- data.frame(chrom=as.character(seqnames(pgr)), start=as.integer(start(pgr)),
+    				end=as.integer(end(pgr)), strand=as.character(strand(pgr)))
+
  
 	C <- sort(as.character(unique(f[[1]])))
 	F <- rep(0,NROW(f))
@@ -82,7 +87,7 @@ CountReadsInInterval <- function(f, p) {
 			dim(PROBEStr)		<- c(NROW(PROBEStr), 	 NCOL(PROBEStr))
 
 			Fprime <- .Call("CountReadsInFeatures", FeatureStart, FeatureEnd, FeatureStr, 
-							PROBEStart, PROBEEnd, PROBEStr, PACKAGE = "GROseq")
+							PROBEStart, PROBEEnd, PROBEStr, PACKAGE = "groHMM")
 
 			F[indxF][Ford] <- as.integer(Fprime)
 		}
@@ -93,7 +98,7 @@ CountReadsInInterval <- function(f, p) {
  
 ########################################################################
 ##
-##	CountMappableReadsInInterval
+##	countMappableReadsInInterval
 ##	Date: 2010-05-12
 ##
 ##	This function takes information from BED file to represent regions (as in CountReadsInInterval), and 
@@ -113,7 +118,7 @@ CountReadsInInterval <- function(f, p) {
 ##	(2) ...
 ##
 ########################################################################
-CountMappableReadsInInterval <- function(f, UnMAQ, debug=FALSE) {
+countMappableReadsInInterval <- function(f, UnMAQ, debug=FALSE) {
 
 	C <- sort(as.character(unique(f[[1]])))
 	F <- rep(0,NROW(f))
@@ -152,7 +157,7 @@ CountMappableReadsInInterval <- function(f, UnMAQ, debug=FALSE) {
 
 			## Count unMAQable regions, and size of everything ... 
 			nonmappable <- .Call("CountUnMAQableReads", FeatureStart, FeatureEnd, 
-					UnMAQ[[2]], CHRSTART, CHRSIZE, PACKAGE = "GROseq")
+					UnMAQ[[2]], CHRSTART, CHRSIZE, PACKAGE = "groHMM")
 
 			## Adjust size of gene body.
 			Difference <- (FeatureEnd - FeatureStart) - nonmappable + 1 ## Otherwise, get -1 for some.
@@ -168,4 +173,35 @@ CountMappableReadsInInterval <- function(f, UnMAQ, debug=FALSE) {
 
 	return(F)
 }
- 
+ 
+########################################################################
+##
+##  limitToXkb
+##  Date: 2012-07-11
+##
+##  This function limits a genomic range to a samll region relative to the transcription site.
+##
+##
+##  TODO:
+##
+########################################################################
+limitToXkb <- function(gr, offset=1000, size=13000) {
+	w <- width(gr)
+
+	# do nothing for w < offset 
+	small  <- (offset < w) & (w < size)
+	gr[small,] <- flank(gr[small,], -1*(w[small]-offset), start=FALSE)
+
+	big  <- w > size 
+	gr[big,] <- resize(gr[big,], width=size)
+
+	bigPlus <- big & as.character(strand(gr))=="+"
+	if (any(bigPlus)) start(gr[bigPlus,]) <- start(gr[bigPlus,]) + offset 
+
+	bigMinus <- big & as.character(strand(gr))=="-"
+	if (any(bigMinus)) end(gr[bigMinus,]) <- end(gr[bigMinus,]) - offset 
+
+	return(gr)
+}
+
+

@@ -21,7 +21,7 @@
 
 ########################################################################
 ##
-##	ExpressedGenes
+##	expressedGenes
 ##	Date: 2010-02-23
 ##
 ##	This identifes genes that are expressed in a given cell, based on short read data.
@@ -33,8 +33,7 @@
 ##
 ##
 ########################################################################
-ExpressedGenes <- function(f, p, genomeSize=3000000000, Lambda= NULL, UnMAQ=NULL, debug=FALSE) {
-
+expressedGenes <- function(f, p, genomeSize=3000000000, Lambda= NULL, UnMAQ=NULL, debug=FALSE) {
 	C <- sort(as.character(unique(f[[1]])))
 	ANSgeneid <- rep("char", NROW(f))
 	ANSpvalue <- rep(0,NROW(f))
@@ -74,7 +73,7 @@ ExpressedGenes <- function(f, p, genomeSize=3000000000, Lambda= NULL, UnMAQ=NULL
 
 			
 			NUMReads <- .Call("CountReadsInFeatures", FeatureStart, FeatureEnd, FeatureStr, 
-							PROBEStart, PROBEEnd, PROBEStr, PACKAGE = "GROseq")
+							PROBEStart, PROBEEnd, PROBEStr, PACKAGE = "groHMM")
 
 
 			## Calculate UN-MAQable regions...
@@ -98,7 +97,7 @@ ExpressedGenes <- function(f, p, genomeSize=3000000000, Lambda= NULL, UnMAQ=NULL
 
 				## Count unMAQable regions, and size of everything ... 
 				nonmappable <- .Call("CountUnMAQableReads", FeatureStart, FeatureEnd, 
-						UnMAQ[[2]], CHRSTART, CHRSIZE, PACKAGE = "GROseq")
+						UnMAQ[[2]], CHRSTART, CHRSIZE, PACKAGE = "groHMM")
 
 				## Adjust size of gene body.
 				MappablePositions <- (FeatureEnd - FeatureStart) - nonmappable + 1

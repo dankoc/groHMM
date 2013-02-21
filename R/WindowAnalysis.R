@@ -22,14 +22,14 @@
 
 ########################################################################
 ##
-##	WindowAnalysis
+##	windowAnalysis
 ##	Date: 2009-07-08
 ##
 ##	Returns a vector of integers representing the counts of reads in a moving window.
 ##
 ##	Arguments:
 ##	p	-> data.frame of: CHR, START, END, STRAND.
-##	str	-> Character; Strand of the probes to count, or "N" for ignore strand.
+##	strand	-> Character; Strand of the probes to count, or "N" for ignore strand.
 ##	wsize	-> The size of the moving window.  Defaults to consecutive, non-inclusive windows.
 ##	ssize	-> The number of bp moved with each step.  Defaults to consecutive, non-inclusive windows.
 ##	chrom   -> Chromosome to search (NULL for all).
@@ -45,15 +45,18 @@
 ##	(2) ...
 ##
 ########################################################################
-WindowAnalysis <- function(p, str="N", wsize=(ssize-1), ssize=(wsize+1), chrom=NULL, start=0, end=NULL, limitPCRDups=FALSE, debug=FALSE) { 
+windowAnalysis <- function(pgr, strand="N", wsize=(ssize-1), ssize=(wsize+1), chrom=NULL, start=0, end=NULL, limitPCRDups=FALSE, debug=FALSE) { 
+	p <- data.frame(chrom=as.factor(as.character((seqnames(pgr)))), start=as.integer(start(pgr)),
+                          end=as.integer(end(pgr)), strand=as.factor(as.character(strand(pgr))))
+
 	wsize <- as.integer(wsize)
 	ssize <- as.integer(ssize)
-	str   <- as.character(str)
+	strand   <- as.character(strand)
 	start <- as.integer(start)
 	H <- NULL
 	
-	if(limitPCRDups & str != "N" & NCOL(p) > 2) {
-	  p <- p[p[,4] == str,]
+	if(limitPCRDups & strand != "N" & NCOL(p) > 2) {
+	  p <- p[p[,4] == strand,]
 	}
 	if(is.null(chrom)) {
 		chrom <- sort(as.character(unique(p[[1]])))
@@ -81,7 +84,7 @@ WindowAnalysis <- function(p, str="N", wsize=(ssize-1), ssize=(wsize+1), chrom=N
 			else {
 			 if(NCOL(p) == 2) { ## If probes are represented by only two columns, set PROBEEnd to 0-length probes.  Record 
 			   PROBEEnd <- as.integer(PROBEStart)
-			   PROBEStr <- as.character(rep(str, NROW(PROBEStart))) ## no strand information takes both...
+			   PROBEStr <- as.character(rep(strand, NROW(PROBEStart))) ## no strand information takes both...
 			 }
 			 }
 
@@ -90,7 +93,7 @@ WindowAnalysis <- function(p, str="N", wsize=(ssize-1), ssize=(wsize+1), chrom=N
 			  PROBElength <- (PROBEStart[1]-PROBEEnd[1])
 			  PROBEStart <- as.integer(unique(PROBEStart))
 			  PROBEEnd <- as.integer(PROBEStart+PROBElength)
-			  PROBEStr <- as.character(rep(str, NROW(PROBEStart)))
+			  PROBEStr <- as.character(rep(strand, NROW(PROBEStart)))
 			}
 			 
 			# Set dimensions.
@@ -105,8 +108,8 @@ WindowAnalysis <- function(p, str="N", wsize=(ssize-1), ssize=(wsize+1), chrom=N
 			if(debug) {
 				print(paste(chrom[i],": Counting reads in specified region.",sep=""))
 			}
-			Hprime <- .Call("WindowAnalysis", PROBEStart, PROBEEnd, PROBEStr, str,
-							wsize, ssize, start, endChrom, PACKAGE = "GROseq")
+			Hprime <- .Call("WindowAnalysis", PROBEStart, PROBEEnd, PROBEStr, strand,
+							wsize, ssize, start, endChrom, PACKAGE = "groHMM")
 
 			H[[chrom[i]]] <- as.integer(Hprime)
 		}

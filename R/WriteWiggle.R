@@ -28,8 +28,9 @@
 ##	Writes a wiggle file suitable for uploading to the UCSC genome browser!
 ##
 ########################################################################
-WriteWiggle <- function(p, file, str="N", size=50, normCounts=1, sep.chrom=FALSE, reverse=FALSE, track.type.line=FALSE, debug=FALSE) { #color="0,0,0", OtherOptions="", 
-	F <- WindowAnalysis(p=p, str=str, ssize=size, debug=debug)
+writeWiggle <- function(pgr, file, strand="N", size=50, normCounts=1, sep.chrom=FALSE, reverse=FALSE, track.type.line=FALSE, debug=FALSE) { #color="0,0,0", OtherOptions="", 
+	F <- windowAnalysis(pgr=pgr, strand=strand, ssize=size, debug=debug)
+    #print("debug1")
 	CHR <- as.character(names(F))
 
 	## If we are not separating, prepare the file before the loop
@@ -41,6 +42,8 @@ WriteWiggle <- function(p, file, str="N", size=50, normCounts=1, sep.chrom=FALSE
 		}
 	}
 
+    cat("Writing...\n")
+    pb <- txtProgressBar(min=0, max=NROW(CHR), style=3)
 	for(i in 1:NROW(CHR)) {
 		if(debug) {
 			print(paste("Writing:", CHR[i]))
@@ -62,7 +65,8 @@ WriteWiggle <- function(p, file, str="N", size=50, normCounts=1, sep.chrom=FALSE
 		else {
 			write(as.real(-1*F[[CHR[i]]]*normCounts), file=filename, ncolumns=1, append=TRUE)
 		}
+        setTxtProgressBar(pb, i)
 	}
-
+    cat("\n")
 }
 

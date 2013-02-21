@@ -22,7 +22,7 @@
 
 ########################################################################
 ##
-##	PolymeraseWave
+##	polymeraseWave
 ##	Date: 2009-09-16
 ##
 ##	Given GRO-seq data, identifies the location of the polymerase wave in up- or down-
@@ -37,7 +37,8 @@
 ##	[1,*) framework by keeping the vairence constant, and scaling the mean for each gene.
 ##
 ##	Arguments:
-##	p1,p2	     -> data.frame of: CHR, START, END, STRAND.  These are to be compared.
+##	pgr1,pgr2    -> GRanges to be compared.
+##	(deprecated: p1,p2	     -> data.frame of: CHR, START, END, STRAND.  These are to be compared.)
 ##	genes	     -> A set of genes in which to search for the wave...
 ##	size	     -> The size of the moving window.
 ##	chrom        -> Chromosome to search (NULL for all).
@@ -56,19 +57,19 @@
 ## Test with GREB1: 	chr2:11,591,693-11,700,363
 ##			GREB1 <- data.frame(chr="chr2", start=11591693, end=11700363, str="+")
 ########################################################################
-PolymeraseWave <- function(p1, p2, genes, size=50, approxDist, upstreamDist= 10000, TSmooth=NA, 
+polymeraseWave <- function(pgr1, pgr2, genes, size=50, approxDist, upstreamDist= 10000, TSmooth=NA, 
 							prefix=NULL, MinKLDiv= 1, finterWindowSize=10000, debug=TRUE, returnVal="simple") {
 	if(debug) {
 		print("Analyzing windows")
 	}
 
-	Fp1 <- WindowAnalysis(p=p1, str="+", ssize=size, debug=FALSE)
-	Fp2 <- WindowAnalysis(p=p2, str="+", ssize=size, debug=FALSE)
-	Fm1 <- WindowAnalysis(p=p1, str="-", ssize=size, debug=FALSE)
-	Fm2 <- WindowAnalysis(p=p2, str="-", ssize=size, debug=FALSE)
-	sizeP1 <- NROW(p1)
-	sizeP2 <- NROW(p2)
-	expCounts <- mean(NROW(p1),NROW(p2))
+	Fp1 <- windowAnalysis(pgr=pgr1, strand="+", ssize=size, debug=FALSE)
+	Fp2 <- windowAnalysis(pgr=pgr2, strand="+", ssize=size, debug=FALSE)
+	Fm1 <- windowAnalysis(pgr=pgr1, strand="-", ssize=size, debug=FALSE)
+	Fm2 <- windowAnalysis(pgr=pgr2, strand="-", ssize=size, debug=FALSE)
+	sizeP1 <- NROW(pgr1)
+	sizeP2 <- NROW(pgr2)
+	expCounts <- mean(NROW(pgr1),NROW(pgr2))
 
 	ANS <- rep(-1, NROW(genes))
 	ENDwave <- rep(-1,NROW(genes))
@@ -198,8 +199,8 @@ PolymeraseWave <- function(p1, p2, genes, size=50, approxDist, upstreamDist= 100
 		g <- list()
 		g[[1]] <- gene
 		ans <- .Call("RBaumWelchEM", nstates, g, as.integer(1), ePrDist, ePrVars, tProb, iProb, 
-#				0.01, c(FALSE,FALSE,FALSE), c(TRUE, TRUE, TRUE), as.integer(10), TRUE, PACKAGE="GROseq")
-				0.01, c(TRUE,TRUE,TRUE), c(TRUE, TRUE, TRUE), as.integer(10), TRUE, PACKAGE="GROseq")
+#				0.01, c(FALSE,FALSE,FALSE), c(TRUE, TRUE, TRUE), as.integer(10), TRUE, PACKAGE="groHMM")
+				0.01, c(TRUE,TRUE,TRUE), c(TRUE, TRUE, TRUE), as.integer(10), TRUE, PACKAGE="groHMM")
 										##  Update emis...
 		ansVitervi <- ans[[3]][[1]]
 		DTs <- max(which(ansVitervi==0))
@@ -356,19 +357,19 @@ PolymeraseWave <- function(p1, p2, genes, size=50, approxDist, upstreamDist= 100
 	}
 }
 
-PolymeraseWaveTryNorm <- function(p1, p2, genes, size=50, approxDist, upstreamDist= 10000, TSmooth=NA, NonMap=NULL, 
+polymeraseWaveTryNorm <- function(pgr1, pgr2, genes, size=50, approxDist, upstreamDist= 10000, TSmooth=NA, NonMap=NULL, 
 							prefix=NULL, MinKLDiv= 1, emissionDistAssumption= "norm", finterWindowSize=10000, limitPCRDups=FALSE, returnVal="simple", debug=TRUE) {
 	if(debug) {
 		print("Analyzing windows")
 	}	
 
-	Fp1 <- WindowAnalysis(p=p1, str="+", ssize=size, limitPCRDups=limitPCRDups, debug=FALSE)
-	Fp2 <- WindowAnalysis(p=p2, str="+", ssize=size, limitPCRDups=limitPCRDups, debug=FALSE)
-	Fm1 <- WindowAnalysis(p=p1, str="-", ssize=size, limitPCRDups=limitPCRDups, debug=FALSE)
-	Fm2 <- WindowAnalysis(p=p2, str="-", ssize=size, limitPCRDups=limitPCRDups, debug=FALSE)
-	sizeP1 <- NROW(p1)
-	sizeP2 <- NROW(p2)
-	expCounts <- mean(NROW(p1),NROW(p2))
+	Fp1 <- windowAnalysis(pgr=pgr1, strand="+", ssize=size, limitPCRDups=limitPCRDups, debug=FALSE)
+	Fp2 <- windowAnalysis(pgr=pgr2, strand="+", ssize=size, limitPCRDups=limitPCRDups, debug=FALSE)
+	Fm1 <- windowAnalysis(pgr=pgr1, strand="-", ssize=size, limitPCRDups=limitPCRDups, debug=FALSE)
+	Fm2 <- windowAnalysis(pgr=pgr2, strand="-", ssize=size, limitPCRDups=limitPCRDups, debug=FALSE)
+	sizeP1 <- NROW(pgr1)
+	sizeP2 <- NROW(pgr2)
+	expCounts <- mean(NROW(pgr1),NROW(pgr2))
 
 	ANS <- rep(-1, NROW(genes))
 	ENDwave <- rep(-1,NROW(genes))
@@ -502,7 +503,7 @@ PolymeraseWaveTryNorm <- function(p1, p2, genes, size=50, approxDist, upstreamDi
 										chromEnd= as.integer(windowEnds), strand= rep("+",NROW(windowStarts)))
 		  print(head(windowsToSurvey))
 		  print(tail(windowsToSurvey))
-		  unmap <- CountMappableReadsInInterval(windowsToSurvey, NonMap)
+		  unmap <- countMappableReadsInInterval(windowsToSurvey, NonMap)
   		  if(genes[i,4] == "+") {
 			 unmap <- rev(unmap)
 		  }
@@ -520,7 +521,7 @@ PolymeraseWaveTryNorm <- function(p1, p2, genes, size=50, approxDist, upstreamDi
 		g[[1]] <- gene
 		ans <- list()
 		ans <- tryCatch(.Call("RBaumWelchEM", nstates, g, as.integer(1), ePrDist, ePrVars, tProb, iProb, 
-				0.01, c(TRUE,TRUE,TRUE), c(TRUE, TRUE, TRUE), as.integer(10), TRUE, PACKAGE="GROseq"), error=function(e) e)
+				0.01, c(TRUE,TRUE,TRUE), c(TRUE, TRUE, TRUE), as.integer(10), TRUE, PACKAGE="groHMM"), error=function(e) e)
 										##  Update emis...
 		if(NROW(ans) < 3) { ## An error will have a length of 2 (is this guaranteed?!).  
 			print("ERROR CAUGHT ON THE C SIDE")

@@ -41,7 +41,7 @@ RgammaMLE <- function(X) {
 	N <- as.real(NROW(X))
 	sumxis <- as.real(sum(X))
 	sumlogxis <- as.real(sum(log(X)))
-	Fit <- .Call("RgammaMLE", N, sumxis, sumlogxis, PACKAGE = "GROseq")
+	Fit <- .Call("RgammaMLE", N, sumxis, sumlogxis, PACKAGE = "groHMM")
 	return(Fit)
 
 }
@@ -62,7 +62,7 @@ Rnorm <- function(X) {
 ##
 ################################
 Rnorm.exp <- function(xi, wi=rep(1,NROW(xi)), guess=c(0.5, 0, 1, 1), tol=sqrt(.Machine$double.eps), maxit=10000) {
-  	Fit <- .Call("RNormExpMLE", xi, wi, guess, tol, as.integer(maxit), PACKAGE = "GROseq")
+  	Fit <- .Call("RNormExpMLE", xi, wi, guess, tol, as.integer(maxit), PACKAGE = "groHMM")
 }
 
 ################################
