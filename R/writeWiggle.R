@@ -28,9 +28,28 @@
 ##	Writes a wiggle file suitable for uploading to the UCSC genome browser!
 ##
 ########################################################################
-writeWiggle <- function(pgr, file, strand="N", size=50, normCounts=1, sep.chrom=FALSE, reverse=FALSE, track.type.line=FALSE, debug=FALSE) { #color="0,0,0", OtherOptions="", 
-	F <- windowAnalysis(pgr=pgr, strand=strand, ssize=size, debug=debug)
-    #print("debug1")
+
+#` writeWiggle writes a wiggle track suitable for uploading to the UCSC genome browser.
+#` Currently only supports writing a fixed-step wiggle.
+#`
+#` @param reads GenomicRanges object representing the position of reads mapping in the genome.
+#` @param file Specifies the file prefix for the output wiggle.
+#` @param strand Takes values of "+", "-", or "N".  Computes Writes a wiggle on the speicified strand.  "N" denotes collapsing reads on both strands.  Default: "N".
+#` @param size Size of non-overlapping windows to write. Default: 50 bp.
+#` @param normCounts A normalization factor correcting for library size or other effects.  For example, total mappible read counts might be a reasonable value.  Default: 1 (i.e. no normalization).
+#` @param sep.chrom If set to TRUE, will write a separate wiggle file for each chromosome.  Default: FALSE
+#` @param reverse If set to TRUE, multiplies values by -1.  Used for reversing GRO-seq data on the negative (-) strand. Default: FALSE
+#` @param track.type.line If set to TRUE, prints a header identifying the file as a wiggle.  Necessary to upload a custom track to the UCSC genome browser.  Default: TRUE
+#` @param debug If set to TRUE, provides additional print options. Default: FALSE
+#` @return Writes a wiggle file to the specified file.
+writeWiggle <- function(reads, file, strand="N", size=50, normCounts=1, sep.chrom=FALSE, reverse=FALSE, track.type.line=TRUE, debug=FALSE) { #color="0,0,0", OtherOptions="", 
+
+	## Error checking. ... 
+	if(!(strand=="N"|strand=="+"|strand=="-")) {
+	  stop("Strand should be specified as '+', '-', or 'N'.")
+	}
+	
+	F <- windowAnalysis(reads=reads, strand=strand, ssize=size, debug=debug)
 	CHR <- as.character(names(F))
 
 	## If we are not separating, prepare the file before the loop

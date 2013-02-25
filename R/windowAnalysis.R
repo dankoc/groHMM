@@ -29,12 +29,12 @@
 ##
 ##	Arguments:
 ##	p	-> data.frame of: CHR, START, END, STRAND.
-##	strand	-> Character; Strand of the probes to count, or "N" for ignore strand.
-##	wsize	-> The size of the moving window.  Defaults to consecutive, non-inclusive windows.
-##	ssize	-> The number of bp moved with each step.  Defaults to consecutive, non-inclusive windows.
-##	chrom   -> Chromosome to search (NULL for all).
-##	start   -> The start in genomic coordinates (NULL for all).
-##	end	-> The end in genomic coordinates (NULL for all).
+##	strand	    -> Character; Strand of the probes to count, or "N" for ignore strand.
+##	window_size	-> The size of the moving window.  Defaults to consecutive, non-inclusive windows.
+##	step_size	-> The number of bp moved with each step.  Defaults to consecutive, non-inclusive windows.
+##	chrom       -> Chromosome to search (NULL for all).
+##	start       -> The start in genomic coordinates (NULL for all).
+##	end	        -> The end in genomic coordinates (NULL for all).
 ##
 ##
 ##	Assumptions:
@@ -45,12 +45,25 @@
 ##	(2) ...
 ##
 ########################################################################
-windowAnalysis <- function(pgr, strand="N", wsize=(ssize-1), ssize=(wsize+1), chrom=NULL, start=0, end=NULL, limitPCRDups=FALSE, debug=FALSE) { 
-	p <- data.frame(chrom=as.factor(as.character((seqnames(pgr)))), start=as.integer(start(pgr)),
-                          end=as.integer(end(pgr)), strand=as.factor(as.character(strand(pgr))))
 
-	wsize <- as.integer(wsize)
-	ssize <- as.integer(ssize)
+#` windowAnalysis Returns a vector of integers representing the counts of reads in a moving window.
+#`
+#` @param reads GenomicRanges object representing the position of reads mapping in the genome.
+#` @param strand Takes values of "+", "-", or "N".  Computes Writes a wiggle on the speicified strand.  "N" denotes collapsing reads on both strands.  Default: "N".
+#` @param window_size Size of the moving window. Either window_size or step_size must be specified.
+#` @param step_size The number of bp moved with each step.
+#` @param chrom Chromosome for which to return data.  Default: returns all avaliable data.
+#` @param start The start position in genomic coordinates.  Default: returns all avaliable data.
+#` @param end The end position in genomic coordinates.  Default: returns all avaliable data.
+#` @param limitPCRDups Counts only one read mapping to each start site.  NOTE: If set to TRUE, assumes that all reads are the same length (don't use for paired-end data).  Default: FALSE.  
+#` @param debug If set to TRUE, provides additional print options. Default: FALSE
+#` @return List object, each element of which represents a chromosome.
+windowAnalysis <- function(reads, strand="N", window_size=(step_size-1), step_size=(window_size+1), chrom=NULL, start=0, end=NULL, limitPCRDups=FALSE, debug=FALSE) { 
+	p <- data.frame(chrom=as.factor(as.character((seqnames(reads)))), start=as.integer(start(reads)),
+                          end=as.integer(end(reads)), strand=as.factor(as.character(strand(reads))))
+
+	wsize <- as.integer(window_size)
+	ssize <- as.integer(step_size)
 	strand   <- as.character(strand)
 	start <- as.integer(start)
 	H <- NULL
@@ -89,7 +102,7 @@ windowAnalysis <- function(pgr, strand="N", wsize=(ssize-1), ssize=(wsize+1), ch
 			 }
 
 			if(limitPCRDups) {
-			  print("WARNING: Using limitPCRDups assumes all probes are the same size!!!!!")
+			  print("WARNING: Using limitPCRDups assumes all probes are the same size!  Don't use for paired end data!!!!")
 			  PROBElength <- (PROBEStart[1]-PROBEEnd[1])
 			  PROBEStart <- as.integer(unique(PROBEStart))
 			  PROBEEnd <- as.integer(PROBEStart+PROBElength)
