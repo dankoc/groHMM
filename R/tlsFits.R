@@ -20,6 +20,14 @@
 ##
 ## Returns x and y values giving information on the fit...
 ##
+
+#` A 'total least squares'-like hack for LOESS.  Works by rotating points 45 degrees, fitting LOESS, and rotating back.
+#`
+#` @param x X values.
+#` @param y Y values.
+#` @param theta Amount to rotate, sets the ratio of variences that are assumed by the hack.  Default: -pi/4 radians (45 degrees) for orthogonal regression.
+#` @param span The LOESS span parameter.  Default: 1
+#` @return List of input values and LOESS predictions.
 tlsLoess <- function(x, y, theta= -pi/4, span= 1) {
  mx <- mean(x)
  my <- mean(y)
@@ -48,24 +56,14 @@ tlsLoess <- function(x, y, theta= -pi/4, span= 1) {
  return(retVar)
 }
 
-
-## WARNING -- CURRENTLY DEMMING AND SVD METHODS FOR FITTING TOTAL LEAST SQUARES DO NOT AGREE!!
-## This warning seems to be related to the normalization applied to the data!
-##
-## Differences in fits due to normalization of the input variables.
-#> tlsSvd((expr[use]-mean(expr[use]))/var(expr[use]), (rate[use]-mean(rate[use]))/var(expr[use]))
-#[1] 5.159783e-36 7.182321e-06
-#> tlsDemming((expr[use]-mean(expr[use]))/var(expr[use]), (rate[use]-mean(rate[use]))/var(expr[use]))
-#[1] 5.159783e-36 7.182321e-06
-#> pcafit(data.frame((expr[use]-mean(expr[use]))/var(expr[use]), (rate[use]-mean(rate[use]))/var(expr[use])))
-#$slope
-#[1] 7.182321e-06
-#  ...
-##
-## Conversely, the SVD results can be pretty closely reproduced by assuming that d = (var(rate[use])^2)/((var(expr[use]))^2)
-
  #####################################################################3
  ## linear total least squares by SVD.
+
+#` A 'total least squares' implementation using singular value demposition.
+#`
+#` @param x X values.
+#` @param y Y values.
+#` @return Parameters for the linear model Y~a*X+e.
  tlsSvd <- function(x,y) {
  n <- NCOL(x)
  Cmat <- as.matrix(data.frame(x, y))
@@ -82,8 +80,15 @@ tlsLoess <- function(x, y, theta= -pi/4, span= 1) {
 ## 
 
  #####################################################################3
- ## linear total least squares by Demming regression.
-tlsDemming <- function(x,y,d=1) {
+ ## linear total least squares by Deming regression.
+
+#` A 'total least squares' implementation using demming regression.
+#`
+#` @param x X values.
+#` @param y Y values.
+#` @param d Ratio of variences. Default: 1, for orthogonal regression.
+#` @return Parameters for the linear model.
+tlsDeming <- function(x,y,d=1) {
  sxx <- 1/(NROW(x)-1) * sum((x-mean(x))^2)
  sxy <- 1/(NROW(x)-1) * sum((x-mean(x))*(y-mean(y)))
  syy <- 1/(NROW(y)-1) * sum((y-mean(y))^2)

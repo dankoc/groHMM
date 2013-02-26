@@ -82,7 +82,18 @@ approx.ratios.CI <- function(num.counts, denom.counts, alpha=0.05) {
 ##			This is likely useful for rate; perhaps for identifying internal paused-peaks...
 ##
 ########################################################################
-pausingIndex <- function(f, p, size=50, up=1000, down=1000, UnMAQ=NULL, method="CoreWaterfallLis", debug=FALSE) {
+
+#` Returns the pausing index for different genes.  TODO: DESCRIBE THE PAUSING INDEX.
+#`
+#`  @param f data.frame of: CHR, START, END, STRAND.
+#`  @param p data.frame of: CHR, START, END, STRAND.
+#`  @param size The size of the moving window.
+#`  @param up Distance upstream of each f to align and histogram.
+#`  @param down	Distance downstream of each f to align and histogram (NULL).
+#`  @param UnMAQ Data structure representing the coordinates of all un-mappable regions in the genome.
+#`  @param debug If set to TRUE, provides additional print options. Default: FALSE
+#`  @return Data.frame of the pausing indices for the input genes.
+pausingIndex <- function(f, p, size=50, up=1000, down=1000, UnMAQ=NULL, debug=FALSE) {
 	C <- sort(as.character(unique(f[[1]])))
 	Pause <- rep(0,NROW(f))
 	Body  <- rep(0,NROW(f))
@@ -254,179 +265,3 @@ pausingIndex <- function(f, p, size=50, up=1000, down=1000, UnMAQ=NULL, method="
 	return(data.frame(Pause= Pause, Body= Body, Fisher= Fish, GeneID= GeneID, CIlower=CIl, CIupper=CIu, 
 			PauseCounts= PauseCounts, BodyCounts= BodyCounts, uPCounts= UpCounts, uGCounts= UgCounts))
 }
-
-########################################################################
-##
-##	PausingIndexStunnenberg
-##	Date: 2009-06-02
-##
-##	Returns the pausing index for different genes -- calculated a-la Stunnenberg's paper.
-##
-##	Arguments:
-##	f	-> data.frame of: CHR, START, END, STRAND.
-##	p	-> data.frame of: CHR, START, END, STRAND.
-##	up	-> Distance upstream of each TSS to count reads.  Defaults are as in Stunnenberg's paper.
-##	down	-> Distance downstream of each TSS to count reads.  Defaults are as in Stunnenberg's paper.
-##
-##	Assumptions:
-##	(1) 
-##
-##	TODO: 
-##	(1) Write C function. 
-##	(2) ...
-##
-########################################################################
-PausingIndexStunnenberg <- function(f, p, up=250, down=500, method="Stunnenberg", debug=FALSE, NotStrandSpecific=FALSE) {
-	C <- sort(as.character(unique(f[[1]])))
-	Pause <- rep(0,NROW(f))
-	Body  <- rep(0,NROW(f))
-	lRatio  <- rep(0,NROW(f))
-	Fish  <- rep(0,NROW(f))
-	GeneID <- rep("",NROW(f))
-
-	up		<- as.integer(up)
-	down		<- as.integer(down)
-	size 		<- up+down
-
-	###### Calculate PLUS and MINUS index, for DRY compliance.
-	PLUS_INDX <- which(f[[4]] == "+")
-	MINU_INDX <- which(f[[4]] == "-")
-
-	###### Identify TSS -- Start for '+' strand, End for '-' strand.
-	if(debug) {
-		print("Calculating TSS and gene ends for each gene based on strand information.")
-	}
-	c_tss_indx <- rep(0,NROW(f))
-	c_tss_indx[PLUS_INDX] <- 2
-	c_tss_indx[MINU_INDX] <- 3
-	c_tss <- unlist(lapply(c(1:NROW(f)), function(x) { f[x, c_tss_indx[x]] }))
-
-	### Now calculate left and right position for promtoer ... Add or subtract from c_tss based on '+' or '-'.
-	pLEFT	<- rep(0,NROW(c_tss))
-	pRIGHT	<- rep(0,NROW(c_tss))
-
-	pLEFT[PLUS_INDX]	<- c_tss[PLUS_INDX] - up
-	pRIGHT[PLUS_INDX]	<- c_tss[PLUS_INDX] + down
-
-	pLEFT[MINU_INDX]	<- c_tss[MINU_INDX] - down
-	pRIGHT[MINU_INDX]	<- c_tss[MINU_INDX] + up
-
-	###### Now calculate left and right position for gene body, based on '+' or '-'.
-	### Calculate gene end.  Gene start is contiguous with the coordinates for the promoter.
-	c_gene_end_indx <- rep(0,NROW(f))
-	c_gene_end_indx[PLUS_INDX] <- 3
-	c_gene_end_indx[MINU_INDX] <- 2
-	c_gene_end <- unlist(lapply(c(1:NROW(f)), function(x) { f[x,c_gene_end_indx[x]] }))
-
-	### Assign left and right.
-	gLEFT	<- rep(0,NROW(c_tss))
-	gRIGHT	<- rep(0,NROW(c_tss))
-
-	gLEFT[PLUS_INDX]	<- pRIGHT[PLUS_INDX]
-	gRIGHT[PLUS_INDX]	<- c_gene_end[PLUS_INDX]
-
-	gLEFT[MINU_INDX]	<- c_gene_end[MINU_INDX]
-	gRIGHT[MINU_INDX]	<- pLEFT[MINU_INDX]
-
-	for(i in 1:NROW(C)) {
-		if(debug) {
-			print(C[i])
-		}
-
-		# Which KG?  prb?
-		indxF   <- which(as.character(f[[1]]) == C[i])
-		indxPrb <- which(as.character(p[[1]]) == C[i])
-
-		if((NROW(indxF) >0) & (NROW(indxPrb) >0)) {
-			# Order -- Make sure, b/c this is one of our main assumptions.  Otherwise violated for DBTSS.
-			Ford <- order(c_tss[indxF])
-			Pord <- order(p[indxPrb,2])
-
-			# Type coersions.
-			gL 		<- as.integer(gLEFT[indxF][Ford])
-			gR 		<- as.integer(gRIGHT[indxF][Ford])
-			pL		<- as.integer(pLEFT[indxF][Ford])
-			pR		<- as.integer(pRIGHT[indxF][Ford])
-			FeatureStr	<- as.character(f[indxF,4][Ford])
-##			FeatureTSS	<- as.integer(c_tss[indxF][Ford])
-
-			PROBEStart 	<- as.integer(p[indxPrb,2][Pord])
-			PROBEEnd 	<- as.integer(p[indxPrb,3][Pord])
-			PROBEStr	<- as.character(p[indxPrb,4][Pord])
-
-			# Set dimensions.
-			dim(gL)			<- c(NROW(gL), 		 NCOL(gL))
-			dim(gR)			<- c(NROW(gR), 		 NCOL(gR))
-			dim(pL)			<- c(NROW(pL), 		 NCOL(pL))
-			dim(pR)			<- c(NROW(pR), 		 NCOL(pR))
-			dim(FeatureStr)		<- c(NROW(FeatureStr), 	 NCOL(FeatureStr))
-			dim(PROBEStart) 	<- c(NROW(PROBEStart), 	 NCOL(PROBEStart))
-			dim(PROBEEnd) 		<- c(NROW(PROBEEnd), 	 NCOL(PROBEEnd))
-			dim(PROBEStr)		<- c(NROW(PROBEStr), 	 NCOL(PROBEStr))
-
-			## Calculate the number of reads in the area surrounding the TSS.
-			if(debug) {
-				print(paste(C[i],": Counting reads in the promoter.",sep=""))
-			}
-			if(NotStrandSpecific) {
-				FeatureStr = rep("+", NROW(pR))
-				PROBEStr = rep("+", NROW(PROBEStart))
-			}
-			HPause <- .Call("CountReadsInFeatures", pL, pR, FeatureStr,
-							PROBEStart, PROBEEnd, PROBEStr)
-
-			## Run the calculation on the gene body...
-			if(debug) {
-				print(paste(C[i],": Counting reads in gene.",sep=""))
-			}
-			HGeneBody <- .Call("CountReadsInFeatures", gL, gR, FeatureStr,
-							PROBEStart, PROBEEnd, PROBEStr)
-
-####################################### Meant for comparsion to Lis method ...
-			## Now use Fisher's Exact.
-			if(debug) {
-				print(paste(C[i],": Using Fisher's exact.",sep=""))
-			}
-			# Get size of gene body.
-			Difference <- gR-gL
-			Difference[Difference < 0] <- 0 ## Genes < 1kb, there is no suitable area in the body of the gene.
-			# Make uniform reads.
-			Up <- round(HPause + HGeneBody)*(size)/(size+Difference)
-			Ug <- round(HPause + HGeneBody)*(Difference)/(size+Difference)
-			HFish <- unlist(lapply(c(1:NROW(Ford)), function(x) {
-				fisher.test(
-					data.frame(
-							c(HPause[x], round(Up[x])), 
-							c(HGeneBody[x], round(Ug[x]))
-					)
-				)$p.value
-			} ))
-#######################################
-
-			# Normalize to size of gene * size of promoter window.
-			HGeneBody <- HGeneBody*size/(gR-gL)
-
-			## Now determine the log2 ratio.
-			if(debug) {
-				print(paste(C[i],": Calculating log ratio.",sep=""))
-			}
-			HlRatio <- log(HPause/HGeneBody, 2)
-
-			Pause[indxF][Ford] 	<- as.real(HPause)
-			Body[indxF][Ford] 	<- as.real(HGeneBody)
-			lRatio[indxF][Ford]	<- as.real(HlRatio)
-			Fish[indxF][Ford]	<- as.real(HFish)
-			GeneID[indxF][Ford]	<- as.character(f[indxF,5][Ford])
-		}
-		if(debug) {
-			print(paste(C[i],": Done!",sep=""))
-		}
-	}
-
-	# Calculate putative pausing ...
-	
-
-	return(data.frame(Pause= Pause, Body= Body, Log2Ratio= lRatio, Fishers= Fish, GeneID= GeneID))
-
-}
- 

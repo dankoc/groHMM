@@ -57,16 +57,43 @@
 ## Test with GREB1: 	chr2:11,591,693-11,700,363
 ##			GREB1 <- data.frame(chr="chr2", start=11591693, end=11700363, str="+")
 ########################################################################
-polymeraseWave <- function(pgr1, pgr2, genes, size=50, approxDist, upstreamDist= 10000, TSmooth=NA, 
+
+
+#`	Given GRO-seq data, identifies the location of the polymerase wave in up- or down-
+#`	regulated genes.  This version is based on a full Baum-Welch EM implementation.
+#`
+#`	This is a three state HMM -- initial state representing the intergenic region 5' of a gene, 
+#`	the second representing the initially upregulated region, and the third representing the 
+#`	remaining sequence of a gene. 
+#`
+#`	We assume that upstream region is intergenic, and thus its emmission distriubtion is assumed  
+#`	to be a constant, set based on a representative intergenic region.  This is accomidated in my
+#`	[1,*) framework by keeping the vairence constant, and scaling the mean for each gene.
+#`
+#`	Arguments:
+#`	@param pgr1 Mapped reads in time point 1.
+#`  @param pgr2 Mapped reads in time point 2.
+#`	@param genes A set of genes in which to search for the wave.
+#`	@param size	The size of the moving window. Default: 50.
+#`	@param approxDist 
+#`	@param upstreamDist 
+#`	@param TSmooth 
+#`	@param prefix
+#`  @param MinKLDiv 
+#`  @param filterWindowSize 
+#`	@param debug If TRUE, prints error messages.
+#`  @param returnVal Takes value "simple" (default) or "alldata". "simple" returns a data.frame with Pol II wave end positions.  "alldata" returns all of the availiable data from each gene, including the full posterior distribution of the model after EM.
+#`  @return Either a data.frame with Pol II wave end positions, or a List() structure with additional data, as specified by returnVal.
+polymeraseWave <- function(reads1, reads2, genes, size=50, approxDist, upstreamDist= 10000, TSmooth=NA, 
 							prefix=NULL, MinKLDiv= 1, finterWindowSize=10000, debug=TRUE, returnVal="simple") {
 	if(debug) {
 		print("Analyzing windows")
 	}
 
-	Fp1 <- windowAnalysis(pgr=pgr1, strand="+", ssize=size, debug=FALSE)
-	Fp2 <- windowAnalysis(pgr=pgr2, strand="+", ssize=size, debug=FALSE)
-	Fm1 <- windowAnalysis(pgr=pgr1, strand="-", ssize=size, debug=FALSE)
-	Fm2 <- windowAnalysis(pgr=pgr2, strand="-", ssize=size, debug=FALSE)
+	Fp1 <- windowAnalysis(reads=reads1, strand="+", ssize=size, debug=FALSE)
+	Fp2 <- windowAnalysis(reads=reads2, strand="+", ssize=size, debug=FALSE)
+	Fm1 <- windowAnalysis(reads=reads1, strand="-", ssize=size, debug=FALSE)
+	Fm2 <- windowAnalysis(reads=reads2, strand="-", ssize=size, debug=FALSE)
 	sizeP1 <- NROW(pgr1)
 	sizeP2 <- NROW(pgr2)
 	expCounts <- mean(NROW(pgr1),NROW(pgr2))
