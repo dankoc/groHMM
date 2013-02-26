@@ -4,4 +4,4 @@ export(countReadsInInterval, countMappableReadsInInterval, pausingIndex,  window
 	metaGene, metaGeneMatrix, metaGene_nL, averagePlot, detectTranscripts, detectTranscriptsEM, detectTranscriptsUTS, polymeraseWave, 
 	writeWiggle, RgammaMLE, Rnorm, Rnorm.exp, tlsLoess, tlsSvd, tlsDemming, detectPeaks, detectTranscriptsTSSPeakCalls, polymeraseWaveTryNorm,
 	makeConsensusAnnotations, evaluateHMM, plotTranscripts, plotTHistogram, breakTranscriptsOnGenes, combineTranscripts,
-	runMetaGene, limitToXkb)
+	runMetaGene, limitToXkb, readBed)

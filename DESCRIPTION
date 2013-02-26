@@ -12,6 +12,6 @@ License: GPL-3
 Collate: countReadsInInterval.R pausingIndex.R associateWithInterval.R metaGene.R 
 	windowAnalysis.R detectTranscripts.R writeWiggle.R polymeraseWave.R 
 	fitDistributions.R expressedGenes.R tlsFits.R zzz.R makeConsensusAnnotations.R
-	plotTranscripts.R breakTranscriptsOnGenes.R
+	plotTranscripts.R breakTranscriptsOnGenes.R readBed.R
 biocViews: Preprocessing, Sequencing, Analysis
 LazyLoad: yes
