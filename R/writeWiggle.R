@@ -49,7 +49,7 @@ writeWiggle <- function(reads, file, strand="N", size=50, normCounts=1, sep.chro
 	  stop("Strand should be specified as '+', '-', or 'N'.")
 	}
 	
-	F <- windowAnalysis(reads=reads, strand=strand, ssize=size, debug=debug)
+	F <- windowAnalysis(reads=reads, strand=strand, window_size=size, debug=debug)
 	CHR <- as.character(names(F))
 
 	## If we are not separating, prepare the file before the loop
