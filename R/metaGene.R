@@ -32,9 +32,9 @@
 ##			Name changed to avoid confusion with new WindowAnalysis function, which is much more general.
 ##
 ##	Arguments:
-##	fgr	-> GRanges whose length is 1 
+##	features	-> GRanges whose length is 1 
 ##	(deprecated: f	-> data.frame of: CHR, START, STRAND.)
-##	pgr	-> GRanges 
+##	reads	-> GRanges 
 ##	(deprecated: p	-> data.frame of: CHR, START, END, STRAND.)
 ##	size	-> The size of the moving window.
 ##	up	-> Distance upstream of each f to align and histogram.
@@ -48,9 +48,9 @@
 ##	(2) ...
 ##
 ########################################################################
-metaGene <- function(fgr, pgr, size, up, down=NULL, debug=FALSE) {
-    	f <- data.frame(as.character(seqnames(fgr)), start(fgr), as.character(strand(fgr)))
-    	p <- data.frame(as.character(seqnames(pgr)), start(pgr), end(pgr), as.character(strand(pgr)))
+metaGene <- function(features, reads, size, up, down=NULL, debug=FALSE) {
+    	f <- data.frame(as.character(seqnames(features)), start(features), as.character(strand(features)))
+    	p <- data.frame(as.character(seqnames(reads)), start(reads), end(reads), as.character(strand(reads)))
 
 	if(is.null(down)) {
 		down <- up
@@ -316,44 +316,57 @@ averagePlot <- function(ProbeData, Peaks, size=50, bins= seq(-1000,1000,size)) {
 }
 
 
-
-runMetaGene <- function(fgr, pgr, size=100, up=10000, down=NULL, normCounts=1, sampling=FALSE, nSampling=1000, debug=FALSE) {
+#' runMetaGene Runs Metagene analysis. 
+#'
+#' Returns a histogram of the number of reads in each section of a moving window centered on a certain feature for both sense and anntisense directions.  It has option for subsampling.
+#'
+#' @param features GRanges whose length is 1, i.e., Transcription Start Site (TSS) 
+#' @param reads GRanges of reads. 
+#' @param size Numeric.  The size of the moving window. Default: 100
+#' @param up Numeric. Distance upstream of each fgr to align and histogram. Default: 10000
+#' @param down Numeric. Distance downstream of each fgr to align and histogram.  If NULL, down is same as up. Default: NULL
+#' @param normCounts Numeric.   Reads are multiplied by normCounts.Thhe size of the moving window. Default: 1
+#' @param sampling Logical.  If TRUE, subsampling of Metagene is used.  Default: FALSE
+#' @param nSampling Numeric. Number of subsampling.  Default: 1000
+#' @param debug. Logical. If set to TRUE, provides additional print options. Default: FALSE 
+#' @author Charles G. Danko and Minho Chae
+runMetaGene <- function(features, reads, size=100, up=10000, down=NULL, normCounts=1, sampling=FALSE, nSampling=1000, debug=FALSE) {
 	if (sampling) {
-		plus <- samplingMetaGene(fgr=fgr, pgr=pgr, size=size, up=up, down=down, normCounts=normCounts, 
+		plus <- samplingMetaGene(features=features, reads=reads, size=size, up=up, down=down, normCounts=normCounts, 
 			nSampling=nSampling, debug=debug)
     	} else {
-		plus <- metaGene(fgr=fgr, pgr=pgr, size=size, up=up, down=down, debug=debug)
-		plus <- plus / NROW(fgr)
-		plus <- plus*normCounts / NROW(pgr)
+		plus <- metaGene(features=features, reads=reads, size=size, up=up, down=down, debug=debug)
+		plus <- plus / NROW(features)
+		plus <- plus*normCounts / NROW(reads)
     	}
 
-	fgrRev <- fgr
-	strand(fgrRev) <- rev(strand(fgr))
+	fgrRev <- features
+	strand(fgrRev) <- rev(strand(features))
 	f <- data.frame(as.character(seqnames(fgrRev)), start(fgrRev), as.character(strand(fgrRev)))
 	if (sampling) {
-		minus <- samplingMetaGene(fgr=fgr, pgr=pgr, size=size, up=up, down=down, normCounts=normCounts, 
+		minus <- samplingMetaGene(features=features, reads=reads, size=size, up=up, down=down, normCounts=normCounts, 
 			nSampling=nSampling, debug=debug)
 	} else {
-		minus <- metaGene(fgr=fgr, pgr=pgr, size=size, up=up, down=down, debug=debug)
-		minus <- minus / NROW(fgr)
-		minus <- minus*normCounts / NROW(pgr)
+		minus <- metaGene(features=features, reads=reads, size=size, up=up, down=down, debug=debug)
+		minus <- minus / NROW(features)
+		minus <- minus*normCounts / NROW(reads)
 	}
 	return(list(sense=plus, antisense=minus))
 }
 
 
-samplingMetaGene <- function(fgr, pgr, size=100, up=10000, down=NULL, normCounts=1, nSampling=1000, debug=FALSE) {
+samplingMetaGene <- function(features, reads, size=100, up=10000, down=NULL, normCounts=1, nSampling=1000, debug=FALSE) {
 	if (is.null(down))
 		down <- up
 
 	read_vector <- NULL
 	tss_vector <- NULL
-	samplingSize <- round(NROW(fgr)*.1)
+	samplingSize <- round(NROW(features)*.1)
 
 	print("Preparing...")
-	pb <- txtProgressBar(min=0, max=NROW(fgr), style=3)
-	for(i in 1:NROW(fgr)) {
-		tss_vector <- rbind(tss_vector, metaGene(fgr=fgr[i,], pgr=pgr, size=size, up=up, down=down))
+	pb <- txtProgressBar(min=0, max=NROW(features), style=3)
+	for(i in 1:NROW(features)) {
+		tss_vector <- rbind(tss_vector, metaGene(features=features[i,], reads=reads, size=size, up=up, down=down))
 		setTxtProgressBar(pb, i)
 	}
 	cat("\n")
@@ -363,12 +376,12 @@ samplingMetaGene <- function(fgr, pgr, size=100, up=10000, down=NULL, normCounts
 	M <- matrix(0, nrow=nSampling, ncol=(up+down+1))
 	for(i in 1:nSampling) {
 		setTxtProgressBar(pb, i)
-		sampInx <- sample(1:NROW(fgr), size=samplingSize, replace=TRUE)
+		sampInx <- sample(1:NROW(features), size=samplingSize, replace=TRUE)
 		M[i,] <- apply(tss_vector[sampInx,], 2, sum)
 	}
 	cat("\n")
 
-	result <- apply(M, 2, median)*normCounts / NROW(pgr)
+	result <- apply(M, 2, median)*normCounts / NROW(reads)
 	result <- result/samplingSize
 	return(result)
 }

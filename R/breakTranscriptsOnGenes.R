@@ -49,7 +49,20 @@ breakInterval <- function(gr, brPos, gap=5, strand="+") {
 
 # Break Transcrips on Genes
 #----------------------------------------------------------------------------------------------
-breakTranscriptsOnGenes <- function(tr, gr, strand="+", geneSize=5000, threshold=0.8, gap=5, debug=FALSE) {
+#' breakTranscriptsOnGenes Breaks transcripts on genes 
+#'
+#' Breaks transcripts when they are fully overlap multiple well annotated genes.
+#'
+#' @param tr GRanges of transcripts.
+#' @param annotations GRanges of non-overlapping annotations for reference.
+#' @param strand Takes "+" or "-" Default: "+"
+#' @param geneSize Numeric. Minimum gene size in gr to be used as reference. Default: 5000
+#' @param threshold Numeric. Threshold for calling the gene part of the transcript.  Default: 0.8
+#' @param gap Numeric.  Gap (bp) between broken transcripts.  Default: 5
+#' @param debug Logical.  If set to TRUE, show easch step in a plot. Default: FALSE
+#' @author Charles G. Danko and Minho Chae
+breakTranscriptsOnGenes <- function(tr, annotations, strand="+", geneSize=5000, threshold=0.8, gap=5, debug=FALSE) {
+	gr <- annotations
 	tr <- tr[as.character(strand(tr)) == strand,]
 	gr <- gr[as.character(strand(gr)) == strand,]
 	elementMetadata(tr)$fixError <- "NA"
@@ -114,7 +127,19 @@ breakTranscriptsOnGenes <- function(tr, gr, strand="+", geneSize=5000, threshold
 # Combine Transcrips on Genes
 # To do: fix the name of the combined transcripts
 #-----------------------------------------------------------------------------------------------
-combineTranscripts <- function(tr, gr, geneSize=1000, threshold=0.8, debug=FALSE) {
+#' combineTranscripts Combines transnscipts. 
+#'
+#' Combines transcripts  that are within the same gene annotation, combining smaller transcripts for genes
+#'  with low regulation into a single transcript representing the gene.
+#'
+#' @param tr GRanges of transcripts.
+#' @param annotations GRanges of non-overlapping annotations for reference.
+#' @param geneSize Numeric. Minimum gene size in annotations to be used as reference. Default: 1000
+#' @param threshold Numeric. Threshold for calling the gene part of the transcript.  Default: 0.8
+#' @param debug Logical.  If set to TRUE, show easch step in a plot. Default: FALSE
+#' @author Charles G. Danko and Minho Chae
+combineTranscripts <- function(tr, annotations, geneSize=1000, threshold=0.8, debug=FALSE) {
+	gr <- annotations
 	print(paste("Initial transcripts:", length(tr)))
 	gr <- gr[width(gr) > geneSize,]
 	ol <- findOverlaps(tr, gr)

@@ -18,10 +18,19 @@
 ##      (1) 
 ##
 ########################################################################
-
-makeConsensusAnnotations <- function(anno, keytype="gene_id") {
+#' makeConsensusAnnotations Makes a consensus annotation 
+#'
+#' Makes a consensus annotation which is a non overlapping annotation where multiply covered isoforms are used
+#' to represent a genomic ranges for the gene.   This also reduces annotations in a way to save starting site of
+#' a gene for overlapping gene annotations.
+#'
+#' @param annotations GRanges of annotations to be collapsed. 
+#' @param keytype Character.  Keytype to collapse isoforms.  Default: "gene_id"
+#' @return GenomicRanges object of reads. 
+#' @author Charles G. Danko and Minho Chae
+makeConsensusAnnotations <- function(annotations, keytype="gene_id") {
 	# First reduce by keytype, collapsing isoforms
-	annoByKeytype <- reduceAnnotationByKeytype(anno, keytype=keytype)
+	annoByKeytype <- reduceAnnotationByKeytype(annotations, keytype=keytype)
 	return(reduceOverlappingAnnotation(annoByKeytype))
 }
 
