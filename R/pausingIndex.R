@@ -83,16 +83,16 @@ approx.ratios.CI <- function(num.counts, denom.counts, alpha=0.05) {
 ##
 ########################################################################
 
-#` Returns the pausing index for different genes.  TODO: DESCRIBE THE PAUSING INDEX.
-#`
-#`  @param f data.frame of: CHR, START, END, STRAND.
-#`  @param p data.frame of: CHR, START, END, STRAND.
-#`  @param size The size of the moving window.
-#`  @param up Distance upstream of each f to align and histogram.
-#`  @param down	Distance downstream of each f to align and histogram (NULL).
-#`  @param UnMAQ Data structure representing the coordinates of all un-mappable regions in the genome.
-#`  @param debug If set to TRUE, provides additional print options. Default: FALSE
-#`  @return Data.frame of the pausing indices for the input genes.
+#' Returns the pausing index for different genes.  TODO: DESCRIBE THE PAUSING INDEX.
+#'
+#'  @param f data.frame of: CHR, START, END, STRAND.
+#'  @param p data.frame of: CHR, START, END, STRAND.
+#'  @param size The size of the moving window.
+#'  @param up Distance upstream of each f to align and histogram.
+#'  @param down	Distance downstream of each f to align and histogram (NULL).
+#'  @param UnMAQ Data structure representing the coordinates of all un-mappable regions in the genome.
+#'  @param debug If set to TRUE, provides additional print options. Default: FALSE
+#'  @return Data.frame of the pausing indices for the input genes.
 pausingIndex <- function(f, p, size=50, up=1000, down=1000, UnMAQ=NULL, debug=FALSE) {
 	C <- sort(as.character(unique(f[[1]])))
 	Pause <- rep(0,NROW(f))
