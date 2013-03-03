@@ -18,6 +18,7 @@
 ##      (1) 
 ##
 ########################################################################
+
 #' makeConsensusAnnotations Makes a consensus annotation 
 #'
 #' Makes a consensus annotation which is a non overlapping annotation where multiply covered isoforms are used

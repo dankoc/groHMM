@@ -36,11 +36,18 @@
 ##	2009-02-06 Updated to allow assocation of features with arbitrary length.
 ##
 ########################################################################
-associateWithInterval <- function(fgr, pgr) {
-        f <- data.frame(chrom=as.character(seqnames(fgr)), start=as.integer(start(fgr)),
-                                        end=as.integer(end(fgr)), strand=as.character(strand(fgr)))
-        p <- data.frame(chrom=as.character(seqnames(pgr)), start=as.integer(start(pgr)),
-                                end=as.integer(end(pgr)), strand=as.character(strand(pgr))) 
+
+#' associateWithInterval associates reads with the first feature that they fall inside of.
+#'
+#' @param features A GRanges object representing a set of genomic coordinates.  The meta-plot will be centered on the start position.
+#' @param reads A GRanges object representing a set of mapped reads.
+#' @return Returns index of the feature in which a each read is found.  Will be a vector of integers, the same size as the number of reads.  NA indicates that the reads does not fall inside of any feature.
+#' @author Charles G. Danko and Minho Chae
+associateWithInterval <- function(features, reads) {
+        f <- data.frame(chrom=as.character(seqnames(features)), start=as.integer(start(features)),
+                                        end=as.integer(end(features)), strand=as.character(strand(features)))
+        p <- data.frame(chrom=as.character(seqnames(reads)), start=as.integer(start(reads)),
+                                end=as.integer(end(reads)), strand=as.character(strand(reads))) 
 
     C <- as.character(unique(p[[1]]))
     F <- rep(NA, NROW(p))

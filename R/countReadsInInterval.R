@@ -42,11 +42,20 @@
 ##	(2) ...
 ##
 ########################################################################
-countReadsInInterval <- function(fgr, pgr) {
-	f <- data.frame(chrom=as.character(seqnames(fgr)), start=as.integer(start(fgr)),
-					end=as.integer(end(fgr)), strand=as.character(strand(fgr)))
-	p <- data.frame(chrom=as.character(seqnames(pgr)), start=as.integer(start(pgr)),
-    				end=as.integer(end(pgr)), strand=as.character(strand(pgr)))
+
+#' countReadsInInterval counts the number of reads that fall inside of each genomic feature.
+#'
+#' Only counts reads on the appropriate strand.
+#'
+#' @param features A GRanges object representing a set of genomic coordinates.  The meta-plot will be centered on the start position.
+#' @param reads A GRanges object representing a set of mapped reads.
+#' @return Returns a vector of counts, each representing the number of reads inside each genomic interval.
+#' @author Charles G. Danko and Minho Chae
+countReadsInInterval <- function(features, reads) {
+	f <- data.frame(chrom=as.character(seqnames(features)), start=as.integer(start(features)),
+					end=as.integer(end(features)), strand=as.character(strand(features)))
+	p <- data.frame(chrom=as.character(seqnames(reads)), start=as.integer(start(reads)),
+    				end=as.integer(end(reads)), strand=as.character(strand(reads)))
 
  
 	C <- sort(as.character(unique(f[[1]])))
@@ -118,21 +127,29 @@ countReadsInInterval <- function(fgr, pgr) {
 ##	(2) ...
 ##
 ########################################################################
-countMappableReadsInInterval <- function(f, UnMAQ, debug=FALSE) {
 
-	C <- sort(as.character(unique(f[[1]])))
-	F <- rep(0,NROW(f))
+#' countMappableReadsInInterval counts the number of mappable reads in a set of genomic features.
+#'
+#' @param features A GRanges object representing a set of genomic coordinates.  The meta-plot will be centered on the start position.
+#' @param reads A GRanges object representing a set of mapped reads.
+#' @param UnMap List object representing the position of un-mappable reads.  Default: not used.
+#' @return Returns a vector of counts, each representing the number of reads inside each genomic interval.
+#' @author Charles G. Danko and Minho Chae
+countMappableReadsInInterval <- function(features, UnMap, debug=FALSE) {
+
+	C <- sort(as.character(unique(features[[1]])))
+	F <- rep(0,NROW(features))
 	for(i in 1:NROW(C)) {
-		indxF   <- which(as.character(f[[1]]) == C[i])
+		indxF   <- which(as.character(features[[1]]) == C[i])
 
 		if(NROW(indxF) >0) {
 			# Order -- Make sure, b/c this is one of our main assumptions.  Otherwise violated for DBTSS.
-			Ford <- order(f[indxF,2])
+			Ford <- order(features[indxF,2])
 
 			# Type coersions.
-			FeatureStart 	<- as.integer(f[indxF,2][Ford])
-			FeatureEnd 	<- as.integer(f[indxF,3][Ford])
-			FeatureStr	<- as.character(f[indxF,4][Ford])
+			FeatureStart 	<- as.integer(features[indxF,2][Ford])
+			FeatureEnd 	<- as.integer(features[indxF,3][Ford])
+			FeatureStr	<- as.character(features[indxF,4][Ford])
 
 			# Set dimensions.
 			dim(FeatureStart)	<- c(NROW(FeatureStart), NCOL(FeatureStart))
@@ -140,12 +157,12 @@ countMappableReadsInInterval <- function(f, UnMAQ, debug=FALSE) {
 			dim(FeatureStr)		<- c(NROW(FeatureStr), 	 NCOL(FeatureStr))
 			
 			## Count start index.
-			chr_indx <- which(UnMAQ[[1]][[1]] == C[i])
-			CHRSIZE <- as.integer(UnMAQ[[1]][[2]][chr_indx])
+			chr_indx <- which(UnMap[[1]][[1]] == C[i])
+			CHRSIZE <- as.integer(UnMap[[1]][[2]][chr_indx])
 			CHRSTART <- as.integer(0)
 			if(chr_indx > 1) {  ## Running on 1:0 gives c(1, 0)
 				CHRSTART <- as.integer( 
-					sum(UnMAQ[[1]][[2]][
+					sum(UnMap[[1]][[2]][
 						c(1:(chr_indx-1))
 					]) +1)
 			}
@@ -157,7 +174,7 @@ countMappableReadsInInterval <- function(f, UnMAQ, debug=FALSE) {
 
 			## Count unMAQable regions, and size of everything ... 
 			nonmappable <- .Call("CountUnMAQableReads", FeatureStart, FeatureEnd, 
-					UnMAQ[[2]], CHRSTART, CHRSIZE, PACKAGE = "groHMM")
+					UnMap[[2]], CHRSTART, CHRSIZE, PACKAGE = "groHMM")
 
 			## Adjust size of gene body.
 			Difference <- (FeatureEnd - FeatureStart) - nonmappable + 1 ## Otherwise, get -1 for some.
@@ -185,23 +202,31 @@ countMappableReadsInInterval <- function(f, UnMAQ, debug=FALSE) {
 ##  TODO:
 ##
 ########################################################################
-limitToXkb <- function(gr, offset=1000, size=13000) {
-	w <- width(gr)
+
+#' limitToXkb truncates a set of genomic itnervals at a constant, maximum size.
+#'
+#' @param features A GRanges object representing a set of genomic coordinates.  The meta-plot will be centered on the start position.
+#' @param offset Starts the interval from this position relative to the start of each genomic features.
+#' @param size Specifies the size of the window.
+#' @return Returns a new 'GRanges' object representing the size new size.
+#' @author Minho Chae and Charles G. Danko
+limitToXkb <- function(features, offset=1000, size=13000) {
+	w <- width(features)
 
 	# do nothing for w < offset 
 	small  <- (offset < w) & (w < size)
-	gr[small,] <- flank(gr[small,], -1*(w[small]-offset), start=FALSE)
+	features[small,] <- flank(features[small,], -1*(w[small]-offset), start=FALSE)
 
 	big  <- w > size 
-	gr[big,] <- resize(gr[big,], width=size)
+	features[big,] <- resize(features[big,], width=size)
 
-	bigPlus <- big & as.character(strand(gr))=="+"
-	if (any(bigPlus)) start(gr[bigPlus,]) <- start(gr[bigPlus,]) + offset 
+	bigPlus <- big & as.character(strand(features))=="+"
+	if (any(bigPlus)) start(features[bigPlus,]) <- start(features[bigPlus,]) + offset 
 
-	bigMinus <- big & as.character(strand(gr))=="-"
-	if (any(bigMinus)) end(gr[bigMinus,]) <- end(gr[bigMinus,]) - offset 
+	bigMinus <- big & as.character(strand(features))=="-"
+	if (any(bigMinus)) end(features[bigMinus,]) <- end(features[bigMinus,]) - offset 
 
-	return(gr)
+	return(features)
 }
 
 

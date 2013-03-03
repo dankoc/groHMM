@@ -48,7 +48,17 @@
 ##	(2) ...
 ##
 ########################################################################
-metaGene <- function(features, reads, size, up, down=NULL, debug=FALSE) {
+
+#' Returns a histogram of the number of reads in each section of a moving window centered on a certain feature.
+#'
+#' @param features A GRanges object representing a set of genomic coordinates.  The meta-plot will be centered on the start position.
+#' @param reads A GRanges object representing a set of mapped reads.
+#' @param size The size of the moving window.
+#' @param up Distance upstream of each features to align and histogram Default: 1 kb.
+#' @param down Distance downstream of each features to align and histogram Default: same as up.
+#' @return A vector representing the 'typical' signal centered on a point of interest.
+#' @author Charles G. Danko and Minho Chae
+metaGene <- function(features, reads, size, up=1000, down=up, debug=FALSE) {
     	f <- data.frame(as.character(seqnames(features)), start(features), as.character(strand(features)))
     	p <- data.frame(as.character(seqnames(reads)), start(reads), end(reads), as.character(strand(reads)))
 
@@ -124,12 +134,19 @@ metaGene <- function(features, reads, size, up, down=NULL, debug=FALSE) {
 ##	Assumptions: Same as MetaGene
 ##
 ########################################################################
-metaGeneMatrix <- function(f, p, size, up, down=NULL, debug=FALSE) {
-	if(is.null(down)) {
-		down <- up
-	}
 
-	C <- sort(as.character(unique(f[[1]])))
+#' Returns a matrix, with rows representing read counts across a specified gene, or other features of interest.
+#'
+#' @param features data.frame of: CHR, START, END, STRAND. (TODO: Convert this to G-Ranges.)
+#' @param reads data.frame of: CHR, START, END, STRAND. (TODO: Convert this to G-Ranges.)
+#' @param size The size of the moving window.
+#' @param up Distance upstream of each f to align and histogram Default: 1 kb.
+#' @param down Distance downstream of each f to align and histogram Default: same as up.
+#' @return A vector representing the 'typical' signal across genes of different length.
+#' @author Charles G. Danko and Minho Chae
+metaGeneMatrix <- function(features, reads, size= 50, up=1000, down=up, debug=FALSE) {
+
+	C <- sort(as.character(unique(features[[1]])))
 	H <- NULL
 	for(i in 1:NROW(C)) {
 		if(debug) {
@@ -137,19 +154,19 @@ metaGeneMatrix <- function(f, p, size, up, down=NULL, debug=FALSE) {
 		}
 
 		# Which KG?  prb?
-		indxF   <- which(as.character(f[[1]]) == C[i])
-		indxPrb <- which(as.character(p[[1]]) == C[i])
+		indxF   <- which(as.character(features[[1]]) == C[i])
+		indxPrb <- which(as.character(reads[[1]]) == C[i])
 
 		if((NROW(indxF) >0) & (NROW(indxPrb) >0)) {
 			# Order -- Make sure, b/c this is one of our main assumptions.  Otherwise violated for DBTSS.
-			ord <- order(f[indxF,2])
+			ord <- order(features[indxF,2])
 
 			# Type coersions.
-			FeatureStart 	<- as.integer(f[indxF,2][ord])
-			FeatureStr	<- as.character(f[indxF,3][ord])
-			PROBEStart 	<- as.integer(p[indxPrb,2])
-			PROBEEnd 	<- as.integer(p[indxPrb,3])
-			PROBEStr	<- as.character(p[indxPrb,4])
+			FeatureStart 	<- as.integer(features[indxF,2][ord])
+			FeatureStr	<- as.character(features[indxF,3][ord])
+			PROBEStart 	<- as.integer(reads[indxPrb,2])
+			PROBEEnd 	<- as.integer(reads[indxPrb,3])
+			PROBEStr	<- as.character(reads[indxPrb,4])
 			size		<- as.integer(size)
 			up		<- as.integer(up)
 			down		<- as.integer(down)
@@ -191,7 +208,7 @@ metaGeneMatrix <- function(f, p, size, up, down=NULL, debug=FALSE) {
 ##	Arguments:
 ##	f	-> data.frame of: CHR, START, END, STRAND.
 ##	p	-> data.frame of: CHR, START, END, STRAND.
-##	res	-> The resolution of the MetaGene -- i.e. the number of moving windows to break it into..
+##	n_windows	-> The resolution of the MetaGene -- i.e. the number of moving windows to break it into..
 ##
 ##	Assumptions:
 ##	(1) Gene list should be ordered!  
@@ -202,9 +219,17 @@ metaGeneMatrix <- function(f, p, size, up, down=NULL, debug=FALSE) {
 ##	(2) ...
 ##
 ########################################################################
-metaGene_nL <- function(f, p, res=1000, debug=FALSE) {
+
+#' Returns a histogram of the number of reads in each section of a moving window of variable size across genes.
+#'
+#' @param f data.frame of: CHR, START, END, STRAND. (TODO: Convert this to G-Ranges.)
+#' @param reads data.frame of: CHR, START, END, STRAND. (TODO: Convert this to G-Ranges.)
+#' @param n_windows The number of windows to break genes into.
+#' @return A vector representing the 'typical' signal across genes of different length.
+#' @author Charles G. Danko and Minho Chae
+metaGene_nL <- function(f, reads, n_windows=1000, debug=FALSE) {
 	C <- sort(as.character(unique(f[[1]])))
-	H <- rep(0,res)
+	H <- rep(0,n_windows)
 	for(i in 1:NROW(C)) {
 		if(debug) {
 			print(C[i])
@@ -212,7 +237,7 @@ metaGene_nL <- function(f, p, res=1000, debug=FALSE) {
 
 		# Which KG?  prb?
 		indxF   <- which(as.character(f[[1]]) == C[i])
-		indxPrb <- which(as.character(p[[1]]) == C[i])
+		indxPrb <- which(as.character(reads[[1]]) == C[i])
 
 		if((NROW(indxF) >0) & (NROW(indxPrb) >0)) {
 			# Order -- Make sure, b/c this is one of our main assumptions.  Otherwise violated for DBTSS.
@@ -222,9 +247,9 @@ metaGene_nL <- function(f, p, res=1000, debug=FALSE) {
 			FeatureStart 	<- as.integer(f[indxF,2][ord])
 			FeatureEnd 	<- as.integer(f[indxF,3][ord])
 			FeatureStr	<- as.character(f[indxF,4][ord])
-			PROBEStart 	<- as.integer(p[indxPrb,2])
-			PROBEEnd 	<- as.integer(p[indxPrb,3])
-			PROBEStr	<- as.character(p[indxPrb,4])
+			PROBEStart 	<- as.integer(reads[indxPrb,2])
+			PROBEEnd 	<- as.integer(reads[indxPrb,3])
+			PROBEStr	<- as.character(reads[indxPrb,4])
 
 			# Set dimensions.
 			dim(FeatureStart)	<- c(NROW(FeatureStart), NCOL(FeatureStart))
@@ -234,7 +259,7 @@ metaGene_nL <- function(f, p, res=1000, debug=FALSE) {
 			dim(PROBEStr)		<- c(NROW(PROBEStr), 	 NCOL(PROBEStr))
 
 			for(iFeatures in 1:NROW(FeatureStart)) {
-				ws <- (FeatureEnd[iFeatures]-FeatureStart[iFeatures])/res ## This WILL be an interger.
+				ws <- (FeatureEnd[iFeatures]-FeatureStart[iFeatures])/n_windows ## This WILL be an interger.
 				if(debug) {
 					print(paste(C[i],": Counting reads in specified region:",
 							FeatureStart[iFeatures],"-",FeatureEnd[iFeatures],sep=""))
@@ -284,13 +309,22 @@ metaGene_nL <- function(f, p, res=1000, debug=FALSE) {
 ##	Arguments:
 ##	Peaks		-> data.frame of: CHR, CENTER, STRAND. (note that STRAND is currenly not supported, and does nothing).
 ##	ProbeData	-> data.frame of: CHR, CENTER, VALUE
-##	bins		-> The bins of the meta gene -- i.e. the number of moving windows to break it into..
+##	bins		-> The bins of the meta gene -- i.e. the number of moving windows to break it into.
 ##
 ##	TODO: 
 ##	(1) Implement support for a Peaks$starnd (
 ##	(2) ...
 ##
 ########################################################################
+
+#' Returns the average profile of tiling array probe intensity values or wiggle-like count data centered on a set of genomic positions (specified by 'Peaks').
+#'
+#' @param ProbeData Data.frame representing chromosome, window center, and a value.
+#' @param Peaks Data.frame representing chromosome, and window center.
+#' @param size Numeric.  The size of the moving window. Default: 50 bp.
+#' @param bins The bins of the meta gene -- i.e. the number of moving windows to break it into. Default +/- 1kb from center.
+#' @return A vector representing the 'typical' signal centered on the peaks of interest.
+#' @author Charles G. Danko and Minho Chae
 averagePlot <- function(ProbeData, Peaks, size=50, bins= seq(-1000,1000,size)) {
 
 	## For each chromsome.  
@@ -329,7 +363,8 @@ averagePlot <- function(ProbeData, Peaks, size=50, bins= seq(-1000,1000,size)) {
 #' @param sampling Logical.  If TRUE, subsampling of Metagene is used.  Default: FALSE
 #' @param nSampling Numeric. Number of subsampling.  Default: 1000
 #' @param debug. Logical. If set to TRUE, provides additional print options. Default: FALSE 
-#' @author Charles G. Danko and Minho Chae
+#' @return List of vectors representing the 'typical' signal centered on the genomic features of interest.
+#' @author Minho Chae
 runMetaGene <- function(features, reads, size=100, up=10000, down=NULL, normCounts=1, sampling=FALSE, nSampling=1000, debug=FALSE) {
 	if (sampling) {
 		plus <- samplingMetaGene(features=features, reads=reads, size=size, up=up, down=down, normCounts=normCounts, 
