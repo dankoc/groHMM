@@ -42,6 +42,7 @@
 #' @param track.type.line If set to TRUE, prints a header identifying the file as a wiggle.  Necessary to upload a custom track to the UCSC genome browser.  Default: TRUE
 #' @param debug If set to TRUE, provides additional print options. Default: FALSE
 #' @return Writes a wiggle file to the specified file.
+#' @author Charles G. Danko
 writeWiggle <- function(reads, file, strand="N", size=50, normCounts=1, sep.chrom=FALSE, reverse=FALSE, track.type.line=TRUE, debug=FALSE) { #color="0,0,0", OtherOptions="", 
 
 	## Error checking. ... 

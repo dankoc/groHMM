@@ -93,6 +93,7 @@ approx.ratios.CI <- function(num.counts, denom.counts, alpha=0.05) {
 #'  @param UnMAQ Data structure representing the coordinates of all un-mappable regions in the genome.
 #'  @param debug If set to TRUE, provides additional print options. Default: FALSE
 #'  @return Data.frame of the pausing indices for the input genes.
+#'  @author Charles G. Danko and Minho Chae.
 pausingIndex <- function(f, p, size=50, up=1000, down=1000, UnMAQ=NULL, debug=FALSE) {
 	C <- sort(as.character(unique(f[[1]])))
 	Pause <- rep(0,NROW(f))

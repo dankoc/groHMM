@@ -17,7 +17,7 @@
 #' @param first Integer. First n transcripts to plot after transcripts are ordered by their gene sizes. Default: NA
 #' @param last Integer. Last n transcripts to plot after transcripts are ordered by their gene sizes. Default: NA
 #' @param filename Character.  File name for output. Default: NA
-#' @author Charles G. Danko and Minho Chae
+#' @author Minho Chae
 plotTranscripts <- function(tr, annotations, chrom=NA, strand=NA, scale=TRUE, runGenes="best", brokenAnnotation="best", first=NA, last=NA, filename=NA) {
 	gr <- annotations
 	if (!is.na(chrom)) {
@@ -177,7 +177,7 @@ plotTranscriptsStrand <- function(tr, gr, strand, scale, runGenes="best", broken
 #' @param tr GRanges of transcripts predicted by HMM. 
 #' @param annotations GRanges of non-overlapping annotatoins.
 #' @return  List of evaluation information; runGeneError, brokenError, overlapQuality.
-#' @author Charles G. Danko and Minho Chae
+#' @author Minho Chae
 evaluateHMM <- function(tr, annotations) {
 	gr <- annotations
 	ol <- findOverlaps(tr, gr)
@@ -345,10 +345,9 @@ plotTHistogramStrand <- function(tr, gr, strand, scale, runGenes="best", brokenA
 #' @param strand Character.  "+" or "-";  NA for all chromosomes.  Default: NA
 #' @param scale Logical.  If TRUE, plot is scaled to relative to gene size of 30000 bp. Default: TRUE
 #' @param runGenes Character.  One of "best", "all", or "none" for the transcripts running over multiple gene annotations. Default: "best"
-
 #' @param brokenAnnotation Character.  One of "best", "all", or "none" for the transcripts breaking one annotation. Default: "best"
 #' @param filename Character.  File name for output. Default: NA
-#' @author Charles G. Danko and Minho Chae
+#' @author Minho Chae
 plotTHistogram <- function(tr, gr, chrom=NA, strand=NA, scale=TRUE, runGenes="best", brokenAnnotation="best", filename=NA) {
 	if (!is.na(chrom)) {
 		tr <- tr[as.character(seqnames(tr)) == chrom,]

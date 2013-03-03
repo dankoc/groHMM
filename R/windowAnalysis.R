@@ -58,6 +58,7 @@
 #' @param limitPCRDups Counts only one read mapping to each start site.  NOTE: If set to TRUE, assumes that all reads are the same length (don't use for paired-end data).  Default: FALSE.  
 #' @param debug If set to TRUE, provides additional print options. Default: FALSE
 #' @return List object, each element of which represents a chromosome.
+#' @author Charles G. Danko and Minho Chae
 windowAnalysis <- function(reads, strand="N", window_size=(step_size-1), step_size=(window_size+1), chrom=NULL, start=0, end=NULL, limitPCRDups=FALSE, debug=FALSE) { 
 	p <- data.frame(chrom=as.factor(as.character((seqnames(reads)))), start=as.integer(start(reads)),
                           end=as.integer(end(reads)), strand=as.factor(as.character(strand(reads))))

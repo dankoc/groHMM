@@ -27,7 +27,7 @@
 #' @param annotations GRanges of annotations to be collapsed. 
 #' @param keytype Character.  Keytype to collapse isoforms.  Default: "gene_id"
 #' @return GenomicRanges object of reads. 
-#' @author Charles G. Danko and Minho Chae
+#' @author Minho Chae
 makeConsensusAnnotations <- function(annotations, keytype="gene_id") {
 	# First reduce by keytype, collapsing isoforms
 	annoByKeytype <- reduceAnnotationByKeytype(annotations, keytype=keytype)

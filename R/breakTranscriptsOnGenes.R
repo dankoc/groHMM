@@ -60,7 +60,7 @@ breakInterval <- function(gr, brPos, gap=5, strand="+") {
 #' @param threshold Numeric. Threshold for calling the gene part of the transcript.  Default: 0.8
 #' @param gap Numeric.  Gap (bp) between broken transcripts.  Default: 5
 #' @param debug Logical.  If set to TRUE, show easch step in a plot. Default: FALSE
-#' @author Charles G. Danko and Minho Chae
+#' @author Minho Chae and Charles G. Danko
 breakTranscriptsOnGenes <- function(tr, annotations, strand="+", geneSize=5000, threshold=0.8, gap=5, debug=FALSE) {
 	gr <- annotations
 	tr <- tr[as.character(strand(tr)) == strand,]
@@ -137,7 +137,7 @@ breakTranscriptsOnGenes <- function(tr, annotations, strand="+", geneSize=5000, 
 #' @param geneSize Numeric. Minimum gene size in annotations to be used as reference. Default: 1000
 #' @param threshold Numeric. Threshold for calling the gene part of the transcript.  Default: 0.8
 #' @param debug Logical.  If set to TRUE, show easch step in a plot. Default: FALSE
-#' @author Charles G. Danko and Minho Chae
+#' @author Minho Chae and Charles G. Danko
 combineTranscripts <- function(tr, annotations, geneSize=1000, threshold=0.8, debug=FALSE) {
 	gr <- annotations
 	print(paste("Initial transcripts:", length(tr)))

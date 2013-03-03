@@ -19,6 +19,11 @@
 ##
 ##########################################################################
 
+##
+##  TODO: Re-factor to one function, allowing the model version to be specified as an argument (Charles).
+##
+##
+##
 
 ########################################################################
 ##
@@ -70,6 +75,8 @@
 #'	to be a constant, set based on a representative intergenic region.  This is accomidated in my
 #'	[1,*) framework by keeping the vairence constant, and scaling the mean for each gene.
 #'
+#'  polymeraseWave_gamma assumes gamma distributed emissions for states two and three, and a normal distribution for state 1.
+#'
 #'	Arguments:
 #'	@param pgr1 Mapped reads in time point 1.
 #'  @param pgr2 Mapped reads in time point 2.
@@ -84,7 +91,8 @@
 #'	@param debug If TRUE, prints error messages.
 #'  @param returnVal Takes value "simple" (default) or "alldata". "simple" returns a data.frame with Pol II wave end positions.  "alldata" returns all of the availiable data from each gene, including the full posterior distribution of the model after EM.
 #'  @return Either a data.frame with Pol II wave end positions, or a List() structure with additional data, as specified by returnVal.
-polymeraseWave <- function(reads1, reads2, genes, size=50, approxDist, upstreamDist= 10000, TSmooth=NA, 
+#'  @author Charles G. Danko and Minho Chae
+polymeraseWave_gamma <- function(reads1, reads2, genes, size=50, approxDist, upstreamDist= 10000, TSmooth=NA, 
 							prefix=NULL, MinKLDiv= 1, finterWindowSize=10000, debug=TRUE, returnVal="simple") {
 	if(debug) {
 		print("Analyzing windows")
@@ -384,19 +392,47 @@ polymeraseWave <- function(reads1, reads2, genes, size=50, approxDist, upstreamD
 	}
 }
 
-polymeraseWaveTryNorm <- function(pgr1, pgr2, genes, size=50, approxDist, upstreamDist= 10000, TSmooth=NA, NonMap=NULL, 
+#'	Given GRO-seq data, identifies the location of the polymerase wave in up- or down-
+#'	regulated genes.  This version is based on a full Baum-Welch EM implementation.
+#'
+#'	This is a three state HMM -- initial state representing the intergenic region 5' of a gene, 
+#'	the second representing the initially upregulated region, and the third representing the 
+#'	remaining sequence of a gene. 
+#'
+#'	We assume that upstream region is intergenic, and thus its emmission distriubtion is assumed  
+#'	to be a constant, set based on a representative intergenic region.  This is accomidated in my
+#'	[1,*) framework by keeping the vairence constant, and scaling the mean for each gene.
+#'
+#'  polymeraseWave_norm assumes normally distributed emissions for all three states.
+#'
+#'	Arguments:
+#'	@param reads1 Mapped reads in time point 1.
+#'  @param reads2 Mapped reads in time point 2.
+#'	@param genes A set of genes in which to search for the wave.
+#'	@param size	The size of the moving window. Default: 50.
+#'	@param approxDist 
+#'	@param upstreamDist 
+#'	@param TSmooth 
+#'	@param prefix
+#'  @param MinKLDiv 
+#'  @param filterWindowSize 
+#'	@param debug If TRUE, prints error messages.
+#'  @param returnVal Takes value "simple" (default) or "alldata". "simple" returns a data.frame with Pol II wave end positions.  "alldata" returns all of the availiable data from each gene, including the full posterior distribution of the model after EM.
+#'  @return Either a data.frame with Pol II wave end positions, or a List() structure with additional data, as specified by returnVal.
+#'  @author Charles G. Danko and Minho Chae.
+polymeraseWave_norm <- function(reads1, reads2, genes, size=50, approxDist, upstreamDist= 10000, TSmooth=NA, NonMap=NULL, 
 							prefix=NULL, MinKLDiv= 1, emissionDistAssumption= "norm", finterWindowSize=10000, limitPCRDups=FALSE, returnVal="simple", debug=TRUE) {
 	if(debug) {
 		print("Analyzing windows")
 	}	
 
-	Fp1 <- windowAnalysis(pgr=pgr1, strand="+", ssize=size, limitPCRDups=limitPCRDups, debug=FALSE)
-	Fp2 <- windowAnalysis(pgr=pgr2, strand="+", ssize=size, limitPCRDups=limitPCRDups, debug=FALSE)
-	Fm1 <- windowAnalysis(pgr=pgr1, strand="-", ssize=size, limitPCRDups=limitPCRDups, debug=FALSE)
-	Fm2 <- windowAnalysis(pgr=pgr2, strand="-", ssize=size, limitPCRDups=limitPCRDups, debug=FALSE)
-	sizeP1 <- NROW(pgr1)
-	sizeP2 <- NROW(pgr2)
-	expCounts <- mean(NROW(pgr1),NROW(pgr2))
+	Fp1 <- windowAnalysis(pgr=reads1, strand="+", ssize=size, limitPCRDups=limitPCRDups, debug=FALSE)
+	Fp2 <- windowAnalysis(pgr=reads2, strand="+", ssize=size, limitPCRDups=limitPCRDups, debug=FALSE)
+	Fm1 <- windowAnalysis(pgr=reads1, strand="-", ssize=size, limitPCRDups=limitPCRDups, debug=FALSE)
+	Fm2 <- windowAnalysis(pgr=reads2, strand="-", ssize=size, limitPCRDups=limitPCRDups, debug=FALSE)
+	sizeP1 <- NROW(reads1)
+	sizeP2 <- NROW(reads2)
+	expCounts <- mean(NROW(reads1),NROW(reads2))
 
 	ANS <- rep(-1, NROW(genes))
 	ENDwave <- rep(-1,NROW(genes))

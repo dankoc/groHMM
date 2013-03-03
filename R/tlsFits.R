@@ -28,6 +28,7 @@
 #' @param theta Amount to rotate, sets the ratio of variences that are assumed by the hack.  Default: -pi/4 radians (45 degrees) for orthogonal regression.
 #' @param span The LOESS span parameter.  Default: 1
 #' @return List of input values and LOESS predictions.
+#' @author Charles G. Danko
 tlsLoess <- function(x, y, theta= -pi/4, span= 1) {
  mx <- mean(x)
  my <- mean(y)
@@ -64,6 +65,7 @@ tlsLoess <- function(x, y, theta= -pi/4, span= 1) {
 #' @param x X values.
 #' @param y Y values.
 #' @return Parameters for the linear model Y~a*X+e.
+#' @author Charles G. Danko
  tlsSvd <- function(x,y) {
  n <- NCOL(x)
  Cmat <- as.matrix(data.frame(x, y))
@@ -88,6 +90,7 @@ tlsLoess <- function(x, y, theta= -pi/4, span= 1) {
 #' @param y Y values.
 #' @param d Ratio of variences. Default: 1, for orthogonal regression.
 #' @return Parameters for the linear model.
+#' @author Charles G. Danko
 tlsDeming <- function(x,y,d=1) {
  sxx <- 1/(NROW(x)-1) * sum((x-mean(x))^2)
  sxy <- 1/(NROW(x)-1) * sum((x-mean(x))*(y-mean(y)))

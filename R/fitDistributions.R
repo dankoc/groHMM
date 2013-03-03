@@ -36,24 +36,32 @@
 ##		-- Negative binomial (??)
 ##
 ########################################################################
-RgammaMLE <- function(X) {
 
+#' RgammaMLE fits a gamma distribution to a specified data vector using maximum likelihood.
+#'
+#' @param X A vector of observations, assumed to be real numbers in the inveraval [0,+Inf).  
+#' @return List of parameters for the best-fit gamma distribution (shape and scale).
+#' @author Charles G. Danko
+RgammaMLE <- function(X) {
+    if(sum(X<0) > 0) error("Negative values not allowed!")
 	N <- as.real(NROW(X))
 	sumxis <- as.real(sum(X))
 	sumlogxis <- as.real(sum(log(X)))
 	Fit <- .Call("RgammaMLE", N, sumxis, sumlogxis, PACKAGE = "groHMM")
 	return(Fit)
-
 }
 
+#' Rnorm fits a normal distribution to a specified data vector using maximum likelihood.
+#'
+#' @param X A vector of observations, assumed to be real numbers in the inveraval (-Inf,+Inf).  
+#' @return List of parameters for the best-fit normal distribution (mean and varience).
+#' @author Charles G. Danko
 Rnorm <- function(X) {
-
 	returnList      <- list()
 	returnList$mean <- mean(X)
 	returnList$var  <- var(X)
 
 	return(returnList)
-
 }
 
 ################################
@@ -61,6 +69,20 @@ Rnorm <- function(X) {
 ##  R interface to MLEFit for alpha*Normal+(1-alpha)*Exponential hybrid distribution.
 ##
 ################################
+
+#' Rnorm.exp fits a normal+exponential distribution to a specified data vector using maximum likelihood.
+#'
+#' Distrubtion function devined by: alpha*Normal(mean, varience)+(1-alpha)*Exponential(lambda).
+#'
+#' Fits nicely with data types that look normal overall, but have a long tail starting for positive values.
+#'
+#' @param xi A vector of observations, assumed to be real numbers in the inveraval (-Inf,+Inf).  
+#' @param wi A vector of weights.  Default: vector of repeating 1; indicating all observations are weighted equally. (Are these normalized internally?!  Or do they have to be [0,1]?)
+#' @param guess Initial guess for paremeters.  Default: c(0.5, 0, 1, 1).
+#' @param tol Convergence tolerance.  Default: sqrt(.Machine$double.eps).
+#' @param maxit.  Maximum number of iterations.  Default: 10,000.
+#' @return List of parameters for the best-fit normal distribution (alpha, mean, varience, and lambda).
+#' @author Charles G. Danko
 Rnorm.exp <- function(xi, wi=rep(1,NROW(xi)), guess=c(0.5, 0, 1, 1), tol=sqrt(.Machine$double.eps), maxit=10000) {
   	Fit <- .Call("RNormExpMLE", xi, wi, guess, tol, as.integer(maxit), PACKAGE = "groHMM")
 }
@@ -70,7 +92,6 @@ Rnorm.exp <- function(xi, wi=rep(1,NROW(xi)), guess=c(0.5, 0, 1, 1), tol=sqrt(.M
 ## weighted.var -- Computes the weighted varience, where the varience is weighted by some factor...
 ##
 ###############################
-
 weighted.var <- function(x, w, na.rm = FALSE) {
     if (na.rm) {
         w <- w[i <- !is.na(x)]
