@@ -80,7 +80,7 @@ detectTranscripts <- function(reads=NULL, Fp=NULL, Fm=NULL, LtProbA=-5, LtProbB=
 	## Set up initial HMM variables.
 	HMM <- list()
 	HMM$nstates <- as.integer(2)
-	HMM$ePrDist <- c("gamma", "gamma") ## CGD: 3-3-13: Switched to integrating gamma between read and read+1
+	HMM$ePrDist <- c("dgamma", "dgamma") ## CGD: 3-3-13: Still legacy. Switch to integrating gamma between read and read+1
 
 	HMM$iProb <- as.real(log(c(1.0,0.0)))
 									## Non-transcribed,  transcribed.
@@ -90,8 +90,8 @@ detectTranscripts <- function(reads=NULL, Fp=NULL, Fm=NULL, LtProbA=-5, LtProbB=
 	## Cast counts to a real, and combine +/- strand into one list variable.  
 	##  Treat like separate training sequences (they really are).
 	F <- list()
-	for(i in 1:nFp) F[[i]]     <- as.real(Fp[[i]]+0.5) ## CGD: 3-3-13: Switched to integrating gamma between read and read+1
-	for(i in 1:nFm) F[[i+nFp]] <- as.real(Fm[[i]]+0.5) ## CGD: 3-3-13: Switched to integrating gamma between read and read+1
+	for(i in 1:nFp) F[[i]]     <- as.real(Fp[[i]]+1) ## CGD: 3-3-13: Still legacy.  Switch to integrating gamma between read and read+1
+	for(i in 1:nFm) F[[i+nFp]] <- as.real(Fm[[i]]+1) ## CGD: 3-3-13: Still legacy.  Switch to integrating gamma between read and read+1
 
 	## In case the above command copies, rather than points ... free unused memory.
 	remove(Fp)
