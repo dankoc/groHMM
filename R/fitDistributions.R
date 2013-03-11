@@ -43,7 +43,7 @@
 #' @return List of parameters for the best-fit gamma distribution (shape and scale).
 #' @author Charles G. Danko
 RgammaMLE <- function(X) {
-    if(sum(X<0) > 0) error("Negative values not allowed!")
+    if(sum(X<0) > 0) message("Negative values not allowed!")
 	N <- as.real(NROW(X))
 	sumxis <- as.real(sum(X))
 	sumlogxis <- as.real(sum(log(X)))

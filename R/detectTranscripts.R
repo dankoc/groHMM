@@ -1,7 +1,6 @@
 ###########################################################################
 ##
-##   Copyright 2009, 2010, 2011 Charles Danko.
-##
+##   Copyright 2009, 2010, 2011 Charles Danko.##
 ##   This program is part of the GRO-seq R package
 ##
 ##   GRO-seq is free software: you can redistribute it and/or modify it 
@@ -65,8 +64,8 @@ detectTranscripts <- function(reads=NULL, Fp=NULL, Fm=NULL, LtProbA=-5, LtProbB=
 	epsilon <- 0.001
 	
 	if(is.null(Fp) & is.null(Fm)) { ## Allow equilavent form of Fp and Fm to be spcified in the function automatically.
-	 Fp <- windowAnalysis(reads=reads, strand="+", ssize=size, debug=FALSE)
-	 Fm <- windowAnalysis(reads=reads, strand="-", ssize=size, debug=FALSE)
+	 Fp <- windowAnalysis(reads=reads, strand="+", step_size=size, debug=FALSE)
+	 Fm <- windowAnalysis(reads=reads, strand="-", step_size=size, debug=FALSE)
 	}
 	
 	nFp <- NROW(Fp)

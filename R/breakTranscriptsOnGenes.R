@@ -53,7 +53,7 @@ breakInterval <- function(gr, brPos, gap=5, strand="+") {
 #'
 #' Breaks transcripts when they are fully overlap multiple well annotated genes.
 #'
-#' @param tr GRanges of transcripts.
+#' @param tx GRanges of transcripts.
 #' @param annotations GRanges of non-overlapping annotations for reference.
 #' @param strand Takes "+" or "-" Default: "+"
 #' @param geneSize Numeric. Minimum gene size in gr to be used as reference. Default: 5000
@@ -61,7 +61,8 @@ breakInterval <- function(gr, brPos, gap=5, strand="+") {
 #' @param gap Numeric.  Gap (bp) between broken transcripts.  Default: 5
 #' @param debug Logical.  If set to TRUE, show easch step in a plot. Default: FALSE
 #' @author Minho Chae and Charles G. Danko
-breakTranscriptsOnGenes <- function(tr, annotations, strand="+", geneSize=5000, threshold=0.8, gap=5, debug=FALSE) {
+breakTranscriptsOnGenes <- function(tx, annotations, strand="+", geneSize=5000, threshold=0.8, gap=5, debug=FALSE) {
+	tr <- tx
 	gr <- annotations
 	tr <- tr[as.character(strand(tr)) == strand,]
 	gr <- gr[as.character(strand(gr)) == strand,]
@@ -132,13 +133,14 @@ breakTranscriptsOnGenes <- function(tr, annotations, strand="+", geneSize=5000, 
 #' Combines transcripts  that are within the same gene annotation, combining smaller transcripts for genes
 #'  with low regulation into a single transcript representing the gene.
 #'
-#' @param tr GRanges of transcripts.
+#' @param tx GRanges of transcripts.
 #' @param annotations GRanges of non-overlapping annotations for reference.
 #' @param geneSize Numeric. Minimum gene size in annotations to be used as reference. Default: 1000
 #' @param threshold Numeric. Threshold for calling the gene part of the transcript.  Default: 0.8
 #' @param debug Logical.  If set to TRUE, show easch step in a plot. Default: FALSE
 #' @author Minho Chae and Charles G. Danko
-combineTranscripts <- function(tr, annotations, geneSize=1000, threshold=0.8, debug=FALSE) {
+combineTranscripts <- function(tx, annotations, geneSize=1000, threshold=0.8, debug=FALSE) {
+	tr <- tx
 	gr <- annotations
 	print(paste("Initial transcripts:", length(tr)))
 	gr <- gr[width(gr) > geneSize,]

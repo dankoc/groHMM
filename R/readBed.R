@@ -11,11 +11,11 @@
 readBed <- function(file, ...) {
     df <- read.table(file, ...)
 	if(NCOL(df) == 3) {
-		col.names(df) <- c("seqnames", "start", "end")
+		colnames(df) <- c("seqnames", "start", "end")
 		df <- cbind(df, strand=Rle("*", NROW(df)))
 	}
-	if(NCOL(df) == 4) col.names(df) <- c("seqnames", "start", "end", "strand")
-	if(NCOL(df) == 6) col.names(df) <- c("seqnames", "start", "end", "name", "score", "strand")
+	if(NCOL(df) == 4) colnames(df) <- c("seqnames", "start", "end", "strand")
+	if(NCOL(df) == 6) colnames(df) <- c("seqnames", "start", "end", "name", "score", "strand")
 	return( GRanges(seqnames = Rle(df$seqnames), ranges = IRanges(df$start, df$end),
             strand = Rle(strand(df$strand))))
 }

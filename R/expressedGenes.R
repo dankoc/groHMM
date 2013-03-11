@@ -36,7 +36,7 @@
 
 #' Function identifies expressed features using the methods introduced in Core, Waterfall, Lis; Science, Dec. 2008.
 #'
-#' @param features A GRanges object representing a set of genomic coordinates.  The meta-plot will be centered on the start position.
+#' @param features A GRanges object representing a set of genomic coordinates.  The meta-plot will be centered on the start position.  There can be optional "ID" column for gene ids.
 #' @param reads A GRanges object representing a set of mapped reads.
 #' @param genomeSize The size of the target genome.  Default: 3e9, or roughly the size of the human genome.
 #' @param Lambda Measurement of assay noise.  Default: # reads/ genome size (tends to be too high for GRO-seq data).
@@ -45,7 +45,11 @@
 #' @return A data.frame representing the expression p.values for features of interest.
 #' @author Charles G. Danko and Minho Chae
 expressedGenes <- function(features, reads, genomeSize=3e9, Lambda= NULL, UnMap=NULL, debug=FALSE) {
-	C <- sort(as.character(unique(features[[1]])))
+	# Order -- Make sure, b/c this is one of our main assumptions.  Otherwise violated for DBTSS.
+	features <- sort(features)
+	reads <- sort(reads)
+
+	C <- sort(unique(as.character(seqnames(features))))
 	ANSgeneid <- rep("char", NROW(features))
 	ANSpvalue <- rep(0,NROW(features))
 	ANScounts <- rep(0,NROW(features))
@@ -58,21 +62,17 @@ expressedGenes <- function(features, reads, genomeSize=3e9, Lambda= NULL, UnMap=
 		}
 	
 		# Which KG?  prb?
-		indxF   <- which(as.character(features[[1]]) == C[i])
-		indxPrb <- which(as.character(reads[[1]]) == C[i])
+		indxF   <- which(as.character(seqnames(features)) == C[i])
+		indxPrb <- which(as.character(seqnames(reads)) == C[i])
 
 		if((NROW(indxF) >0) & (NROW(indxPrb) >0)) {
-			# Order -- Make sure, b/c this is one of our main assumptions.  Otherwise violated for DBTSS.
-			Ford <- order(features[indxF,2])
-			Pord <- order(reads[indxPrb,2])
-
 			# Type coersions.
-			FeatureStart 	<- as.integer(features[indxF,2][Ford])
-			FeatureEnd 	<- as.integer(features[indxF,3][Ford])
-			FeatureStr	<- as.character(features[indxF,4][Ford])
-			PROBEStart 	<- as.integer(reads[indxPrb,2][Pord])
-			PROBEEnd 	<- as.integer(reads[indxPrb,3][Pord])
-			PROBEStr	<- as.character(reads[indxPrb,4][Pord])
+			FeatureStart 	<- start(features[indxF,])
+			FeatureEnd 	<- end(features[indxF,])
+			FeatureStr	<- as.character(strand(features[indxF,]))
+			PROBEStart 	<- start(reads[indxPrb,])
+			PROBEEnd 	<- end(reads[indxPrb,])
+			PROBEStr	<- as.character(strand(reads[indxPrb,]))
 
 			# Set dimensions.
 			dim(FeatureStart)	<- c(NROW(FeatureStart), NCOL(FeatureStart))
@@ -125,11 +125,15 @@ expressedGenes <- function(features, reads, genomeSize=3e9, Lambda= NULL, UnMap=
 			MappablePositions <- (FeatureEnd - FeatureStart) - nonmappable + 1
 
 			## Calculate poisson prob. of each.
-			ANSgeneid[indxF][Ford] <- as.character(features[indxF, 5][Ford])
-			ANSpvalue[indxF][Ford] <- ppois(NUMReads, (Lambda*MappablePositions), lower.tail=FALSE)
-			ANScounts[indxF][Ford] <- NUMReads
-			ANSunmapp[indxF][Ford] <- nonmappable
-			ANSgsize[indxF][Ford]  <- (FeatureEnd-FeatureStart)
+			if ("ID" %in% colnames(mcols(features))) {  # there is "ID" column
+				ANSgeneid[indxF] <- elementMetadata(features[indxF,])$ID
+			} else {
+				ANSgeneid[indxF] <- rep(NA, NROW(indxF)) 
+			}
+			ANSpvalue[indxF] <- ppois(NUMReads, (Lambda*MappablePositions), lower.tail=FALSE)
+			ANScounts[indxF] <- NUMReads
+			ANSunmapp[indxF] <- nonmappable
+			ANSgsize[indxF]  <- (FeatureEnd-FeatureStart)
 		}
 	}
 

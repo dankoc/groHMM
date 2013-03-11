@@ -6,7 +6,7 @@
 #'
 #' Plots transcripts with their associated genes. 
 #'
-#' @param tr GRanges of transcripts. 
+#' @param tx GRanges of transcripts. 
 #' @param annotations GRanges of non-overlapping annotatoins.
 #' @param chrom Character.  Target transcript chromosome; NA for all chromosomes.  Default: NA
 #' @param strand Character.  "+" or "-";  NA for all chromosomes.  Default: NA
@@ -18,7 +18,8 @@
 #' @param last Integer. Last n transcripts to plot after transcripts are ordered by their gene sizes. Default: NA
 #' @param filename Character.  File name for output. Default: NA
 #' @author Minho Chae
-plotTranscripts <- function(tr, annotations, chrom=NA, strand=NA, scale=TRUE, runGenes="best", brokenAnnotation="best", first=NA, last=NA, filename=NA) {
+plotTranscripts <- function(tx, annotations, chrom=NA, strand=NA, scale=TRUE, runGenes="best", brokenAnnotation="best", first=NA, last=NA, filename=NA) {
+	tr <- tx
 	gr <- annotations
 	if (!is.na(chrom)) {
 		tr <- tr[as.character(seqnames(tr)) == chrom,]
@@ -339,7 +340,7 @@ plotTHistogramStrand <- function(tr, gr, strand, scale, runGenes="best", brokenA
 #'
 #'Plots transcripts stacked together for their associated genes.  Gene size can be absolute or scaled to 30000 bp.
 #'
-#' @param tr GRanges of transcripts. 
+#' @param tx GRanges of transcripts. 
 #' @param annotations GRanges of non-overlapping annotatoins.
 #' @param chrom Character.  Target transcript chromosome; NA for all chromosomes. Default: NA
 #' @param strand Character.  "+" or "-";  NA for all chromosomes.  Default: NA
@@ -348,7 +349,9 @@ plotTHistogramStrand <- function(tr, gr, strand, scale, runGenes="best", brokenA
 #' @param brokenAnnotation Character.  One of "best", "all", or "none" for the transcripts breaking one annotation. Default: "best"
 #' @param filename Character.  File name for output. Default: NA
 #' @author Minho Chae
-plotTHistogram <- function(tr, gr, chrom=NA, strand=NA, scale=TRUE, runGenes="best", brokenAnnotation="best", filename=NA) {
+plotTHistogram <- function(tx, annotations, chrom=NA, strand=NA, scale=TRUE, runGenes="best", brokenAnnotation="best", filename=NA) {
+	tr <- tx
+	gr <- annotations
 	if (!is.na(chrom)) {
 		tr <- tr[as.character(seqnames(tr)) == chrom,]
 		gr <- gr[as.character(seqnames(gr)) == chrom,]

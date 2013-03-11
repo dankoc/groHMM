@@ -59,14 +59,15 @@
 #' @return A vector representing the 'typical' signal centered on a point of interest.
 #' @author Charles G. Danko and Minho Chae
 metaGene <- function(features, reads, size, up=1000, down=up, debug=FALSE) {
-    	f <- data.frame(as.character(seqnames(features)), start(features), as.character(strand(features)))
-    	p <- data.frame(as.character(seqnames(reads)), start(reads), end(reads), as.character(strand(reads)))
+	# Order -- Make sure, b/c this is one of our main assumptions.  Otherwise violated for DBTSS.
+	# GRanges sort by natural order; order by (a) sequence level, (b)strand, (c)start, (d)width.
+	features <- sort(features)
 
 	if(is.null(down)) {
 		down <- up
 	}
 
-	C <- sort(as.character(unique(f[[1]])))
+	C <- sort(unique(as.character(seqnames(features))))
 	H <- rep(0,(up + down + 1))
 	for(i in 1:NROW(C)) {
 		if(debug) {
@@ -74,21 +75,18 @@ metaGene <- function(features, reads, size, up=1000, down=up, debug=FALSE) {
 		}
 
 		# Which KG?  prb?
-		indxF   <- which(as.character(f[[1]]) == C[i])
-		indxPrb <- which(as.character(p[[1]]) == C[i])
+		indxF   <- which(as.character(seqnames(features)) == C[i])
+		indxPrb <- which(as.character(seqnames(reads)) == C[i])
 
 		if((NROW(indxF) >0) & (NROW(indxPrb) >0)) {
-			# Order -- Make sure, b/c this is one of our main assumptions.  Otherwise violated for DBTSS.
-			ord <- order(f[indxF,2])
-
 			# Type coersions.
-			FeatureStart 	<- as.integer(f[indxF,2][ord])
-			FeatureStr	<- as.character(f[indxF,3][ord])
-			PROBEStart 	<- as.integer(p[indxPrb,2])
-			PROBEEnd 	<- as.integer(p[indxPrb,3])
-			PROBEStr	<- as.character(p[indxPrb,4])
+			FeatureStart 	<- start(features[indxF,])
+			FeatureStr	<- as.character(strand(features[indxF,]))
+			PROBEStart 	<- start(reads[indxPrb,])
+			PROBEEnd 	<- end(reads[indxPrb,])
+			PROBEStr	<- as.character(strand(reads[indxPrb,]))
 			size		<- as.integer(size)
-			up		<- as.integer(up)
+			up			<- as.integer(up)
 			down		<- as.integer(down)
 
 			# Set dimensions.
@@ -137,16 +135,18 @@ metaGene <- function(features, reads, size, up=1000, down=up, debug=FALSE) {
 
 #' Returns a matrix, with rows representing read counts across a specified gene, or other features of interest.
 #'
-#' @param features data.frame of: CHR, START, END, STRAND. (TODO: Convert this to G-Ranges.)
-#' @param reads data.frame of: CHR, START, END, STRAND. (TODO: Convert this to G-Ranges.)
+#' @param features A GRanges object representing a set of genomic coordinates. 
+#' @param reads A GRanges object representing a set of mapped reads. 
 #' @param size The size of the moving window.
 #' @param up Distance upstream of each f to align and histogram Default: 1 kb.
 #' @param down Distance downstream of each f to align and histogram Default: same as up.
 #' @return A vector representing the 'typical' signal across genes of different length.
 #' @author Charles G. Danko and Minho Chae
 metaGeneMatrix <- function(features, reads, size= 50, up=1000, down=up, debug=FALSE) {
+	# Order -- Make sure, b/c this is one of our main assumptions.  Otherwise violated for DBTSS.
+	features <- sort(features)
 
-	C <- sort(as.character(unique(features[[1]])))
+	C <- sort(unique(as.character(seqnames(features))))
 	H <- NULL
 	for(i in 1:NROW(C)) {
 		if(debug) {
@@ -154,21 +154,18 @@ metaGeneMatrix <- function(features, reads, size= 50, up=1000, down=up, debug=FA
 		}
 
 		# Which KG?  prb?
-		indxF   <- which(as.character(features[[1]]) == C[i])
-		indxPrb <- which(as.character(reads[[1]]) == C[i])
+		indxF   <- which(as.character(seqnames(features)) == C[i])
+		indxPrb <- which(as.character(seqnames(reads)) == C[i])
 
 		if((NROW(indxF) >0) & (NROW(indxPrb) >0)) {
-			# Order -- Make sure, b/c this is one of our main assumptions.  Otherwise violated for DBTSS.
-			ord <- order(features[indxF,2])
-
 			# Type coersions.
-			FeatureStart 	<- as.integer(features[indxF,2][ord])
-			FeatureStr	<- as.character(features[indxF,3][ord])
-			PROBEStart 	<- as.integer(reads[indxPrb,2])
-			PROBEEnd 	<- as.integer(reads[indxPrb,3])
-			PROBEStr	<- as.character(reads[indxPrb,4])
+			FeatureStart 	<- start(features[indxF,])
+			FeatureStr	<- as.character(strand(features[indxF,]))
+			PROBEStart 	<- start(reads[indxPrb,])
+			PROBEEnd 	<- end(reads[indxPrb,])
+			PROBEStr	<- as.character(strand(reads[indxPrb,]))
 			size		<- as.integer(size)
-			up		<- as.integer(up)
+			up			<- as.integer(up)
 			down		<- as.integer(down)
 
 			# Set dimensions.
@@ -184,7 +181,6 @@ metaGeneMatrix <- function(features, reads, size= 50, up=1000, down=up, debug=FA
 			Hprime <- .Call("MatrixOfReadsByFeature", FeatureStart, FeatureStr, 
 							PROBEStart, PROBEEnd, PROBEStr, 
 							size, up, down, PACKAGE = "groHMM")
-
 			H <- rbind(H, Hprime)
 		}
 		if(debug) {
@@ -222,13 +218,15 @@ metaGeneMatrix <- function(features, reads, size= 50, up=1000, down=up, debug=FA
 
 #' Returns a histogram of the number of reads in each section of a moving window of variable size across genes.
 #'
-#' @param f data.frame of: CHR, START, END, STRAND. (TODO: Convert this to G-Ranges.)
-#' @param reads data.frame of: CHR, START, END, STRAND. (TODO: Convert this to G-Ranges.)
+#' @param features A GRanges object representing a set of genomic coordinates. 
+#' @param reads A GRanges object representing a set of mapped reads. 
 #' @param n_windows The number of windows to break genes into.
 #' @return A vector representing the 'typical' signal across genes of different length.
 #' @author Charles G. Danko and Minho Chae
-metaGene_nL <- function(f, reads, n_windows=1000, debug=FALSE) {
-	C <- sort(as.character(unique(f[[1]])))
+metaGene_nL <- function(features, reads, n_windows=1000, debug=FALSE) {
+	# Order -- Make sure, b/c this is one of our main assumptions.  Otherwise violated for DBTSS.
+	features <- sort(features)
+	C <- sort(unique(as.character(seqnames(features))))
 	H <- rep(0,n_windows)
 	for(i in 1:NROW(C)) {
 		if(debug) {
@@ -236,20 +234,17 @@ metaGene_nL <- function(f, reads, n_windows=1000, debug=FALSE) {
 		}
 
 		# Which KG?  prb?
-		indxF   <- which(as.character(f[[1]]) == C[i])
-		indxPrb <- which(as.character(reads[[1]]) == C[i])
+		indxF   <- which(as.character(seqnames(features)) == C[i])
+		indxPrb <- which(as.character(seqnames(reads)) == C[i])
 
 		if((NROW(indxF) >0) & (NROW(indxPrb) >0)) {
-			# Order -- Make sure, b/c this is one of our main assumptions.  Otherwise violated for DBTSS.
-			ord <- order(f[indxF,2])
-
 			# Type coersions.
-			FeatureStart 	<- as.integer(f[indxF,2][ord])
-			FeatureEnd 	<- as.integer(f[indxF,3][ord])
-			FeatureStr	<- as.character(f[indxF,4][ord])
-			PROBEStart 	<- as.integer(reads[indxPrb,2])
-			PROBEEnd 	<- as.integer(reads[indxPrb,3])
-			PROBEStr	<- as.character(reads[indxPrb,4])
+			FeatureStart 	<- start(features[indxF,])
+			FeatureEnd 	<- end(features[indxF,])
+			FeatureStr	<- as.character(strand(features[indxF,]))
+			PROBEStart 	<- start(reads[indxPrb,])
+			PROBEEnd 	<- end(reads[indxPrb,])
+			PROBEStr	<- as.character(strand(reads[indxPrb,]))
 
 			# Set dimensions.
 			dim(FeatureStart)	<- c(NROW(FeatureStart), NCOL(FeatureStart))

@@ -45,36 +45,36 @@
 #' @author Charles G. Danko and Minho Chae
 associateWithInterval <- function(features, reads) {
         f <- data.frame(chrom=as.character(seqnames(features)), start=as.integer(start(features)),
-                                        end=as.integer(end(features)), strand=as.character(strand(features)))
+                                end=as.integer(end(features)), strand=as.character(strand(features)))
         p <- data.frame(chrom=as.character(seqnames(reads)), start=as.integer(start(reads)),
                                 end=as.integer(end(reads)), strand=as.character(strand(reads))) 
 
-    C <- as.character(unique(p[[1]]))
-    F <- rep(NA, NROW(p))
-    for(i in 1:NROW(C)) {
-        # Which KG?  prb?
-        indxF   <- which(f[[1]] == C[i])
-        indxPrb <- which(p[[1]] == C[i])
- 
-        if((NROW(indxF) >0) & (NROW(indxPrb) >0)) {
-            # Type coersions.
-            FeatureStart <- as.integer(f[[2]][indxF])
-            FeatureEnd <- as.integer(f[[3]][indxF])
-            PROBEStart <- as.integer(p[[2]][indxPrb])
-            PROBELength <- as.integer(p[[3]][indxPrb] - p[[2]][indxPrb])
- 
-            # Set dimensions.
-            dim(PROBEStart) <- c(NROW(PROBEStart), NCOL(PROBEStart))
-            dim(FeatureStart) <- c(NROW(FeatureStart), NCOL(FeatureStart))
-            dim(FeatureEnd) <- c(NROW(FeatureEnd), NCOL(FeatureEnd))
-            dim(PROBELength) <- c(NROW(PROBELength), NCOL(PROBELength))
-         
-            Fprime <- .Call("AssociateRegionWithFeatures", FeatureStart, FeatureEnd, PROBEStart, PROBELength, PACKAGE = "groHMM")
- 
-            F[indxPrb] <- as.character(f[[4]][indxF][as.vector(Fprime)])
-        }
-    }
- 
+	C <- as.character(unique(p[[1]]))
+	F <- rep(NA, NROW(p))
+	for(i in 1:NROW(C)) {
+		# Which KG?  prb?
+		indxF   <- which(f[[1]] == C[i])
+		indxPrb <- which(p[[1]] == C[i])
+
+		if((NROW(indxF) >0) & (NROW(indxPrb) >0)) {
+			# Type coersions.
+			FeatureStart <- as.integer(f[[2]][indxF])
+			FeatureEnd <- as.integer(f[[3]][indxF])
+			PROBEStart <- as.integer(p[[2]][indxPrb])
+			PROBELength <- as.integer(p[[3]][indxPrb] - p[[2]][indxPrb])
+
+			# Set dimensions.
+			dim(PROBEStart) <- c(NROW(PROBEStart), NCOL(PROBEStart))
+			dim(FeatureStart) <- c(NROW(FeatureStart), NCOL(FeatureStart))
+			dim(FeatureEnd) <- c(NROW(FeatureEnd), NCOL(FeatureEnd))
+			dim(PROBELength) <- c(NROW(PROBELength), NCOL(PROBELength))
+
+			Fprime <- .Call("AssociateRegionWithFeatures", FeatureStart, FeatureEnd, PROBEStart, PROBELength, PACKAGE = "groHMM")
+
+			F[indxPrb] <- as.character(f[[4]][indxF][as.vector(Fprime)])
+		}
+	}
+
     return(F)
 }
 

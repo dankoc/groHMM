@@ -42,7 +42,7 @@
 ##	[1,*) framework by keeping the vairence constant, and scaling the mean for each gene.
 ##
 ##	Arguments:
-##	pgr1,pgr2    -> GRanges to be compared.
+##	reads1,reads2    -> GRanges to be compared.
 ##	(deprecated: p1,p2	     -> data.frame of: CHR, START, END, STRAND.  These are to be compared.)
 ##	genes	     -> A set of genes in which to search for the wave...
 ##	size	     -> The size of the moving window.
@@ -78,8 +78,8 @@
 #'  polymeraseWave_gamma assumes gamma distributed emissions for states two and three, and a normal distribution for state 1.
 #'
 #'	Arguments:
-#'	@param pgr1 Mapped reads in time point 1.
-#'  @param pgr2 Mapped reads in time point 2.
+#'	@param reads1 Mapped reads in time point 1.
+#'  @param reads2 Mapped reads in time point 2.
 #'	@param genes A set of genes in which to search for the wave.
 #'	@param size	The size of the moving window. Default: 50.
 #'	@param approxDist 
@@ -98,13 +98,13 @@ polymeraseWave_gamma <- function(reads1, reads2, genes, size=50, approxDist, ups
 		print("Analyzing windows")
 	}
 
-	Fp1 <- windowAnalysis(reads=reads1, strand="+", ssize=size, debug=FALSE)
-	Fp2 <- windowAnalysis(reads=reads2, strand="+", ssize=size, debug=FALSE)
-	Fm1 <- windowAnalysis(reads=reads1, strand="-", ssize=size, debug=FALSE)
-	Fm2 <- windowAnalysis(reads=reads2, strand="-", ssize=size, debug=FALSE)
-	sizeP1 <- NROW(pgr1)
-	sizeP2 <- NROW(pgr2)
-	expCounts <- mean(NROW(pgr1),NROW(pgr2))
+	Fp1 <- windowAnalysis(reads=reads1, strand="+", step_size=size, debug=FALSE)
+	Fp2 <- windowAnalysis(reads=reads2, strand="+", step_size=size, debug=FALSE)
+	Fm1 <- windowAnalysis(reads=reads1, strand="-", step_size=size, debug=FALSE)
+	Fm2 <- windowAnalysis(reads=reads2, strand="-", step_size=size, debug=FALSE)
+	sizeP1 <- NROW(reads1)
+	sizeP2 <- NROW(reads2)
+	expCounts <- mean(NROW(reads1),NROW(reads2))
 
 	ANS <- rep(-1, NROW(genes))
 	ENDwave <- rep(-1,NROW(genes))
@@ -426,10 +426,10 @@ polymeraseWave_norm <- function(reads1, reads2, genes, size=50, approxDist, upst
 		print("Analyzing windows")
 	}	
 
-	Fp1 <- windowAnalysis(pgr=reads1, strand="+", ssize=size, limitPCRDups=limitPCRDups, debug=FALSE)
-	Fp2 <- windowAnalysis(pgr=reads2, strand="+", ssize=size, limitPCRDups=limitPCRDups, debug=FALSE)
-	Fm1 <- windowAnalysis(pgr=reads1, strand="-", ssize=size, limitPCRDups=limitPCRDups, debug=FALSE)
-	Fm2 <- windowAnalysis(pgr=reads2, strand="-", ssize=size, limitPCRDups=limitPCRDups, debug=FALSE)
+	Fp1 <- windowAnalysis(reads=reads1, strand="+", step_size=size, limitPCRDups=limitPCRDups, debug=FALSE)
+	Fp2 <- windowAnalysis(reads=reads2, strand="+", step_size=size, limitPCRDups=limitPCRDups, debug=FALSE)
+	Fm1 <- windowAnalysis(reads=reads1, strand="-", step_size=size, limitPCRDups=limitPCRDups, debug=FALSE)
+	Fm2 <- windowAnalysis(reads=reads2, strand="-", step_size=size, limitPCRDups=limitPCRDups, debug=FALSE)
 	sizeP1 <- NROW(reads1)
 	sizeP2 <- NROW(reads2)
 	expCounts <- mean(NROW(reads1),NROW(reads2))
