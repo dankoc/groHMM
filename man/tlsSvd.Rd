@@ -1,0 +1,22 @@
+\name{tlsSvd}
+\alias{tlsSvd}
+\title{A 'total least squares' implementation using singular value demposition.}
+\usage{
+  tlsSvd(x, y)
+}
+\arguments{
+  \item{x}{X values.}
+
+  \item{y}{Y values.}
+}
+\value{
+  Parameters for the linear model Y~a*X+e.
+}
+\description{
+  A 'total least squares' implementation using singular
+  value demposition.
+}
+\author{
+  Charles G. Danko
+}
+

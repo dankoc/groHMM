@@ -1,0 +1,42 @@
+\name{Rnorm.exp}
+\alias{Rnorm.exp}
+\title{Rnorm.exp fits a normal+exponential distribution to a specified data vector using maximum likelihood.}
+\usage{
+  Rnorm.exp(xi, wi = rep(1, NROW(xi)),
+    guess = c(0.5, 0, 1, 1),
+    tol = sqrt(.Machine$double.eps), maxit = 10000)
+}
+\arguments{
+  \item{xi}{A vector of observations, assumed to be real
+  numbers in the inveraval (-Inf,+Inf).}
+
+  \item{wi}{A vector of weights.  Default: vector of
+  repeating 1; indicating all observations are weighted
+  equally. (Are these normalized internally?!  Or do they
+  have to be [0,1]?)}
+
+  \item{guess}{Initial guess for paremeters.  Default:
+  c(0.5, 0, 1, 1).}
+
+  \item{tol}{Convergence tolerance.  Default:
+  sqrt(.Machine$double.eps).}
+
+  \item{maxit}{Maximum number of iterations.  Default:
+  10,000.}
+}
+\value{
+  List of parameters for the best-fit normal distribution
+  (alpha, mean, varience, and lambda).
+}
+\description{
+  Distrubtion function devined by: alpha*Normal(mean,
+  varience)+(1-alpha)*Exponential(lambda).
+}
+\details{
+  Fits nicely with data types that look normal overall, but
+  have a long tail starting for positive values.
+}
+\author{
+  Charles G. Danko
+}
+

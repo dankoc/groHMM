@@ -52,40 +52,36 @@
 #' @return Returns a vector of counts, each representing the number of reads inside each genomic interval.
 #' @author Charles G. Danko and Minho Chae
 countReadsInInterval <- function(features, reads) {
-	f <- data.frame(chrom=as.character(seqnames(features)), start=as.integer(start(features)),
-					end=as.integer(end(features)), strand=as.character(strand(features)))
-	p <- data.frame(chrom=as.character(seqnames(reads)), start=as.integer(start(reads)),
-    				end=as.integer(end(reads)), strand=as.character(strand(reads)))
-
+	# Order -- Make sure, b/c this is one of our main assumptions.  Otherwise violated for DBTSS.
+	# GRanges sort by natural order; order by (a) sequence level, (b)strand, (c)start, (d)width.
+	features <- sort(features)
+	reads <- sort(reads)
  
-	C <- sort(as.character(unique(f[[1]])))
-	F <- rep(0,NROW(f))
+	C <- sort(unique(as.character(seqnames(features))))
+	F <- rep(0,NROW(features))
 	for(i in 1:NROW(C)) {
 		# Which KG?  prb?
-		indxF   <- which(as.character(f[[1]]) == C[i])
-		indxPrb <- which(as.character(p[[1]]) == C[i])
+		indxF   <- which(as.character(seqnames(features)) == C[i])
+		indxPrb <- which(as.character(seqnames(reads)) == C[i])
 
 		if((NROW(indxF) >0) & (NROW(indxPrb) >0)) {
-			# Order -- Make sure, b/c this is one of our main assumptions.  Otherwise violated for DBTSS.
-			Ford <- order(f[indxF,2])
-			Pord <- order(p[indxPrb,2])
-
 			# Type coersions.
-			FeatureStart 	<- as.integer(f[indxF,2][Ford])
-			FeatureEnd 	<- as.integer(f[indxF,3][Ford])
-			FeatureStr	<- as.character(f[indxF,4][Ford])
-			PROBEStart 	<- as.integer(p[indxPrb,2][Pord])
-			if(NCOL(p) > 2) { ## Assume that all four columns are present.
-			  PROBEEnd 	<- as.integer(p[indxPrb,3][Pord])
-			  PROBEStr	<- as.character(p[indxPrb,4][Pord])
-			}
-			else {
-			 if(NCOL(p) == 2) { ## If probes are represented by only two columns, set PROBEEnd to 0-length probes.  Record 
-			   PROBEEnd <- PROBEStart
-			   PROBEStr <- rep("+", NROW(PROBEStart))
-			   FeatureStr <- rep("+", NROW(FeatureStr))
-			 }
-			}
+			FeatureStart 	<- start(features[indxF,])
+			FeatureEnd 	<- end(features[indxF,])
+			FeatureStr	<- as.character(strand(features[indxF,]))
+			PROBEStart 	<- start(reads[indxPrb,])
+
+			#if(NCOL(p) > 2) { ## Assume that all four columns are present.
+			#  PROBEEnd 	<- as.integer(p[indxPrb,3][Pord])
+			#  PROBEStr	<- as.character(p[indxPrb,4][Pord])
+			#}
+			#else {
+			# if(NCOL(p) == 2) { ## If probes are represented by only two columns, set PROBEEnd to 0-length probes.  Record 
+			#   PROBEEnd <- PROBEStart
+			#   PROBEStr <- rep("+", NROW(PROBEStart))
+			#   FeatureStr <- rep("+", NROW(FeatureStr))
+			# }
+			#}
 
 			# Set dimensions.
 			dim(FeatureStart)	<- c(NROW(FeatureStart), NCOL(FeatureStart))
@@ -98,7 +94,7 @@ countReadsInInterval <- function(features, reads) {
 			Fprime <- .Call("CountReadsInFeatures", FeatureStart, FeatureEnd, FeatureStr, 
 							PROBEStart, PROBEEnd, PROBEStr, PACKAGE = "groHMM")
 
-			F[indxF][Ford] <- as.integer(Fprime)
+			F[indxF] <- as.integer(Fprime)
 		}
 	}
 
@@ -131,25 +127,24 @@ countReadsInInterval <- function(features, reads) {
 #' countMappableReadsInInterval counts the number of mappable reads in a set of genomic features.
 #'
 #' @param features A GRanges object representing a set of genomic coordinates.  The meta-plot will be centered on the start position.
-#' @param reads A GRanges object representing a set of mapped reads.
 #' @param UnMap List object representing the position of un-mappable reads.  Default: not used.
+#' @param debug If set to TRUE, provides additional print options. Default: FALSE
 #' @return Returns a vector of counts, each representing the number of reads inside each genomic interval.
 #' @author Charles G. Danko and Minho Chae
 countMappableReadsInInterval <- function(features, UnMap, debug=FALSE) {
-
-	C <- sort(as.character(unique(features[[1]])))
+	# Order -- Make sure, b/c this is one of our main assumptions.  Otherwise violated for DBTSS.
+	features <- sort(features)
+	
+	C <- sort(unique(as.character(seqnames(features))))
 	F <- rep(0,NROW(features))
 	for(i in 1:NROW(C)) {
-		indxF   <- which(as.character(features[[1]]) == C[i])
+		indxF   <- which(as.character(seqnames(features)) == C[i])
 
 		if(NROW(indxF) >0) {
-			# Order -- Make sure, b/c this is one of our main assumptions.  Otherwise violated for DBTSS.
-			Ford <- order(features[indxF,2])
-
 			# Type coersions.
-			FeatureStart 	<- as.integer(features[indxF,2][Ford])
-			FeatureEnd 	<- as.integer(features[indxF,3][Ford])
-			FeatureStr	<- as.character(features[indxF,4][Ford])
+			FeatureStart 	<- start(features[indxF,])
+			FeatureEnd 	<- end(features[indxF,])
+			FeatureStr	<- as.character(strand(features[indxF,]))
 
 			# Set dimensions.
 			dim(FeatureStart)	<- c(NROW(FeatureStart), NCOL(FeatureStart))
@@ -184,7 +179,7 @@ countMappableReadsInInterval <- function(features, UnMap, debug=FALSE) {
 				print(as.integer(head(Difference)))
 			}
 
-			F[indxF][Ford] <- as.integer(Difference)
+			F[indxF] <- as.integer(Difference)
 		}
 	}
 

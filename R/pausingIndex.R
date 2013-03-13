@@ -188,7 +188,7 @@ pausingIndex <- function(f, p, size=50, up=1000, down=1000, UnMAQ=NULL, debug=FA
 				print(paste(C[i],": Counting reads in gene.",sep=""))
 			}
 			HGeneBody <- .Call("CountReadsInFeatures", FeatureStart, FeatureEnd, FeatureStr,
-							PROBEStart, PROBEEnd, PROBEStr)
+							PROBEStart, PROBEEnd, PROBEStr, PACKAGE = "groHMM")
 
 		## Get size of gene body
 			Difference <- FeatureEnd-FeatureStart

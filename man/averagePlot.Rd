@@ -1,0 +1,34 @@
+\name{averagePlot}
+\alias{averagePlot}
+\title{Returns the average profile of tiling array probe intensity values or wiggle-like count data centered on a set of genomic positions (specified by 'Peaks').}
+\usage{
+  averagePlot(ProbeData, Peaks, size = 50,
+    bins = seq(-1000, 1000, size))
+}
+\arguments{
+  \item{ProbeData}{Data.frame representing chromosome,
+  window center, and a value.}
+
+  \item{Peaks}{Data.frame representing chromosome, and
+  window center.}
+
+  \item{size}{Numeric.  The size of the moving window.
+  Default: 50 bp.}
+
+  \item{bins}{The bins of the meta gene -- i.e. the number
+  of moving windows to break it into. Default +/- 1kb from
+  center.}
+}
+\value{
+  A vector representing the 'typical' signal centered on
+  the peaks of interest.
+}
+\description{
+  Returns the average profile of tiling array probe
+  intensity values or wiggle-like count data centered on a
+  set of genomic positions (specified by 'Peaks').
+}
+\author{
+  Charles G. Danko and Minho Chae
+}
+

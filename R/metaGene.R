@@ -56,6 +56,7 @@
 #' @param size The size of the moving window.
 #' @param up Distance upstream of each features to align and histogram Default: 1 kb.
 #' @param down Distance downstream of each features to align and histogram Default: same as up.
+#' @param debug If set to TRUE, provides additional print options. Default: FALSE
 #' @return A vector representing the 'typical' signal centered on a point of interest.
 #' @author Charles G. Danko and Minho Chae
 metaGene <- function(features, reads, size, up=1000, down=up, debug=FALSE) {
@@ -140,6 +141,7 @@ metaGene <- function(features, reads, size, up=1000, down=up, debug=FALSE) {
 #' @param size The size of the moving window.
 #' @param up Distance upstream of each f to align and histogram Default: 1 kb.
 #' @param down Distance downstream of each f to align and histogram Default: same as up.
+#' @param debug If set to TRUE, provides additional print options. Default: FALSE
 #' @return A vector representing the 'typical' signal across genes of different length.
 #' @author Charles G. Danko and Minho Chae
 metaGeneMatrix <- function(features, reads, size= 50, up=1000, down=up, debug=FALSE) {
@@ -221,6 +223,7 @@ metaGeneMatrix <- function(features, reads, size= 50, up=1000, down=up, debug=FA
 #' @param features A GRanges object representing a set of genomic coordinates. 
 #' @param reads A GRanges object representing a set of mapped reads. 
 #' @param n_windows The number of windows to break genes into.
+#' @param debug If set to TRUE, provides additional print options. Default: FALSE
 #' @return A vector representing the 'typical' signal across genes of different length.
 #' @author Charles G. Danko and Minho Chae
 metaGene_nL <- function(features, reads, n_windows=1000, debug=FALSE) {
@@ -357,7 +360,7 @@ averagePlot <- function(ProbeData, Peaks, size=50, bins= seq(-1000,1000,size)) {
 #' @param normCounts Numeric.   Reads are multiplied by normCounts.Thhe size of the moving window. Default: 1
 #' @param sampling Logical.  If TRUE, subsampling of Metagene is used.  Default: FALSE
 #' @param nSampling Numeric. Number of subsampling.  Default: 1000
-#' @param debug. Logical. If set to TRUE, provides additional print options. Default: FALSE 
+#' @param debug Logical. If set to TRUE, provides additional print options. Default: FALSE 
 #' @return List of vectors representing the 'typical' signal centered on the genomic features of interest.
 #' @author Minho Chae
 runMetaGene <- function(features, reads, size=100, up=10000, down=NULL, normCounts=1, sampling=FALSE, nSampling=1000, debug=FALSE) {

@@ -1,0 +1,25 @@
+\name{tlsDeming}
+\alias{tlsDeming}
+\title{A 'total least squares' implementation using demming regression.}
+\usage{
+  tlsDeming(x, y, d = 1)
+}
+\arguments{
+  \item{x}{X values.}
+
+  \item{y}{Y values.}
+
+  \item{d}{Ratio of variences. Default: 1, for orthogonal
+  regression.}
+}
+\value{
+  Parameters for the linear model.
+}
+\description{
+  A 'total least squares' implementation using demming
+  regression.
+}
+\author{
+  Charles G. Danko
+}
+

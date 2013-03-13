@@ -1,0 +1,22 @@
+\name{RgammaMLE}
+\alias{RgammaMLE}
+\title{RgammaMLE fits a gamma distribution to a specified data vector using maximum likelihood.}
+\usage{
+  RgammaMLE(X)
+}
+\arguments{
+  \item{X}{A vector of observations, assumed to be real
+  numbers in the inveraval [0,+Inf).}
+}
+\value{
+  List of parameters for the best-fit gamma distribution
+  (shape and scale).
+}
+\description{
+  RgammaMLE fits a gamma distribution to a specified data
+  vector using maximum likelihood.
+}
+\author{
+  Charles G. Danko
+}
+

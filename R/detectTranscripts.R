@@ -43,7 +43,6 @@
 #'
 #' Read counts can be specified as either a GRanges object (reads), or using a fixed-step wiggle-format passed in a list (Fp and Fm).  Either reads or BOTH Fp and Fm must be specified.
 #'
-#' @param features A GRanges object representing a set of genomic coordinates.  The meta-plot will be centered on the start position.
 #' @param reads A GRanges object representing a set of mapped reads.
 #' @param Fp Wiggle-formatted read counts on "+" strand. Optionally, Fp and Fm represent list() filled with a vector of counts for each chromosome.  Can detect transcripts starting from a fixed-step wiggle.
 #' @param Fm Wiggle-formatted read counts on "-" strand. 
@@ -52,6 +51,7 @@
 #' @param UTS Varience in read counts of the untranscribed sequence.  Default: 5.
 #' @param size Log probability of t... .  Default: -5.
 #' @param threshold Threshold change in total likelihood, below which EM exits. 
+#' @param debug If set to TRUE, provides additional print options. Default: FALSE
 #' @return Returns a GRanges object representing the predicted genomic coordinates of transcripts on both the + and - strand.
 #' @author Charles G. Danko and Minho Chae
 

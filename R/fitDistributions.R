@@ -80,7 +80,7 @@ Rnorm <- function(X) {
 #' @param wi A vector of weights.  Default: vector of repeating 1; indicating all observations are weighted equally. (Are these normalized internally?!  Or do they have to be [0,1]?)
 #' @param guess Initial guess for paremeters.  Default: c(0.5, 0, 1, 1).
 #' @param tol Convergence tolerance.  Default: sqrt(.Machine$double.eps).
-#' @param maxit.  Maximum number of iterations.  Default: 10,000.
+#' @param maxit  Maximum number of iterations.  Default: 10,000.
 #' @return List of parameters for the best-fit normal distribution (alpha, mean, varience, and lambda).
 #' @author Charles G. Danko
 Rnorm.exp <- function(xi, wi=rep(1,NROW(xi)), guess=c(0.5, 0, 1, 1), tol=sqrt(.Machine$double.eps), maxit=10000) {

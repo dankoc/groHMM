@@ -6,6 +6,7 @@
 #' Any additional arguments availiable to read.table can be specified.  
 #'
 #' @param file Path to the input file.
+#' @param ... Extra argument passed to read.table 
 #' @return GenomicRanges object, representing mapped reads. 
 #' @author Minho Chae and Charles G. Danko.
 readBed <- function(file, ...) {
