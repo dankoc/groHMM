@@ -7,7 +7,7 @@
 #' Plots transcripts with their associated genes. 
 #'
 #' @param tx GRanges of transcripts. 
-#' @param annotations GRanges of non-overlapping annotatoins.
+#' @param features GRanges of non-overlapping annotatoins.
 #' @param chrom Character.  Target transcript chromosome; NA for all chromosomes.  Default: NA
 #' @param strand Character.  "+" or "-";  NA for all chromosomes.  Default: NA
 #' @param scale Logical.  If TRUE, plot is scaled to relative to gene size of 30000 bp. Default: TRUE
@@ -18,26 +18,24 @@
 #' @param last Integer. Last n transcripts to plot after transcripts are ordered by their gene sizes. Default: NA
 #' @param filename Character.  File name for output. Default: NA
 #' @author Minho Chae
-plotTranscripts <- function(tx, annotations, chrom=NA, strand=NA, scale=TRUE, runGenes="best", brokenAnnotation="best", first=NA, last=NA, filename=NA) {
-	tr <- tx
-	gr <- annotations
+plotTranscripts <- function(tx, features, chrom=NA, strand=NA, scale=TRUE, runGenes="best", brokenAnnotation="best", first=NA, last=NA, filename=NA) {
 	if (!is.na(chrom)) {
-		tr <- tr[as.character(seqnames(tr)) == chrom,]
-		gr <- gr[as.character(seqnames(gr)) == chrom,]
+		tx <- tx[as.character(seqnames(tx)) == chrom,]
+		features <- features[as.character(seqnames(features)) == chrom,]
 	}
 
 	if (is.na(strand)) {  # both strands
-		trPlus <- tr[strand(tr)=="+",]
-		grPlus <- gr[strand(gr)=="+",]
-		trMinus <- tr[strand(tr)=="-",]
-		grMinus <- gr[strand(gr)=="-",]
-		plusResult <- plotTranscriptsStrand(trPlus, grPlus, strand="+", scale=scale, runGenes=runGenes, brokenAnnotation=brokenAnnotation)
-		minusResult <- plotTranscriptsStrand(trMinus, grMinus, strand="-", scale=scale, runGenes=runGenes, brokenAnnotation=brokenAnnotation)
+		txPlus <- tx[strand(tx)=="+",]
+		fePlus <- features[strand(features)=="+",]
+		txMinus <- tx[strand(tx)=="-",]
+		feMinus <- features[strand(features)=="-",]
+		plusResult <- plotTranscriptsStrand(txPlus, fePlus, strand="+", scale=scale, runGenes=runGenes, brokenAnnotation=brokenAnnotation)
+		minusResult <- plotTranscriptsStrand(txMinus, feMinus, strand="-", scale=scale, runGenes=runGenes, brokenAnnotation=brokenAnnotation)
 
 		t <- c(plusResult[[1]], minusResult[[1]])
 		g <- c(plusResult[[2]], minusResult[[2]])
 	} else {
-		result <- plotTranscriptsStrand(tr[strand(tr)==strand,], gr[strand(gr)==strand,],
+		result <- plotTranscriptsStrand(tx[strand(tx)==strand,], features[strand(features)==strand,],
 			strand=strand, scale=scale, runGenes=runGenes, brokenAnnotation=brokenAnnotation)
 		t <- result[[1]]
 		g <- result[[2]]
@@ -175,13 +173,13 @@ plotTranscriptsStrand <- function(tr, gr, strand, scale, runGenes="best", broken
 #'
 #' Evaluates HMM calling of transripts compared to know annotations. 
 #'
-#' @param tr GRanges of transcripts predicted by HMM. 
+#' @param tx GRanges of transcripts predicted by HMM. 
 #' @param annotations GRanges of non-overlapping annotatoins.
 #' @return  List of evaluation information; runGeneError, brokenError, overlapQuality.
 #' @author Minho Chae
-evaluateHMM <- function(tr, annotations) {
+evaluateHMM <- function(tx, annotations) {
 	gr <- annotations
-	ol <- findOverlaps(tr, gr)
+	ol <- findOverlaps(tx, gr)
 	rgError <-  NROW(unique(queryHits(ol[duplicated(queryHits(ol)),])))
 	brokenError <- NROW(unique(subjectHits(ol[duplicated(subjectHits(ol)),])))
 	print("=======================================")
@@ -190,34 +188,34 @@ evaluateHMM <- function(tr, annotations) {
 	print(paste("Run genes together:", rgError))
 	print(paste("Broken up a single annotation:", brokenError))
 
-	#intx <- pintersect(tr[queryHits(ol),], gr[subjectHits(ol),])
-	#oQuality <- data.frame(tID=elementMetadata(tr[queryHits(ol),])$ID,
+	#intx <- pintersect(tx[queryHits(ol),], gr[subjectHits(ol),])
+	#oQuality <- data.frame(tID=elementMetadata(tx[queryHits(ol),])$ID,
 	#                             gID=elementMetadata(gr[subjectHits(ol),])$ID,
 	#                             gSymbol=elementMetadata(gr[subjectHits(ol),])$symbol,
-	#                             tOverlap=width(intx)/width(tr[queryHits(ol),]),
+	#                             tOverlap=width(intx)/width(tx[queryHits(ol),]),
 	#                             gOverlap=width(intx)/width(gr[subjectHits(ol),]),
 	#                             overBases=width(intx),
-	#                             similarity=width(intx)/pmax(width(tr[queryHits(ol),]), width(gr[subjectHits(ol),])))
+	#                             similarity=width(intx)/pmax(width(tx[queryHits(ol),]), width(gr[subjectHits(ol),])))
 
-	intx <- pintersect(tr[queryHits(ol),], gr[subjectHits(ol),])
-	oQuality <- data.frame( tOverlap=width(intx)/width(tr[queryHits(ol),]),
+	intx <- pintersect(tx[queryHits(ol),], gr[subjectHits(ol),])
+	oQuality <- data.frame(tOverlap=width(intx)/width(tx[queryHits(ol),]),
 			    gOverlap=width(intx)/width(gr[subjectHits(ol),]),
 			    overBases=width(intx),
-			    similarity=width(intx)/pmax(width(tr[queryHits(ol),]), width(gr[subjectHits(ol),])))
+			    similarity=width(intx)/pmax(width(tx[queryHits(ol),]), width(gr[subjectHits(ol),])))
 
 
-	trWidth <- summary(width(tr[queryHits(ol),]))
+	txWidth <- summary(width(tx[queryHits(ol),]))
 	grWidth <- summary(width(gr[subjectHits(ol),]))
-	trOverlap <- summary(oQuality$tOverlap)
+	txOverlap <- summary(oQuality$tOverlap)
 	grOverlap <- summary(oQuality$gOverlap)
 	overBases <- summary(oQuality$overBases)
 	similarity <- summary(oQuality$similarity)
 	print("=======================================")
 	print(paste("Overlap quality (Median Mean)"))
 	print("=======================================")
-	print(paste("Tx length:", trWidth["Median"], trWidth["Mean"]))
+	print(paste("Tx length:", txWidth["Median"], txWidth["Mean"]))
 	print(paste("Gene length:", grWidth["Median"], grWidth["Mean"]))
-	print(paste("Tx overlap:", trOverlap["Median"], trOverlap["Mean"]))
+	print(paste("Tx overlap:", txOverlap["Median"], txOverlap["Mean"]))
 	print(paste("Gene overlap:", grOverlap["Median"], grOverlap["Mean"]))
 	print(paste("Overbases:", overBases["Median"], overBases["Mean"]))
 	print(paste("Similarity:", similarity["Median"], similarity["Mean"]))
@@ -341,7 +339,7 @@ plotTHistogramStrand <- function(tr, gr, strand, scale, runGenes="best", brokenA
 #'Plots transcripts stacked together for their associated genes.  Gene size can be absolute or scaled to 30000 bp.
 #'
 #' @param tx GRanges of transcripts. 
-#' @param annotations GRanges of non-overlapping annotatoins.
+#' @param features GRanges of non-overlapping annotatoins.
 #' @param chrom Character.  Target transcript chromosome; NA for all chromosomes. Default: NA
 #' @param strand Character.  "+" or "-";  NA for all chromosomes.  Default: NA
 #' @param scale Logical.  If TRUE, plot is scaled to relative to gene size of 30000 bp. Default: TRUE
@@ -349,26 +347,24 @@ plotTHistogramStrand <- function(tr, gr, strand, scale, runGenes="best", brokenA
 #' @param brokenAnnotation Character.  One of "best", "all", or "none" for the transcripts breaking one annotation. Default: "best"
 #' @param filename Character.  File name for output. Default: NA
 #' @author Minho Chae
-plotTHistogram <- function(tx, annotations, chrom=NA, strand=NA, scale=TRUE, runGenes="best", brokenAnnotation="best", filename=NA) {
-	tr <- tx
-	gr <- annotations
+plotTHistogram <- function(tx, features, chrom=NA, strand=NA, scale=TRUE, runGenes="best", brokenAnnotation="best", filename=NA) {
 	if (!is.na(chrom)) {
-		tr <- tr[as.character(seqnames(tr)) == chrom,]
-		gr <- gr[as.character(seqnames(gr)) == chrom,]
+		tx <- tx[as.character(seqnames(tx)) == chrom,]
+		features <- features[as.character(seqnames(features)) == chrom,]
 	}
 
 	if (is.na(strand)) {  # both strands
-		trPlus <- tr[strand(tr)=="+",]
-		grPlus <- gr[strand(gr)=="+",]
-		trMinus <- tr[strand(tr)=="-",]
-		grMinus <- gr[strand(gr)=="-",]
-		plusResult <- plotTHistogramStrand(trPlus, grPlus, strand="+", scale=scale, runGenes=runGenes, brokenAnnotation=brokenAnnotation)
-		minusResult <- plotTHistogramStrand(trMinus, grMinus, strand="-", scale=scale, runGenes=runGenes, brokenAnnotation=brokenAnnotation)
+		txPlus <- tx[strand(tx)=="+",]
+		fePlus <- features[strand(features)=="+",]
+		txMinus <- tx[strand(tx)=="-",]
+		feMinus <- features[strand(features)=="-",]
+		plusResult <- plotTHistogramStrand(txPlus, fePlus, strand="+", scale=scale, runGenes=runGenes, brokenAnnotation=brokenAnnotation)
+		minusResult <- plotTHistogramStrand(txMinus, feMinus, strand="-", scale=scale, runGenes=runGenes, brokenAnnotation=brokenAnnotation)
 
 		t <- c(plusResult[[1]], minusResult[[1]])
 		g <- c(plusResult[[2]], minusResult[[2]])
 	} else {
-		result <- plotTHistogramStrand(tr[strand(tr)==strand,], gr[strand(gr)==strand,],
+		result <- plotTHistogramStrand(tx[strand(tx)==strand,], features[strand(features)==strand,],
 			strand=strand, scale=scale, runGenes=runGenes, brokenAnnotation=brokenAnnotation)
 		t <- result[[1]]
 		g <- result[[2]]
@@ -413,6 +409,7 @@ plotTHistogram <- function(tx, annotations, chrom=NA, strand=NA, scale=TRUE, run
 		cat("\n")
 		print(paste("FP(5'):", round(FP5prime/block,2), "TP:", round(TP/block,2), "PostTTS:",
 			round(PostTTS/block,2), "accuracy:", round(accuracy,2)))
+		abline(v=-30000, col="blue", lty=2)
 	} else {
 		plot(min(start(t)):max(end(t)), hist, type="l", ylim=c(0, length(t)))
 	}

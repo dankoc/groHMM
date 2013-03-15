@@ -46,8 +46,8 @@
 #' @author Charles G. Danko and Minho Chae
 expressedGenes <- function(features, reads, genomeSize=3e9, Lambda= NULL, UnMap=NULL, debug=FALSE) {
 	# Order -- Make sure, b/c this is one of our main assumptions.  Otherwise violated for DBTSS.
-	features <- sort(features)
-	reads <- sort(reads)
+	features <- features[order(as.character(seqnames(features)), start(features)),]
+	reads <- reads[order(as.character(seqnames(reads)), start(reads)),]
 
 	C <- sort(unique(as.character(seqnames(features))))
 	ANSgeneid <- rep("char", NROW(features))

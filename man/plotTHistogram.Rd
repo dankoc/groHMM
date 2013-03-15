@@ -2,15 +2,14 @@
 \alias{plotTHistogram}
 \title{plotTranscripts Plots a transcript histogram.}
 \usage{
-  plotTHistogram(tx, annotations, chrom = NA, strand = NA,
+  plotTHistogram(tx, features, chrom = NA, strand = NA,
     scale = TRUE, runGenes = "best",
     brokenAnnotation = "best", filename = NA)
 }
 \arguments{
   \item{tx}{GRanges of transcripts.}
 
-  \item{annotations}{GRanges of non-overlapping
-  annotatoins.}
+  \item{features}{GRanges of non-overlapping annotatoins.}
 
   \item{chrom}{Character.  Target transcript chromosome; NA
   for all chromosomes. Default: NA}

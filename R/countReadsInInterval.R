@@ -53,10 +53,12 @@
 #' @author Charles G. Danko and Minho Chae
 countReadsInInterval <- function(features, reads) {
 	# Order -- Make sure, b/c this is one of our main assumptions.  Otherwise violated for DBTSS.
-	# GRanges sort by natural order; order by (a) sequence level, (b)strand, (c)start, (d)width.
-	features <- sort(features)
-	reads <- sort(reads)
- 
+	# Can't use GRanges sort b/c GRanges sort by natural order; order by (a) sequence level, (b)strand, 
+	# (c)start, (d)width.
+
+   	features <- features[order(as.character(seqnames(features)), start(features)),]
+    reads <- reads[order(as.character(seqnames(reads)), start(reads)),]
+
 	C <- sort(unique(as.character(seqnames(features))))
 	F <- rep(0,NROW(features))
 	for(i in 1:NROW(C)) {
@@ -70,6 +72,9 @@ countReadsInInterval <- function(features, reads) {
 			FeatureEnd 	<- end(features[indxF,])
 			FeatureStr	<- as.character(strand(features[indxF,]))
 			PROBEStart 	<- start(reads[indxPrb,])
+
+		 	PROBEEnd        <- end(reads[indxPrb,])
+                        PROBEStr        <- as.character(strand(reads[indxPrb,]))	
 
 			#if(NCOL(p) > 2) { ## Assume that all four columns are present.
 			#  PROBEEnd 	<- as.integer(p[indxPrb,3][Pord])
@@ -133,8 +138,8 @@ countReadsInInterval <- function(features, reads) {
 #' @author Charles G. Danko and Minho Chae
 countMappableReadsInInterval <- function(features, UnMap, debug=FALSE) {
 	# Order -- Make sure, b/c this is one of our main assumptions.  Otherwise violated for DBTSS.
-	features <- sort(features)
-	
+    features <- features[order(as.character(seqnames(features)), start(features)),]
+
 	C <- sort(unique(as.character(seqnames(features))))
 	F <- rep(0,NROW(features))
 	for(i in 1:NROW(C)) {

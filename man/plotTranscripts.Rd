@@ -2,7 +2,7 @@
 \alias{plotTranscripts}
 \title{plotTranscripts Plots transcripts.}
 \usage{
-  plotTranscripts(tx, annotations, chrom = NA, strand = NA,
+  plotTranscripts(tx, features, chrom = NA, strand = NA,
     scale = TRUE, runGenes = "best",
     brokenAnnotation = "best", first = NA, last = NA,
     filename = NA)
@@ -10,8 +10,7 @@
 \arguments{
   \item{tx}{GRanges of transcripts.}
 
-  \item{annotations}{GRanges of non-overlapping
-  annotatoins.}
+  \item{features}{GRanges of non-overlapping annotatoins.}
 
   \item{chrom}{Character.  Target transcript chromosome; NA
   for all chromosomes.  Default: NA}

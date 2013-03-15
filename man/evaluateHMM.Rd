@@ -2,10 +2,10 @@
 \alias{evaluateHMM}
 \title{evaluateHMM Evaluates HMM calling.}
 \usage{
-  evaluateHMM(tr, annotations)
+  evaluateHMM(tx, annotations)
 }
 \arguments{
-  \item{tr}{GRanges of transcripts predicted by HMM.}
+  \item{tx}{GRanges of transcripts predicted by HMM.}
 
   \item{annotations}{GRanges of non-overlapping
   annotatoins.}

@@ -61,8 +61,7 @@
 #' @author Charles G. Danko and Minho Chae
 metaGene <- function(features, reads, size, up=1000, down=up, debug=FALSE) {
 	# Order -- Make sure, b/c this is one of our main assumptions.  Otherwise violated for DBTSS.
-	# GRanges sort by natural order; order by (a) sequence level, (b)strand, (c)start, (d)width.
-	features <- sort(features)
+	features <- features[order(as.character(seqnames(features)), start(features)),]
 
 	if(is.null(down)) {
 		down <- up
@@ -146,7 +145,7 @@ metaGene <- function(features, reads, size, up=1000, down=up, debug=FALSE) {
 #' @author Charles G. Danko and Minho Chae
 metaGeneMatrix <- function(features, reads, size= 50, up=1000, down=up, debug=FALSE) {
 	# Order -- Make sure, b/c this is one of our main assumptions.  Otherwise violated for DBTSS.
-	features <- sort(features)
+	features <- features[order(as.character(seqnames(features)), start(features)),]
 
 	C <- sort(unique(as.character(seqnames(features))))
 	H <- NULL
@@ -228,7 +227,8 @@ metaGeneMatrix <- function(features, reads, size= 50, up=1000, down=up, debug=FA
 #' @author Charles G. Danko and Minho Chae
 metaGene_nL <- function(features, reads, n_windows=1000, debug=FALSE) {
 	# Order -- Make sure, b/c this is one of our main assumptions.  Otherwise violated for DBTSS.
-	features <- sort(features)
+	features <- features[order(as.character(seqnames(features)), start(features)),]
+
 	C <- sort(unique(as.character(seqnames(features))))
 	H <- rep(0,n_windows)
 	for(i in 1:NROW(C)) {
