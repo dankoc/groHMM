@@ -407,7 +407,7 @@ plotTHistogram <- function(tx, features, chrom=NA, strand=NA, scale=TRUE, runGen
 		TN <- 30000*nT - FP5prime
 		accuracy <- (TP + TN)/ total
 		cat("\n")
-		print(paste("FP(5'):", round(FP5prime/block,2), "TP:", round(TP/block,2), "PostTTS:",
+		print(paste("FT Density:", round(FP5prime/block,2), "TT Density:", round(TP/block,2), "PostTTS:",
 			round(PostTTS/block,2), "accuracy:", round(accuracy,2)))
 		abline(v=-30000, col="blue", lty=2)
 	} else {

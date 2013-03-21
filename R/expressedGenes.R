@@ -46,7 +46,6 @@
 #' @author Charles G. Danko and Minho Chae
 expressedGenes <- function(features, reads, genomeSize=3e9, Lambda= NULL, UnMap=NULL, debug=FALSE) {
 	# Order -- Make sure, b/c this is one of our main assumptions.  Otherwise violated for DBTSS.
-	features <- features[order(as.character(seqnames(features)), start(features)),]
 	reads <- reads[order(as.character(seqnames(reads)), start(reads)),]
 
 	C <- sort(unique(as.character(seqnames(features))))
@@ -66,10 +65,13 @@ expressedGenes <- function(features, reads, genomeSize=3e9, Lambda= NULL, UnMap=
 		indxPrb <- which(as.character(seqnames(reads)) == C[i])
 
 		if((NROW(indxF) >0) & (NROW(indxPrb) >0)) {
+			# Order -- Make sure, b/c this is one of our main assumptions.  Otherwise violated for DBTSS.
+			Ford <- order(start(features[indxF,])) 
+
 			# Type coersions.
-			FeatureStart 	<- start(features[indxF,])
-			FeatureEnd 	<- end(features[indxF,])
-			FeatureStr	<- as.character(strand(features[indxF,]))
+			FeatureStart 	<- start(features[indxF,][Ford])
+			FeatureEnd 	<- end(features[indxF,][Ford])
+			FeatureStr	<- as.character(strand(features[indxF,][Ford]))
 			PROBEStart 	<- start(reads[indxPrb,])
 			PROBEEnd 	<- end(reads[indxPrb,])
 			PROBEStr	<- as.character(strand(reads[indxPrb,]))
@@ -126,14 +128,14 @@ expressedGenes <- function(features, reads, genomeSize=3e9, Lambda= NULL, UnMap=
 
 			## Calculate poisson prob. of each.
 			if ("ID" %in% colnames(mcols(features))) {  # there is "ID" column
-				ANSgeneid[indxF] <- elementMetadata(features[indxF,])$ID
+				ANSgeneid[indxF][Ford] <- elementMetadata(features[indxF,])$ID
 			} else {
-				ANSgeneid[indxF] <- rep(NA, NROW(indxF)) 
+				ANSgeneid[indxF][Ford] <- rep(NA, NROW(indxF)) 
 			}
-			ANSpvalue[indxF] <- ppois(NUMReads, (Lambda*MappablePositions), lower.tail=FALSE)
-			ANScounts[indxF] <- NUMReads
-			ANSunmapp[indxF] <- nonmappable
-			ANSgsize[indxF]  <- (FeatureEnd-FeatureStart)
+			ANSpvalue[indxF][Ford] <- ppois(NUMReads, (Lambda*MappablePositions), lower.tail=FALSE)
+			ANScounts[indxF][Ford] <- NUMReads
+			ANSunmapp[indxF][Ford] <- nonmappable
+			ANSgsize[indxF][Ford]  <- (FeatureEnd-FeatureStart)
 		}
 	}
 

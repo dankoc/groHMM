@@ -60,9 +60,6 @@
 #' @return A vector representing the 'typical' signal centered on a point of interest.
 #' @author Charles G. Danko and Minho Chae
 metaGene <- function(features, reads, size, up=1000, down=up, debug=FALSE) {
-	# Order -- Make sure, b/c this is one of our main assumptions.  Otherwise violated for DBTSS.
-	features <- features[order(as.character(seqnames(features)), start(features)),]
-
 	if(is.null(down)) {
 		down <- up
 	}
@@ -79,9 +76,12 @@ metaGene <- function(features, reads, size, up=1000, down=up, debug=FALSE) {
 		indxPrb <- which(as.character(seqnames(reads)) == C[i])
 
 		if((NROW(indxF) >0) & (NROW(indxPrb) >0)) {
+			# Order -- Make sure, b/c this is one of our main assumptions.  Otherwise violated for DBTSS.
+			ord <- order(start(features[indxF,])) 
+
 			# Type coersions.
-			FeatureStart 	<- start(features[indxF,])
-			FeatureStr	<- as.character(strand(features[indxF,]))
+			FeatureStart 	<- start(features[indxF,][ord])
+			FeatureStr	<- as.character(strand(features[indxF,][ord]))
 			PROBEStart 	<- start(reads[indxPrb,])
 			PROBEEnd 	<- end(reads[indxPrb,])
 			PROBEStr	<- as.character(strand(reads[indxPrb,]))
@@ -144,8 +144,6 @@ metaGene <- function(features, reads, size, up=1000, down=up, debug=FALSE) {
 #' @return A vector representing the 'typical' signal across genes of different length.
 #' @author Charles G. Danko and Minho Chae
 metaGeneMatrix <- function(features, reads, size= 50, up=1000, down=up, debug=FALSE) {
-	# Order -- Make sure, b/c this is one of our main assumptions.  Otherwise violated for DBTSS.
-	features <- features[order(as.character(seqnames(features)), start(features)),]
 
 	C <- sort(unique(as.character(seqnames(features))))
 	H <- NULL
@@ -159,9 +157,11 @@ metaGeneMatrix <- function(features, reads, size= 50, up=1000, down=up, debug=FA
 		indxPrb <- which(as.character(seqnames(reads)) == C[i])
 
 		if((NROW(indxF) >0) & (NROW(indxPrb) >0)) {
+			# Order -- Make sure, b/c this is one of our main assumptions.  Otherwise violated for DBTSS.
+			ord <- order(start(features[indxF,]))
 			# Type coersions.
-			FeatureStart 	<- start(features[indxF,])
-			FeatureStr	<- as.character(strand(features[indxF,]))
+			FeatureStart 	<- start(features[indxF,][ord])
+			FeatureStr	<- as.character(strand(features[indxF,][ord]))
 			PROBEStart 	<- start(reads[indxPrb,])
 			PROBEEnd 	<- end(reads[indxPrb,])
 			PROBEStr	<- as.character(strand(reads[indxPrb,]))
@@ -226,9 +226,6 @@ metaGeneMatrix <- function(features, reads, size= 50, up=1000, down=up, debug=FA
 #' @return A vector representing the 'typical' signal across genes of different length.
 #' @author Charles G. Danko and Minho Chae
 metaGene_nL <- function(features, reads, n_windows=1000, debug=FALSE) {
-	# Order -- Make sure, b/c this is one of our main assumptions.  Otherwise violated for DBTSS.
-	features <- features[order(as.character(seqnames(features)), start(features)),]
-
 	C <- sort(unique(as.character(seqnames(features))))
 	H <- rep(0,n_windows)
 	for(i in 1:NROW(C)) {
@@ -241,10 +238,13 @@ metaGene_nL <- function(features, reads, n_windows=1000, debug=FALSE) {
 		indxPrb <- which(as.character(seqnames(reads)) == C[i])
 
 		if((NROW(indxF) >0) & (NROW(indxPrb) >0)) {
+			# Order -- Make sure, b/c this is one of our main assumptions.  Otherwise violated for DBTSS.
+			ord <- order(start(features[indxF,])) 
+
 			# Type coersions.
-			FeatureStart 	<- start(features[indxF,])
-			FeatureEnd 	<- end(features[indxF,])
-			FeatureStr	<- as.character(strand(features[indxF,]))
+			FeatureStart 	<- start(features[indxF,][ord])
+			FeatureEnd 	<- end(features[indxF,][ord])
+			FeatureStr	<- as.character(strand(features[indxF,][ord]))
 			PROBEStart 	<- start(reads[indxPrb,])
 			PROBEEnd 	<- end(reads[indxPrb,])
 			PROBEStr	<- as.character(strand(reads[indxPrb,]))
