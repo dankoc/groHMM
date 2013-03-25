@@ -101,6 +101,9 @@ windowAnalysis_foreachChrom <- function(i) {
 
 #' windowAnalysis Returns a vector of integers representing the counts of reads in a moving window.
 #'
+#' Supports parallel processing using mclapply in the 'parallel' package.  To change the number of processors
+#' use the argument 'mc.cores'.
+#'
 #' @param reads GenomicRanges object representing the position of reads mapping in the genome.
 #' @param strand Takes values of "+", "-", or "N".  Computes Writes a wiggle on the speicified strand.  "N" denotes collapsing reads on both strands.  Default: "N".
 #' @param window_size Size of the moving window. Either window_size or step_size must be specified.

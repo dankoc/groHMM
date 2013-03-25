@@ -84,6 +84,9 @@ countReadsInInterval_foreachChrom <- function(i) {
 #'
 #' Only counts reads on the appropriate strand.
 #'
+#' Supports parallel processing using mclapply in the 'parallel' package.  To change the number of processors
+#' use the argument 'mc.cores'.
+#'
 #' @param features A GRanges object representing a set of genomic coordinates.  The meta-plot will be centered on the start position.
 #' @param reads A GRanges object representing a set of mapped reads.
 #' @return Returns a vector of counts, each representing the number of reads inside each genomic interval.
@@ -188,6 +191,9 @@ countMappableReadsInInterval_foreachChrom <- function(i) {
 
 
 #' countMappableReadsInInterval counts the number of mappable reads in a set of genomic features.
+#'
+#' Supports parallel processing using mclapply in the 'parallel' package.  To change the number of processors
+#' use the argument 'mc.cores'.
 #'
 #' @param features A GRanges object representing a set of genomic coordinates.  The meta-plot will be centered on the start position.
 #' @param UnMap List object representing the position of un-mappable reads.  Default: not used.

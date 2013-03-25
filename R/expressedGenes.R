@@ -124,6 +124,9 @@ expressedGenes_foreachChrom <- function(i) {
 
 #' Function identifies expressed features using the methods introduced in Core, Waterfall, Lis; Science, Dec. 2008.
 #'
+#' Supports parallel processing using mclapply in the 'parallel' package.  To change the number of processors
+#' use the argument 'mc.cores'.
+#'
 #' @param features A GRanges object representing a set of genomic coordinates.  The meta-plot will be centered on the start position.  There can be optional "ID" column for gene ids.
 #' @param reads A GRanges object representing a set of mapped reads.
 #' @param genomeSize The size of the target genome.  Default: 3e9, or roughly the size of the human genome.

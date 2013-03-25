@@ -208,6 +208,9 @@ pausingIndex_foreachChrom <- function(i) {
 
 #' Returns the pausing index for different genes.  TODO: DESCRIBE THE PAUSING INDEX.
 #'
+#' Supports parallel processing using mclapply in the 'parallel' package.  To change the number of processors
+#' use the argument 'mc.cores'.
+#'
 #'  @param f data.frame of: CHR, START, END, STRAND.
 #'  @param p data.frame of: CHR, START, END, STRAND.
 #'  @param size The size of the moving window.
