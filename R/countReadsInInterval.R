@@ -43,6 +43,43 @@
 ##
 ########################################################################
 
+countReadsInInterval_foreachChrom <- function(i) {
+	# Which KG?  prb?
+	indxF   <- which(as.character(seqnames(features)) == C[i])
+	indxPrb <- which(as.character(seqnames(reads)) == C[i])
+
+	if((NROW(indxF) >0) & (NROW(indxPrb) >0)) {
+
+		# Order -- Make sure, b/c this is one of our main assumptions.  Otherwise violated for DBTSS.
+		Ford <- order(start(features[indxF,]))
+
+		# Type coersions.
+		FeatureStart 	<- start(features[indxF,][Ford])
+		FeatureEnd 	<- end(features[indxF,][Ford])
+		FeatureStr	<- as.character(strand(features[indxF,][Ford]))
+		PROBEStart 	<- start(reads[indxPrb,])
+
+		PROBEEnd        <- end(reads[indxPrb,])
+		PROBEStr        <- as.character(strand(reads[indxPrb,]))	
+
+		# Set dimensions.
+		dim(FeatureStart)	<- c(NROW(FeatureStart), NCOL(FeatureStart))
+		dim(FeatureEnd) 	<- c(NROW(FeatureEnd), 	 NCOL(FeatureEnd))
+		dim(FeatureStr)		<- c(NROW(FeatureStr), 	 NCOL(FeatureStr))
+		dim(PROBEStart) 	<- c(NROW(PROBEStart), 	 NCOL(PROBEStart))
+		dim(PROBEEnd) 		<- c(NROW(PROBEEnd), 	 NCOL(PROBEEnd))
+		dim(PROBEStr)		<- c(NROW(PROBEStr), 	 NCOL(PROBEStr))
+
+		Fprime <- .Call("CountReadsInFeatures", FeatureStart, FeatureEnd, FeatureStr, 
+						PROBEStart, PROBEEnd, PROBEStr, PACKAGE = "groHMM")
+
+		return(list(data_vect= as.integer(Fprime), ord= Ford))
+	}
+	
+	return(integer(0))
+}
+
+
 #' countReadsInInterval counts the number of reads that fall inside of each genomic feature.
 #'
 #' Only counts reads on the appropriate strand.
@@ -51,56 +88,23 @@
 #' @param reads A GRanges object representing a set of mapped reads.
 #' @return Returns a vector of counts, each representing the number of reads inside each genomic interval.
 #' @author Charles G. Danko and Minho Chae
-countReadsInInterval <- function(features, reads) {
+countReadsInInterval <- function(features, reads, ...) {
 	# Can't use GRanges sort b/c GRanges sort by natural order; order by (a) sequence level, (b)strand, 
 	# (c)start, (d)width.
 	# Order -- Make sure, b/c this is one of our main assumptions.  Otherwise violated for DBTSS.
 	reads <- reads[order(as.character(seqnames(reads)), start(reads)),]
 
 	C <- sort(unique(as.character(seqnames(features))))
+	
+	## Run parallel version.
+	mcp <- mclapply(c(1:NROW(C)), countReadsInInterval_foreachChrom, ...)
+
+	## Convert to a vector.
 	F <- rep(0,NROW(features))
 	for(i in 1:NROW(C)) {
-		# Which KG?  prb?
 		indxF   <- which(as.character(seqnames(features)) == C[i])
-		indxPrb <- which(as.character(seqnames(reads)) == C[i])
-
 		if((NROW(indxF) >0) & (NROW(indxPrb) >0)) {
-			# Order -- Make sure, b/c this is one of our main assumptions.  Otherwise violated for DBTSS.
-			Ford <- order(start(features[indxF,]))
-
-			# Type coersions.
-			FeatureStart 	<- start(features[indxF,][Ford])
-			FeatureEnd 	<- end(features[indxF,][Ford])
-			FeatureStr	<- as.character(strand(features[indxF,][Ford]))
-			PROBEStart 	<- start(reads[indxPrb,])
-
-		 	PROBEEnd        <- end(reads[indxPrb,])
-                        PROBEStr        <- as.character(strand(reads[indxPrb,]))	
-
-			#if(NCOL(p) > 2) { ## Assume that all four columns are present.
-			#  PROBEEnd 	<- as.integer(p[indxPrb,3][Pord])
-			#  PROBEStr	<- as.character(p[indxPrb,4][Pord])
-			#}
-			#else {
-			# if(NCOL(p) == 2) { ## If probes are represented by only two columns, set PROBEEnd to 0-length probes.  Record 
-			#   PROBEEnd <- PROBEStart
-			#   PROBEStr <- rep("+", NROW(PROBEStart))
-			#   FeatureStr <- rep("+", NROW(FeatureStr))
-			# }
-			#}
-
-			# Set dimensions.
-			dim(FeatureStart)	<- c(NROW(FeatureStart), NCOL(FeatureStart))
-			dim(FeatureEnd) 	<- c(NROW(FeatureEnd), 	 NCOL(FeatureEnd))
-			dim(FeatureStr)		<- c(NROW(FeatureStr), 	 NCOL(FeatureStr))
-			dim(PROBEStart) 	<- c(NROW(PROBEStart), 	 NCOL(PROBEStart))
-			dim(PROBEEnd) 		<- c(NROW(PROBEEnd), 	 NCOL(PROBEEnd))
-			dim(PROBEStr)		<- c(NROW(PROBEStr), 	 NCOL(PROBEStr))
-
-			Fprime <- .Call("CountReadsInFeatures", FeatureStart, FeatureEnd, FeatureStr, 
-							PROBEStart, PROBEEnd, PROBEStr, PACKAGE = "groHMM")
-
-			F[indxF][Ford] <- as.integer(Fprime)
+		  F[indxF][mcp[[i]][["ord"]]] <- mcp[[i]][["data_vect"]]
 		}
 	}
 
@@ -130,6 +134,59 @@ countReadsInInterval <- function(features, reads) {
 ##
 ########################################################################
 
+
+countMappableReadsInInterval_foreachChrom <- function(i) {
+	indxF   <- which(as.character(seqnames(features)) == C[i])
+
+	if(NROW(indxF) >0) {
+		# Order -- Make sure, b/c this is one of our main assumptions.  Otherwise violated for DBTSS.
+		Ford <- order(start(features[indxF,]))
+		
+		# Type coersions.
+		FeatureStart 	<- start(features[indxF,][Ford])
+		FeatureEnd 	<- end(features[indxF,][Ford])
+		FeatureStr	<- as.character(strand(features[indxF,][Ford]))
+
+		# Set dimensions.
+		dim(FeatureStart)	<- c(NROW(FeatureStart), NCOL(FeatureStart))
+		dim(FeatureEnd) 	<- c(NROW(FeatureEnd), 	 NCOL(FeatureEnd))
+		dim(FeatureStr)		<- c(NROW(FeatureStr), 	 NCOL(FeatureStr))
+		
+		## Count start index.
+		chr_indx <- which(UnMap[[1]][[1]] == C[i])
+		CHRSIZE <- as.integer(UnMap[[1]][[2]][chr_indx])
+		CHRSTART <- as.integer(0)
+		if(chr_indx > 1) {  ## Running on 1:0 gives c(1, 0)
+			CHRSTART <- as.integer( 
+				sum(UnMap[[1]][[2]][
+					c(1:(chr_indx-1))
+				]) +1)
+		}
+
+		if(debug) {
+			print(paste(C[i],": Counting unMAQable regions.",sep=""))
+			print(paste("CHRSIZE:", CHRSIZE, "CHRSTART:", CHRSTART))
+		}
+
+		## Count unMAQable regions, and size of everything ... 
+		nonmappable <- .Call("CountUnMAQableReads", FeatureStart, FeatureEnd, 
+				UnMap[[2]], CHRSTART, CHRSIZE, PACKAGE = "groHMM")
+
+		## Adjust size of gene body.
+		Difference <- (FeatureEnd - FeatureStart) - nonmappable + 1 ## Otherwise, get -1 for some.
+
+		if(debug) {
+			print(head(nonmappable))
+			print(as.integer(head(Difference)))
+		}
+
+		#F[indxF][Ford] <- as.integer(Difference)
+		return(list(Difference= Difference, ord= Ford))
+	}
+	return(integer(0))
+}
+
+
 #' countMappableReadsInInterval counts the number of mappable reads in a set of genomic features.
 #'
 #' @param features A GRanges object representing a set of genomic coordinates.  The meta-plot will be centered on the start position.
@@ -137,56 +194,20 @@ countReadsInInterval <- function(features, reads) {
 #' @param debug If set to TRUE, provides additional print options. Default: FALSE
 #' @return Returns a vector of counts, each representing the number of reads inside each genomic interval.
 #' @author Charles G. Danko and Minho Chae
-countMappableReadsInInterval <- function(features, UnMap, debug=FALSE) {
+countMappableReadsInInterval <- function(features, UnMap, debug=FALSE, ...) {
 
 	C <- sort(unique(as.character(seqnames(features))))
+	
+	## Run parallel version.
+	mcp <- mclapply(c(1:NROW(C)), countMappableReadsInInterval_foreachChrom, ...)
+
+	## Convert to a vector.
 	F <- rep(0,NROW(features))
 	for(i in 1:NROW(C)) {
 		indxF   <- which(as.character(seqnames(features)) == C[i])
 
 		if(NROW(indxF) >0) {
-			# Order -- Make sure, b/c this is one of our main assumptions.  Otherwise violated for DBTSS.
-			Ford <- order(start(features[indxF,]))
-			
-			# Type coersions.
-			FeatureStart 	<- start(features[indxF,][Ford])
-			FeatureEnd 	<- end(features[indxF,][Ford])
-			FeatureStr	<- as.character(strand(features[indxF,][Ford]))
-
-			# Set dimensions.
-			dim(FeatureStart)	<- c(NROW(FeatureStart), NCOL(FeatureStart))
-			dim(FeatureEnd) 	<- c(NROW(FeatureEnd), 	 NCOL(FeatureEnd))
-			dim(FeatureStr)		<- c(NROW(FeatureStr), 	 NCOL(FeatureStr))
-			
-			## Count start index.
-			chr_indx <- which(UnMap[[1]][[1]] == C[i])
-			CHRSIZE <- as.integer(UnMap[[1]][[2]][chr_indx])
-			CHRSTART <- as.integer(0)
-			if(chr_indx > 1) {  ## Running on 1:0 gives c(1, 0)
-				CHRSTART <- as.integer( 
-					sum(UnMap[[1]][[2]][
-						c(1:(chr_indx-1))
-					]) +1)
-			}
-
-			if(debug) {
-				print(paste(C[i],": Counting unMAQable regions.",sep=""))
-				print(paste("CHRSIZE:", CHRSIZE, "CHRSTART:", CHRSTART))
-			}
-
-			## Count unMAQable regions, and size of everything ... 
-			nonmappable <- .Call("CountUnMAQableReads", FeatureStart, FeatureEnd, 
-					UnMap[[2]], CHRSTART, CHRSIZE, PACKAGE = "groHMM")
-
-			## Adjust size of gene body.
-			Difference <- (FeatureEnd - FeatureStart) - nonmappable + 1 ## Otherwise, get -1 for some.
-
-			if(debug) {
-				print(head(nonmappable))
-				print(as.integer(head(Difference)))
-			}
-
-			F[indxF][Ford] <- as.integer(Difference)
+			F[indxF][mcp[[i]][["ord"]]] <- as.integer(mcp[[i]][["Difference"]])
 		}
 	}
 

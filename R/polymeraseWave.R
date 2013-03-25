@@ -297,86 +297,6 @@ polymeraseWave_gamma <- function(reads1, reads2, genes, size=50, approxDist, ups
 			if(debug) print("PROBLEM DETECTED in fitting KL-Divergence!")
 		}
 
-		## Finally, find the running average and max in windows along the gene.
-		## Prepare this to plot on, and use it to design another filter.
-
-		## Testing... Plots the gene, and the KL-divergence on the same plot.
-		if(!is.null(prefix)) {
-		  png(paste(prefix,".",i,".",genes[i,5],".png",sep=""), width=750, height=600)
-
-			#add extra space to right margin of plot within frame
-			par(mar=c(5, 4, 4, 4) + 0.1)
-
-			# Plot first set of data and draw its axis
-			plot((c(1:NROW(gene))*size), gene, axes=F, xlab="", ylab="", ylim=c(min(gene),max(gene)),
-				type="p",col="black", main=paste("WindowedReads; KLdiv:",KLdivHMM), cex=1, pch=20)
-			axis(2, ylim=c(min(gene),max(gene)),col="black")
-
-			## Plot the predicted up-regulated region.
-			wave <- rep(0,NROW(gene))
-			wave[which(ansVitervi == 1)] <- 1
-			points((c(1:NROW(gene))*size), (log(wave)+max(gene)), col="red", cex=1, pch=15)
-			abline(v=(DTs*size), lty="dotted", lwd=2, col="dark gray")
-			abline(v=(DTe*size), lty="dotted", lwd=2, col="dark gray")
-
-			points((c(1:NROW(gene))*size), gene, pch=20, cex=1)
-
-#			## Add moving max & average.
-			points((c(1:NROW(gene))*size),MovMax,xlab="",ylab="",axes=F,type="l",col="blue",lwd=1.5)
-#			points((c(1:NROW(gene))*size), MovMean, xlab="", ylab="", axes=F, type="l", col="red", lwd=1.5)
-
-			## Calculate the median in the upstream window.
-			abline(h=medDns, col="blue", lty="dotted", lwd=1.5)
-
-			# Plot the second plot and put axis scale on right
-#			par(new=T)  # Allow a second plot on the same graph
-#			plot((c(1:NROW(gene))*size), KS, xlab="", ylab="", ylim=c(min(KS),max(KS)),
-#				axes=F, type="l", col="dark green", lwd=3)
-#			mtext("KS Divergence",side=4,col="dark green",line=2.5)
-#			axis(4, ylim=c(min(KS),max(KS)), col="dark green",col.axis="dark green")
-
-			## Add KL-divergence
-#			par(new=T)
-#			plot((c(1:NROW(gene))*size), KLdiv, xlab="", ylab="", axes=F, type="l", col="brown", lwd=3, 
-#				ylim=c(min(KLdiv),max(KLdiv)))
-#			axis(2, ylim=c(min(KLdiv),max(KLdiv)),col="brown")
-#			mtext("KLdivergence",side=2,line=2.5, col="brown",col.axis="brown")
-
-			## Add difference in means
-#			par(new=T)
-#			plot((c(1:NROW(gene))*size), Means, xlab="", ylab="", axes=F, type="l", col="dark gray", cex=3,
-#				ylim=c(min(Means),max(Means)))
-
-			# Draw the time axis
-			axis(1,pretty(range(c(1:NROW(gene))*50),10))
-			mtext("Position (bp)",side=1,col="black",line=2.5)
-
-			box()
-
-		  dev.off()
-
-		## Now plot the fit paremeters from the HMM.
-##		  if((DTs > 1) & (DTe > 1) & (DTs < DTe) & (DTe < NROW(gene)) & (DTs < NROW(gene))) {
-##		    png(paste(prefix,"-params.",i,".",genes[i,5],".png",sep=""), width=600, height=900)
-##			par(mfrow=c(3,1))
-##
-##			HIST<- hist(gene[c(1:DTs)], 50)
-##			MODEL1 <- DTs*dnorm(HIST$mids, pINew$mean, sqrt(pINew$var))
-##			points(HIST$mids, MODEL1, type="l", col="red")
-##
-##			HIST<- hist(gene[c((DTs+1):DTe)], 50)
-##			MODEL2 <- (DTe-DTs)*dgamma(HIST$mids, shape=pPNew$shape, scale=pPNew$scale)
-##			points(HIST$mids, MODEL2, type="l", col="red")
-##
-##			HIST <- hist(gene[c((DTe+1):NROW(gene))], 50)
-##			MODEL3 <- (NROW(gene)-DTe)*dnorm(HIST$mids, pBNew$mean, sqrt(pBNew$var))
-#######			MODEL3 <- (NROW(gene)-DTe)*dgamma(HIST$mids, pBNew$shape, pBNew$scale)
-##			points(HIST$mids, MODEL3, type="l", col="red", lwd=2)
-##
-##		    dev.off()
-##		  }
-		}
-
 	}
 	
 	returnDF <- data.frame(StartWave= STRTwave, EndWave= ENDwave, Rate= ANS, 
@@ -638,44 +558,6 @@ polymeraseWave_norm <- function(reads1, reads2, genes, size=50, approxDist, upst
 			avgDns <- median(MovMean[c(max((which(ansVitervi == 1))+round(MovMeanSpd/size)):NROW(MovMean))])
 			minAvg <- min(MovMean[c(min(which(ansVitervi == 1)):max(which(ansVitervi == 1)))])
 			minMeanWindLTMed[i] <- (avgDns < minAvg) ## True if min(wave) > med(wave.upstream)
-	
-		## Testing... Plots the gene, and the KL-divergence on the same plot.
-		if(!is.null(prefix)) {
-		  png(paste(prefix,".",i,".",genes[i,5],".png",sep=""), width=750, height=600)
-			par(mar=c(5, 4, 4, 4) + 0.1)
-			plot((c(1:NROW(gene))*size), gene, axes=F, xlab="", ylab="", ylim=c(min(gene),max(gene)),
-				type="p",col="black", main=paste("WindowedReads; KLdiv:",KLdivHMM), cex=1, pch=20)
-			axis(2, ylim=c(min(gene),max(gene)),col="black")
-			wave <- rep(0,NROW(gene))
-			wave[which(ansVitervi == 1)] <- 1
-			points((c(1:NROW(gene))*size), (log(wave)+max(gene)), col="red", cex=1, pch=15)
-			abline(v=(DTs*size), lty="dotted", lwd=2, col="dark gray")
-			abline(v=(DTe*size), lty="dotted", lwd=2, col="dark gray")
-			points((c(1:NROW(gene))*size), gene, pch=20, cex=1)
-			points((c(1:NROW(gene))*size),MovMax,xlab="",ylab="",axes=F,type="l",col="blue",lwd=1.5)
-			abline(h=medDns, col="blue", lty="dotted", lwd=1.5)
-			axis(1,pretty(range(c(1:NROW(gene))*50),10))
-			mtext("Position (bp)",side=1,col="black",line=2.5)
-			box()
-		  dev.off()
-
-		## Now plot the fit paremeters from the HMM.
-#		  png(paste(prefix,"-params.",i,".",genes[i,5],".png",sep=""), width=600, height=900)
-#			  par(mfrow=c(3,1))
-#			  HIST<- hist(gene[c(1:DTs)], 50)
-#			  MODEL1 <- DTs*dnorm(HIST$mids, pINew$mean, sqrt(pINew$var))
-#			  points(HIST$mids, MODEL1, type="l", col="red")
-#			  HIST<- hist(gene[c((DTs+1):DTe)], 50)
-#			  MODEL2 <- (DTe-DTs)*(pPNew$parameters[1]*dnorm(HIST$mids, pPNew$parameters[2], pPNew$parameters[3])+(1-pPNew$parameters[1])*dexp(HIST$mids, 1/pPNew$parameters[4]))
-#			  points(HIST$mids, MODEL2, type="l", col="red")
-#			  HIST <- hist(gene[c((DTe+1):NROW(gene))], 50)
-#			  MODEL3 <- (NROW(gene)-DTe)*(pBNew$parameters[1]*dnorm(HIST$mids, pBNew$parameters[2], pBNew$parameters[3])+(1-pBNew$parameters[1])*dexp(HIST$mids, 1/pBNew$parameters[4]))
-##			  MODEL3 <- (NROW(gene)-DTe)*dnorm(HIST$mids, pBNew$mean, sqrt(pBNew$var))
-###			  MODEL3 <- (NROW(gene)-DTe)*dgamma(HIST$mids, pBNew$shape, pBNew$scale)
-#			  points(HIST$mids, MODEL3, type="l", col="red", lwd=2)
-#		  dev.off()
-
-		  }
 			
 		## Construct the return value...
 		geneData[[1]] <- gene[c(1:DTs)]

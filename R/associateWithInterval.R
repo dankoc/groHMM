@@ -57,9 +57,9 @@ associateWithInterval_foreachChrom <- function(i) {
 		dim(PROBELength) <- c(NROW(PROBELength), NCOL(PROBELength))
 
 		Fprime <- .Call("AssociateRegionWithFeatures", FeatureStart, FeatureEnd, PROBEStart, PROBELength, PACKAGE = "groHMM")
+		return(Fprime)
 	}
-	
-	return(Fprime)
+	return(integer(0))
 }
 
 #' associateWithInterval associates reads with the first feature that they fall inside of.
@@ -77,11 +77,14 @@ associateWithInterval <- function(features, reads, ...) {
 	C <- as.character(unique(p[[1]]))
 	mcp <- mclapply(c(1:NROW(C)), associateWithInterval_foreachChrom, ...)
 
-	## Translate this into a return vector...
+	## Translate this into a single vector...
 	F <- rep(NA, NROW(p))
 	for(i in 1:NROW(C)) {
+		indxF   <- which(f[[1]] == C[i])
 		indxPrb <- which(p[[1]] == C[i])
-		F[indxPrb] <- as.character(f[[4]][indxF][as.vector(F[[i]])])
+		if((NROW(indxF) >0) & (NROW(indxPrb) >0)) {
+			F[indxPrb] <- as.character(f[[4]][indxF][as.vector(F[[i]])])
+		}
 	}
 
     return(F)

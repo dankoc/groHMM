@@ -83,65 +83,7 @@ approx.ratios.CI <- function(num.counts, denom.counts, alpha=0.05) {
 ##
 ########################################################################
 
-#' Returns the pausing index for different genes.  TODO: DESCRIBE THE PAUSING INDEX.
-#'
-#'  @param f data.frame of: CHR, START, END, STRAND.
-#'  @param p data.frame of: CHR, START, END, STRAND.
-#'  @param size The size of the moving window.
-#'  @param up Distance upstream of each f to align and histogram.
-#'  @param down	Distance downstream of each f to align and histogram (NULL).
-#'  @param UnMAQ Data structure representing the coordinates of all un-mappable regions in the genome.
-#'  @param debug If set to TRUE, provides additional print options. Default: FALSE
-#'  @return Data.frame of the pausing indices for the input genes.
-#'  @author Charles G. Danko and Minho Chae.
-pausingIndex <- function(f, p, size=50, up=1000, down=1000, UnMAQ=NULL, debug=FALSE) {
-	C <- sort(as.character(unique(f[[1]])))
-	Pause <- rep(0,NROW(f))
-	Body  <- rep(0,NROW(f))
-	Fish  <- rep(0,NROW(f))
-	GeneID <- rep("",NROW(f))
-	CIl  <- rep(0,NROW(f))
-	CIu  <- rep(0,NROW(f))
-
-	## Pass back information for the fisher test...
-	PauseCounts <- rep(0, NROW(f))
-	BodyCounts  <- rep(0, NROW(f))
-	UpCounts    <- rep(0, NROW(f))
-	UgCounts    <- rep(0, NROW(f))
-
-	size		<- as.integer(size)
-	up		<- as.integer(up)
-	down		<- as.integer(down)
-
-	###### Calculate PLUS and MINUS index, for DRY compliance.
-	PLUS_INDX <- which(f[[4]] == "+")
-	MINU_INDX <- which(f[[4]] == "-")
-
-	###### Identify TSS -- Start for '+' strand, End for '-' strand.
-	if(debug) {
-		print("Calculating TSS and gene ends for each gene based on strand information.")
-	}
-	c_tss_indx <- rep(0,NROW(f))
-	c_tss_indx[PLUS_INDX] <- 2
-	c_tss_indx[MINU_INDX] <- 3
-	c_tss <- unlist(lapply(c(1:NROW(f)), function(x) { f[x, c_tss_indx[x]] }))
-
-	###### Now calculate left and right position for gene body, based on '+' or '-'.
-	### Calculate gene end.  Gene start is contiguous with the coordinates for the promoter.
-	c_gene_end_indx <- rep(0,NROW(f))
-	c_gene_end_indx[PLUS_INDX] <- 3
-	c_gene_end_indx[MINU_INDX] <- 2
-	c_gene_end <- unlist(lapply(c(1:NROW(f)), function(x) { f[x,c_gene_end_indx[x]] }))
-
-	### Assign left and right.
-	gLEFT	<- rep(0,NROW(c_tss))
-	gRIGHT	<- rep(0,NROW(c_tss))
-	gLEFT[PLUS_INDX]	<- c_tss[PLUS_INDX] + down
-	gRIGHT[PLUS_INDX]	<- c_gene_end[PLUS_INDX]
-	gLEFT[MINU_INDX]	<- c_gene_end[MINU_INDX]
-	gRIGHT[MINU_INDX]	<- c_tss[MINU_INDX] - down
-
-	for(i in 1:NROW(C)) {
+pausingIndex_foreachChrom <- function(i) {
 		if(debug) {
 			print(C[i])
 		}
@@ -243,23 +185,106 @@ pausingIndex <- function(f, p, size=50, up=1000, down=1000, UnMAQ=NULL, debug=FA
 			} ))
 
 		## Make return values.
-			Pause[indxF][Ford] 	<- as.real(HPause/size)
-			Body[indxF][Ford] 	<- as.real((HGeneBody+1)/Difference) ## 6-5-2012 -- Add a pseudocount here, forcing at least 1 read in the gene body.   
-			Fish[indxF][Ford]	<- as.real(HFish)
-			GeneID[indxF][Ford]	<- as.character(f[indxF,5][Ford])
+			Pause_c 	<- as.real(HPause/size)
+			Body_c 	<- as.real((HGeneBody+1)/Difference) ## 6-5-2012 -- Add a pseudocount here, forcing at least 1 read in the gene body.   
+			Fish_c	<- as.real(HFish)
+			GeneID_c	<- as.character(f[indxF,5][Ford])
 			
-			PauseCounts[indxF][Ford] <- HPause
-			BodyCounts[indxF][Ford]  <- HGeneBody
-			UpCounts[indxF][Ford]    <- round(Up)
-			UgCounts[indxF][Ford]    <- round(Ug)
+			PauseCounts_c <- HPause
+			BodyCounts_c  <- HGeneBody
+			UpCounts_c    <- round(Up)
+			UgCounts_c    <- round(Ug)
 
 			aCI <- approx.ratios.CI(HPause, HGeneBody)
 			scaleFactor <- Difference/size ## Body/ pause, must be 1/ PI units.
-			CIl[indxF][Ford] <- as.real(aCI[,1]*scaleFactor)
-			CIu[indxF][Ford] <- as.real(aCI[,2]*scaleFactor)
+			CIl_c <- as.real(aCI[,1]*scaleFactor)
+			CIu_c <- as.real(aCI[,2]*scaleFactor)
+			
+			return(list(Pause= Pause_c, Body= Body_c, Fish= Fish_c, GeneID= GeneID_c, PauseCounts= PauseCounts_c, BodyCounts= BodyCounts_c, 
+						UpCounts= UpCounts_c, UgCounts= UgCounts_c, CIl= CIl_c, CIu= CIu_c, ord= Ford))
 		}
-		if(debug) {
-			print(paste(C[i],": Done!",sep=""))
+	return(integer(0))
+}
+
+#' Returns the pausing index for different genes.  TODO: DESCRIBE THE PAUSING INDEX.
+#'
+#'  @param f data.frame of: CHR, START, END, STRAND.
+#'  @param p data.frame of: CHR, START, END, STRAND.
+#'  @param size The size of the moving window.
+#'  @param up Distance upstream of each f to align and histogram.
+#'  @param down	Distance downstream of each f to align and histogram (NULL).
+#'  @param UnMAQ Data structure representing the coordinates of all un-mappable regions in the genome.
+#'  @param debug If set to TRUE, provides additional print options. Default: FALSE
+#'  @return Data.frame of the pausing indices for the input genes.
+#'  @author Charles G. Danko and Minho Chae.
+pausingIndex <- function(f, p, size=50, up=1000, down=1000, UnMAQ=NULL, debug=FALSE, ...) {
+	C <- sort(as.character(unique(f[[1]])))
+	Pause <- rep(0,NROW(f))
+	Body  <- rep(0,NROW(f))
+	Fish  <- rep(0,NROW(f))
+	GeneID <- rep("",NROW(f))
+	CIl  <- rep(0,NROW(f))
+	CIu  <- rep(0,NROW(f))
+
+	## Pass back information for the fisher test...
+	PauseCounts <- rep(0, NROW(f))
+	BodyCounts  <- rep(0, NROW(f))
+	UpCounts    <- rep(0, NROW(f))
+	UgCounts    <- rep(0, NROW(f))
+
+	size		<- as.integer(size)
+	up		<- as.integer(up)
+	down		<- as.integer(down)
+
+	###### Calculate PLUS and MINUS index, for DRY compliance.
+	PLUS_INDX <- which(f[[4]] == "+")
+	MINU_INDX <- which(f[[4]] == "-")
+
+	###### Identify TSS -- Start for '+' strand, End for '-' strand.
+	if(debug) {
+		print("Calculating TSS and gene ends for each gene based on strand information.")
+	}
+	c_tss_indx <- rep(0,NROW(f))
+	c_tss_indx[PLUS_INDX] <- 2
+	c_tss_indx[MINU_INDX] <- 3
+	c_tss <- unlist(lapply(c(1:NROW(f)), function(x) { f[x, c_tss_indx[x]] }))
+
+	###### Now calculate left and right position for gene body, based on '+' or '-'.
+	### Calculate gene end.  Gene start is contiguous with the coordinates for the promoter.
+	c_gene_end_indx <- rep(0,NROW(f))
+	c_gene_end_indx[PLUS_INDX] <- 3
+	c_gene_end_indx[MINU_INDX] <- 2
+	c_gene_end <- unlist(lapply(c(1:NROW(f)), function(x) { f[x,c_gene_end_indx[x]] }))
+
+	### Assign left and right.
+	gLEFT	<- rep(0,NROW(c_tss))
+	gRIGHT	<- rep(0,NROW(c_tss))
+	gLEFT[PLUS_INDX]	<- c_tss[PLUS_INDX] + down
+	gRIGHT[PLUS_INDX]	<- c_gene_end[PLUS_INDX]
+	gLEFT[MINU_INDX]	<- c_gene_end[MINU_INDX]
+	gRIGHT[MINU_INDX]	<- c_tss[MINU_INDX] - down
+
+	## Run parallel version.
+	mcp <- mclapply(c(1:NROW(C)), pausingIndex_foreachChrom, ...)
+	
+	## Unlist and re-order values for printing in a nice data.frame.
+	for(i in 1:NROW(C)) {
+		# Which KG?  prb?
+		indxF   <- which(as.character(f[[1]]) == C[i])
+
+		if((NROW(indxF) >0) & (NROW(indxPrb) >0)) {
+			Pause[indxF][mcp[[i]][["ord"]]] 	<- mcp[[i]][["Pause"]]
+			Body[indxF][mcp[[i]][["ord"]]] 	<- mcp[[i]][["Body"]]
+			Fish[indxF][mcp[[i]][["ord"]]]	<- mcp[[i]][["Fish"]]
+			GeneID[indxF][mcp[[i]][["ord"]]]	<- mcp[[i]][["GeneID"]]
+			
+			PauseCounts[indxF][mcp[[i]][["ord"]]] <- mcp[[i]][["PauseCounts"]]
+			BodyCounts[indxF][mcp[[i]][["ord"]]]  <- mcp[[i]][["BodyCounts"]]
+			UpCounts[indxF][mcp[[i]][["ord"]]]    <- mcp[[i]][["UpCounts"]]
+			UgCounts[indxF][mcp[[i]][["ord"]]]    <- mcp[[i]][["UgCounts"]]
+
+			CIl[indxF][mcp[[i]][["ord"]]] <- mcp[[i]][["CIl"]]
+			CIu[indxF][mcp[[i]][["ord"]]] <- mcp[[i]][["CIu"]]
 		}
 	}
 

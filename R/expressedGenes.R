@@ -34,28 +34,7 @@
 ##
 ########################################################################
 
-#' Function identifies expressed features using the methods introduced in Core, Waterfall, Lis; Science, Dec. 2008.
-#'
-#' @param features A GRanges object representing a set of genomic coordinates.  The meta-plot will be centered on the start position.  There can be optional "ID" column for gene ids.
-#' @param reads A GRanges object representing a set of mapped reads.
-#' @param genomeSize The size of the target genome.  Default: 3e9, or roughly the size of the human genome.
-#' @param Lambda Measurement of assay noise.  Default: # reads/ genome size (tends to be too high for GRO-seq data).
-#' @param UnMap List object representing the position of un-mappable reads.  Default: not used.
-#' @param debug If set to true, returns the number of positions.  Default: FALSE.
-#' @return A data.frame representing the expression p.values for features of interest.
-#' @author Charles G. Danko and Minho Chae
-expressedGenes <- function(features, reads, genomeSize=3e9, Lambda= NULL, UnMap=NULL, debug=FALSE) {
-	# Order -- Make sure, b/c this is one of our main assumptions.  Otherwise violated for DBTSS.
-	reads <- reads[order(as.character(seqnames(reads)), start(reads)),]
-
-	C <- sort(unique(as.character(seqnames(features))))
-	ANSgeneid <- rep("char", NROW(features))
-	ANSpvalue <- rep(0,NROW(features))
-	ANScounts <- rep(0,NROW(features))
-	ANSunmapp <- rep(0,NROW(features))
-	ANSgsize  <- rep(0,NROW(features))
-	if(is.null(Lambda))	Lambda <- NROW(reads)/genomeSize
-	for(i in 1:NROW(C)) {
+expressedGenes_foreachChrom <- function(i) {
 		if(debug) {
 			print(paste("Doing chromosome", C[i]))
 		}
@@ -128,14 +107,54 @@ expressedGenes <- function(features, reads, genomeSize=3e9, Lambda= NULL, UnMap=
 
 			## Calculate poisson prob. of each.
 			if ("ID" %in% colnames(mcols(features))) {  # there is "ID" column
-				ANSgeneid[indxF][Ford] <- elementMetadata(features[indxF,])$ID
+				ANSgeneid_c <- elementMetadata(features[indxF,])$ID
 			} else {
-				ANSgeneid[indxF][Ford] <- rep(NA, NROW(indxF)) 
+				ANSgeneid_c <- rep(NA, NROW(indxF)) 
 			}
-			ANSpvalue[indxF][Ford] <- ppois(NUMReads, (Lambda*MappablePositions), lower.tail=FALSE)
-			ANScounts[indxF][Ford] <- NUMReads
-			ANSunmapp[indxF][Ford] <- nonmappable
-			ANSgsize[indxF][Ford]  <- (FeatureEnd-FeatureStart)
+			 ANSpvalue_c <- ppois(NUMReads, (Lambda*MappablePositions), lower.tail=FALSE)
+			 ANScounts_c <- NUMReads
+			 ANSunmapp_c <- nonmappable
+			 ANSgsize_c <- (FeatureEnd-FeatureStart) #[indxF][Ford]
+			
+			return(list(ANSgeneid= ANSgeneid_c, ANSpvalue= ANSpvalue_c, ANScounts= ANScounts_c, 
+						ANSunmapp=  ANSunmapp_c, ANSgsize= ANSgsize_c, ord= Ford))
+		}
+	return(integer(0))
+}
+
+#' Function identifies expressed features using the methods introduced in Core, Waterfall, Lis; Science, Dec. 2008.
+#'
+#' @param features A GRanges object representing a set of genomic coordinates.  The meta-plot will be centered on the start position.  There can be optional "ID" column for gene ids.
+#' @param reads A GRanges object representing a set of mapped reads.
+#' @param genomeSize The size of the target genome.  Default: 3e9, or roughly the size of the human genome.
+#' @param Lambda Measurement of assay noise.  Default: # reads/ genome size (tends to be too high for GRO-seq data).
+#' @param UnMap List object representing the position of un-mappable reads.  Default: not used.
+#' @param debug If set to true, returns the number of positions.  Default: FALSE.
+#' @return A data.frame representing the expression p.values for features of interest.
+#' @author Charles G. Danko and Minho Chae
+expressedGenes <- function(features, reads, genomeSize=3e9, Lambda= NULL, UnMap=NULL, debug=FALSE, ...) {
+	# Order -- Make sure, b/c this is one of our main assumptions.  Otherwise violated for DBTSS.
+	reads <- reads[order(as.character(seqnames(reads)), start(reads)),]	
+	C <- sort(unique(as.character(seqnames(features))))
+	
+	## Run parallel version.
+	mcp <- mclapply(c(1:NROW(C)), expressedGenes_foreachChrom, ...)
+
+	## Unlist... 
+	ANSgeneid <- rep("char", NROW(features))
+	ANSpvalue <- rep(0,NROW(features))
+	ANScounts <- rep(0,NROW(features))
+	ANSunmapp <- rep(0,NROW(features))
+	ANSgsize  <- rep(0,NROW(features))
+	if(is.null(Lambda))	Lambda <- NROW(reads)/genomeSize
+	for(i in 1:NROW(C)) {
+		indxF   <- which(as.character(seqnames(features)) == C[i])
+		if((NROW(indxF) >0) & (NROW(indxPrb) >0)) {
+			 ANSgeneid[indxF][mcp[[i]][["ord"]]] <- mcp[[i]][["ANSgeneid"]]
+			 ANSpvalue[indxF][mcp[[i]][["ord"]]] <- mcp[[i]][["ANSpvalue"]]
+			 ANScounts[indxF][mcp[[i]][["ord"]]] <- mcp[[i]][["ANScounts"]]
+			 ANSunmapp[indxF][mcp[[i]][["ord"]]] <- mcp[[i]][["ANSunmapp"]]
+			 ANSgsize[indxF][mcp[[i]][["ord"]]] <- mcp[[i]][["ANSgsize"]]
 		}
 	}
 
