@@ -34,7 +34,7 @@
 ##
 ########################################################################
 
-expressedGenes_foreachChrom <- function(i) {
+expressedGenes_foreachChrom <- function(i, features, reads, Lambda, UnMap, debug) {
 		if(debug) {
 			print(paste("Doing chromosome", C[i]))
 		}
@@ -133,6 +133,7 @@ expressedGenes_foreachChrom <- function(i) {
 #' @param Lambda Measurement of assay noise.  Default: # reads/ genome size (tends to be too high for GRO-seq data).
 #' @param UnMap List object representing the position of un-mappable reads.  Default: not used.
 #' @param debug If set to true, returns the number of positions.  Default: FALSE.
+#' @param ... Extra argument passed to mclapply
 #' @return A data.frame representing the expression p.values for features of interest.
 #' @author Charles G. Danko and Minho Chae
 expressedGenes <- function(features, reads, genomeSize=3e9, Lambda= NULL, UnMap=NULL, debug=FALSE, ...) {
@@ -141,7 +142,8 @@ expressedGenes <- function(features, reads, genomeSize=3e9, Lambda= NULL, UnMap=
 	C <- sort(unique(as.character(seqnames(features))))
 	
 	## Run parallel version.
-	mcp <- mclapply(c(1:NROW(C)), expressedGenes_foreachChrom, ...)
+	mcp <- mclapply(c(1:NROW(C)), expressedGenes_foreachChrom, features=features, reads=reads,
+				Lambda=Lambda, UnMap=UnMap, debug=debug, ...)
 
 	## Unlist... 
 	ANSgeneid <- rep("char", NROW(features))
@@ -152,6 +154,7 @@ expressedGenes <- function(features, reads, genomeSize=3e9, Lambda= NULL, UnMap=
 	if(is.null(Lambda))	Lambda <- NROW(reads)/genomeSize
 	for(i in 1:NROW(C)) {
 		indxF   <- which(as.character(seqnames(features)) == C[i])
+		indxPrb   <- which(as.character(seqnames(reads)) == C[i])
 		if((NROW(indxF) >0) & (NROW(indxPrb) >0)) {
 			 ANSgeneid[indxF][mcp[[i]][["ord"]]] <- mcp[[i]][["ANSgeneid"]]
 			 ANSpvalue[indxF][mcp[[i]][["ord"]]] <- mcp[[i]][["ANSpvalue"]]
