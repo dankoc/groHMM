@@ -137,6 +137,7 @@ windowAnalysis <- function(reads, strand="N", window_size=(step_size-1), step_si
 
         H <- mclapply(c(1:NROW(chrom)), windowAnalysis_foreachChrom, p=p, strand=strand, wsize=wsize, 
 			ssize=ssize, chrom=chrom, start=start, limitPCRDups=limitPCRDups, end=end, debug=debug, ...)
+	names(H) <- chrom
 	
 	return(H)
 
