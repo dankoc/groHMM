@@ -146,7 +146,8 @@ metaGene <- function(features, reads, size, up=1000, down=up, debug=FALSE, ...) 
 ##
 ########################################################################
 
-metaGeneMatrix_foreachChrom <- function(i) {
+metaGeneMatrix_foreachChrom <- function(i, features, reads, size, up, down, debug) {
+
 		# Which KG?  prb?
 		indxF   <- which(as.character(seqnames(features)) == C[i])
 		indxPrb <- which(as.character(seqnames(reads)) == C[i])
@@ -194,6 +195,7 @@ metaGeneMatrix_foreachChrom <- function(i) {
 #' @param up Distance upstream of each f to align and histogram Default: 1 kb.
 #' @param down Distance downstream of each f to align and histogram Default: same as up.
 #' @param debug If set to TRUE, provides additional print options. Default: FALSE
+#' @param ... Extra argument passed to mclapply
 #' @return A vector representing the 'typical' signal across genes of different length.
 #' @author Charles G. Danko and Minho Chae
 metaGeneMatrix <- function(features, reads, size= 50, up=1000, down=up, debug=FALSE, ...) {
@@ -201,7 +203,8 @@ metaGeneMatrix <- function(features, reads, size= 50, up=1000, down=up, debug=FA
 	C <- sort(unique(as.character(seqnames(features))))
 
 	## Run parallel version.
-	mcp <- mclapply(c(1:NROW(C)), metaGeneMatrix_foreachChrom, ...)
+	mcp <- mclapply(c(1:NROW(C)), metaGeneMatrix_foreachChrom, features=features, reads=reads, 
+					size=size, up=up, down=down, debug=debug, ...)
 	
 	## Append data from all chromosomes.
 	H <- NULL
