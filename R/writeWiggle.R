@@ -41,16 +41,17 @@
 #' @param reverse If set to TRUE, multiplies values by -1.  Used for reversing GRO-seq data on the negative (-) strand. Default: FALSE
 #' @param track.type.line If set to TRUE, prints a header identifying the file as a wiggle.  Necessary to upload a custom track to the UCSC genome browser.  Default: TRUE
 #' @param debug If set to TRUE, provides additional print options. Default: FALSE
+#' @param ... Extra argument passed to mclapply
 #' @return Writes a wiggle file to the specified file.
 #' @author Charles G. Danko
-writeWiggle <- function(reads, file, strand="N", size=50, normCounts=1, sep.chrom=FALSE, reverse=FALSE, track.type.line=TRUE, debug=FALSE) { #color="0,0,0", OtherOptions="", 
+writeWiggle <- function(reads, file, strand="N", size=50, normCounts=1, sep.chrom=FALSE, reverse=FALSE, track.type.line=TRUE, debug=FALSE, ...) { #color="0,0,0", OtherOptions="", 
 
 	## Error checking. ... 
 	if(!(strand=="N"|strand=="+"|strand=="-")) {
 	  stop("Strand should be specified as '+', '-', or 'N'.")
 	}
 	
-	F <- windowAnalysis(reads=reads, strand=strand, window_size=size, debug=debug)
+	F <- windowAnalysis(reads=reads, strand=strand, window_size=size, debug=debug, ...)
 	CHR <- as.character(names(F))
 
 	## If we are not separating, prepare the file before the loop
