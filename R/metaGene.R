@@ -286,7 +286,7 @@ metaGene_nL <- function(features, reads, n_windows=1000, debug=FALSE, ...) {
 			dim(PROBEStr)		<- c(NROW(PROBEStr), 	 NCOL(PROBEStr))
 
 			#for(iFeatures in 1:NROW(FeatureStart)) {
-			mcpg <- mclapply(c(1:NROW(FeatureStart)) function(iFeatures) {
+			mcpg <- mclapply(c(1:NROW(FeatureStart)), function(iFeatures) {
 				ws <- (FeatureEnd[iFeatures]-FeatureStart[iFeatures])/n_windows ## This WILL be an interger.
 				if(debug) {
 					print(paste(C[i],": Counting reads in specified region:",
