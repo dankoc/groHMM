@@ -49,8 +49,7 @@
 ##
 ########################################################################
 
-metaGene_foreachChrom <- function(i) {
-
+metaGene_foreachChrom <- function(i, C, features, reads, size, up, down, debug) {
 	# Which KG?  prb?
 	indxF   <- which(as.character(seqnames(features)) == C[i])
 	indxPrb <- which(as.character(seqnames(reads)) == C[i])
@@ -100,6 +99,7 @@ metaGene_foreachChrom <- function(i) {
 #' @param up Distance upstream of each features to align and histogram Default: 1 kb.
 #' @param down Distance downstream of each features to align and histogram Default: same as up.
 #' @param debug If set to TRUE, provides additional print options. Default: FALSE
+#' @param ... Extra argument passed to mclapply
 #' @return A vector representing the 'typical' signal centered on a point of interest.
 #' @author Charles G. Danko and Minho Chae
 metaGene <- function(features, reads, size, up=1000, down=up, debug=FALSE, ...) {
@@ -110,7 +110,8 @@ metaGene <- function(features, reads, size, up=1000, down=up, debug=FALSE, ...) 
 	C <- sort(unique(as.character(seqnames(features))))
 	
 	## Run parallel version.
-	mcp <- mclapply(c(1:NROW(C)), metaGene_foreachChrom, ...)
+	mcp <- mclapply(c(1:NROW(C)), metaGene_foreachChrom, C=C, features=features, reads=reads,
+			size=size, up=up, down=down, debug=debug, ...)
 	
 	## Add together all chromosomes.
 	H <- rep(0,(up + down + 1))
@@ -146,7 +147,7 @@ metaGene <- function(features, reads, size, up=1000, down=up, debug=FALSE, ...) 
 ##
 ########################################################################
 
-metaGeneMatrix_foreachChrom <- function(i, features, reads, size, up, down, debug) {
+metaGeneMatrix_foreachChrom <- function(i, C, features, reads, size, up, down, debug) {
 
 		# Which KG?  prb?
 		indxF   <- which(as.character(seqnames(features)) == C[i])
@@ -203,7 +204,7 @@ metaGeneMatrix <- function(features, reads, size= 50, up=1000, down=up, debug=FA
 	C <- sort(unique(as.character(seqnames(features))))
 
 	## Run parallel version.
-	mcp <- mclapply(c(1:NROW(C)), metaGeneMatrix_foreachChrom, features=features, reads=reads, 
+	mcp <- mclapply(c(1:NROW(C)), metaGeneMatrix_foreachChrom, C=C, features=features, reads=reads, 
 					size=size, up=up, down=down, debug=debug, ...)
 	
 	## Append data from all chromosomes.
