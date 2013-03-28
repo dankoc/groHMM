@@ -43,7 +43,7 @@
 ##
 ########################################################################
 
-countReadsInInterval_foreachChrom <- function(i) {
+countReadsInInterval_foreachChrom <- function(i, features, reads, C) {
 	# Which KG?  prb?
 	indxF   <- which(as.character(seqnames(features)) == C[i])
 	indxPrb <- which(as.character(seqnames(reads)) == C[i])
@@ -89,6 +89,7 @@ countReadsInInterval_foreachChrom <- function(i) {
 #'
 #' @param features A GRanges object representing a set of genomic coordinates.  The meta-plot will be centered on the start position.
 #' @param reads A GRanges object representing a set of mapped reads.
+#' @param ... Extra argument passed to mclapply
 #' @return Returns a vector of counts, each representing the number of reads inside each genomic interval.
 #' @author Charles G. Danko and Minho Chae
 countReadsInInterval <- function(features, reads, ...) {
@@ -100,12 +101,14 @@ countReadsInInterval <- function(features, reads, ...) {
 	C <- sort(unique(as.character(seqnames(features))))
 	
 	## Run parallel version.
-	mcp <- mclapply(c(1:NROW(C)), countReadsInInterval_foreachChrom, ...)
+	mcp <- mclapply(c(1:NROW(C)), countReadsInInterval_foreachChrom, 
+			features=features, reads=reads, C=C, ...)
 
 	## Convert to a vector.
 	F <- rep(0,NROW(features))
 	for(i in 1:NROW(C)) {
 		indxF   <- which(as.character(seqnames(features)) == C[i])
+                indxPrb   <- which(as.character(seqnames(reads)) == C[i])
 		if((NROW(indxF) >0) & (NROW(indxPrb) >0)) {
 		  F[indxF][mcp[[i]][["ord"]]] <- mcp[[i]][["data_vect"]]
 		}
