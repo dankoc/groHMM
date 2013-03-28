@@ -141,7 +141,7 @@ countReadsInInterval <- function(features, reads, ...) {
 ########################################################################
 
 
-countMappableReadsInInterval_foreachChrom <- function(i) {
+countMappableReadsInInterval_foreachChrom <- function(i, features, UnMap, C) {
 	indxF   <- which(as.character(seqnames(features)) == C[i])
 
 	if(NROW(indxF) >0) {
@@ -201,6 +201,7 @@ countMappableReadsInInterval_foreachChrom <- function(i) {
 #' @param features A GRanges object representing a set of genomic coordinates.  The meta-plot will be centered on the start position.
 #' @param UnMap List object representing the position of un-mappable reads.  Default: not used.
 #' @param debug If set to TRUE, provides additional print options. Default: FALSE
+#' @param ... Extra argument passed to mclapply
 #' @return Returns a vector of counts, each representing the number of reads inside each genomic interval.
 #' @author Charles G. Danko and Minho Chae
 countMappableReadsInInterval <- function(features, UnMap, debug=FALSE, ...) {
@@ -208,7 +209,8 @@ countMappableReadsInInterval <- function(features, UnMap, debug=FALSE, ...) {
 	C <- sort(unique(as.character(seqnames(features))))
 	
 	## Run parallel version.
-	mcp <- mclapply(c(1:NROW(C)), countMappableReadsInInterval_foreachChrom, ...)
+	mcp <- mclapply(c(1:NROW(C)), countMappableReadsInInterval_foreachChrom, 
+					features=features, UnMap=UnMap, C=C, ...)
 
 	## Convert to a vector.
 	F <- rep(0,NROW(features))
