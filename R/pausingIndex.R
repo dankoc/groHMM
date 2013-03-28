@@ -82,8 +82,7 @@ approx.ratios.CI <- function(num.counts, denom.counts, alpha=0.05) {
 ##			This is likely useful for rate; perhaps for identifying internal paused-peaks...
 ##
 ########################################################################
-
-pausingIndex_foreachChrom <- function(i) {
+pausingIndex_foreachChrom <- function(i, C, f, p, gLEFT, gRIGHT, c_tss, size, up, down, UnMAQ, debug) {
 		if(debug) {
 			print(C[i])
 		}
@@ -211,16 +210,22 @@ pausingIndex_foreachChrom <- function(i) {
 #' Supports parallel processing using mclapply in the 'parallel' package.  To change the number of processors
 #' use the argument 'mc.cores'.
 #'
-#'  @param f data.frame of: CHR, START, END, STRAND.
-#'  @param p data.frame of: CHR, START, END, STRAND.
+#'  @param features A GRanges object representing a set of genomic coordinates. 
+#'  @param reads A GRanges object representing a set of mapped reads.
 #'  @param size The size of the moving window.
 #'  @param up Distance upstream of each f to align and histogram.
 #'  @param down	Distance downstream of each f to align and histogram (NULL).
 #'  @param UnMAQ Data structure representing the coordinates of all un-mappable regions in the genome.
 #'  @param debug If set to TRUE, provides additional print options. Default: FALSE
+#'  @param ... Extra argument passed to mclapply
 #'  @return Data.frame of the pausing indices for the input genes.
 #'  @author Charles G. Danko and Minho Chae.
-pausingIndex <- function(f, p, size=50, up=1000, down=1000, UnMAQ=NULL, debug=FALSE, ...) {
+pausingIndex <- function(features, reads, size=50, up=1000, down=1000, UnMAQ=NULL, debug=FALSE, ...) {
+        f <- data.frame(chrom=as.character(seqnames(features)), start=as.integer(start(features)),
+                                end=as.integer(end(features)), strand=as.character(strand(features)))
+        p <- data.frame(chrom=as.character(seqnames(reads)), start=as.integer(start(reads)),
+                                end=as.integer(end(reads)), strand=as.character(strand(reads)))
+
 	C <- sort(as.character(unique(f[[1]])))
 	Pause <- rep(0,NROW(f))
 	Body  <- rep(0,NROW(f))
@@ -268,12 +273,15 @@ pausingIndex <- function(f, p, size=50, up=1000, down=1000, UnMAQ=NULL, debug=FA
 	gRIGHT[MINU_INDX]	<- c_tss[MINU_INDX] - down
 
 	## Run parallel version.
-	mcp <- mclapply(c(1:NROW(C)), pausingIndex_foreachChrom, ...)
+	mcp <- mclapply(c(1:NROW(C)), pausingIndex_foreachChrom, C=C, f=f, p=p, 
+					gLEFT=gLEFT, gRIGHT=gRIGHT, c_tss=c_tss, 
+					size=size, up=up, down=down, UnMAQ=UnMAQ, debug=debug, ...)
 	
 	## Unlist and re-order values for printing in a nice data.frame.
 	for(i in 1:NROW(C)) {
 		# Which KG?  prb?
 		indxF   <- which(as.character(f[[1]]) == C[i])
+                indxPrb <- which(as.character(p[[1]]) == C[i])
 
 		if((NROW(indxF) >0) & (NROW(indxPrb) >0)) {
 			Pause[indxF][mcp[[i]][["ord"]]] 	<- mcp[[i]][["Pause"]]
