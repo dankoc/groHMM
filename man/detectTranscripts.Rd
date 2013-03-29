@@ -4,7 +4,7 @@
 \usage{
   detectTranscripts(reads = NULL, Fp = NULL, Fm = NULL,
     LtProbA = -5, LtProbB = -5, UTS = 5, size = 50,
-    threshold = 0.1, debug = TRUE)
+    threshold = 0.1, debug = TRUE, ...)
 }
 \arguments{
   \item{reads}{A GRanges object representing a set of
@@ -33,6 +33,8 @@
 
   \item{debug}{If set to TRUE, provides additional print
   options. Default: FALSE}
+
+  \item{...}{Extra argument passed to mclapply}
 }
 \value{
   Returns a GRanges object representing the predicted
