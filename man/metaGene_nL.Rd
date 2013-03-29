@@ -3,7 +3,7 @@
 \title{Returns a histogram of the number of reads in each section of a moving window of variable size across genes.}
 \usage{
   metaGene_nL(features, reads, n_windows = 1000,
-    debug = FALSE)
+    debug = FALSE, ...)
 }
 \arguments{
   \item{features}{A GRanges object representing a set of
@@ -17,14 +17,17 @@
 
   \item{debug}{If set to TRUE, provides additional print
   options. Default: FALSE}
+
+  \item{...}{Extra argument passed to mclapply}
 }
 \value{
   A vector representing the 'typical' signal across genes
   of different length.
 }
 \description{
-  Returns a histogram of the number of reads in each
-  section of a moving window of variable size across genes.
+  Supports parallel processing using mclapply in the
+  'parallel' package.  To change the number of processors
+  use the argument 'mc.cores'.
 }
 \author{
   Charles G. Danko and Minho Chae

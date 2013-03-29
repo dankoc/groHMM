@@ -3,7 +3,7 @@
 \title{Returns a histogram of the number of reads in each section of a moving window centered on a certain feature.}
 \usage{
   metaGene(features, reads, size, up = 1000, down = up,
-    debug = FALSE)
+    debug = FALSE, ...)
 }
 \arguments{
   \item{features}{A GRanges object representing a set of
@@ -23,14 +23,17 @@
 
   \item{debug}{If set to TRUE, provides additional print
   options. Default: FALSE}
+
+  \item{...}{Extra argument passed to mclapply}
 }
 \value{
   A vector representing the 'typical' signal centered on a
   point of interest.
 }
 \description{
-  Returns a histogram of the number of reads in each
-  section of a moving window centered on a certain feature.
+  Supports parallel processing using mclapply in the
+  'parallel' package.  To change the number of processors
+  use the argument 'mc.cores'.
 }
 \author{
   Charles G. Danko and Minho Chae

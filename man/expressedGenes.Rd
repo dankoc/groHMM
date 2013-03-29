@@ -3,7 +3,7 @@
 \title{Function identifies expressed features using the methods introduced in Core, Waterfall, Lis; Science, Dec. 2008.}
 \usage{
   expressedGenes(features, reads, genomeSize = 3e+09,
-    Lambda = NULL, UnMap = NULL, debug = FALSE)
+    Lambda = NULL, UnMap = NULL, debug = FALSE, ...)
 }
 \arguments{
   \item{features}{A GRanges object representing a set of
@@ -26,14 +26,17 @@
 
   \item{debug}{If set to true, returns the number of
   positions.  Default: FALSE.}
+
+  \item{...}{Extra argument passed to mclapply}
 }
 \value{
   A data.frame representing the expression p.values for
   features of interest.
 }
 \description{
-  Function identifies expressed features using the methods
-  introduced in Core, Waterfall, Lis; Science, Dec. 2008.
+  Supports parallel processing using mclapply in the
+  'parallel' package.  To change the number of processors
+  use the argument 'mc.cores'.
 }
 \author{
   Charles G. Danko and Minho Chae

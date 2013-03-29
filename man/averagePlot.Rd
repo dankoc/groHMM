@@ -24,9 +24,9 @@
   the peaks of interest.
 }
 \description{
-  Returns the average profile of tiling array probe
-  intensity values or wiggle-like count data centered on a
-  set of genomic positions (specified by 'Peaks').
+  Supports parallel processing using mclapply in the
+  'parallel' package.  To change the number of processors
+  use the argument 'mc.cores'.
 }
 \author{
   Charles G. Danko and Minho Chae
