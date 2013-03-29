@@ -43,7 +43,7 @@
 ##
 ########################################################################
 
-countReadsInInterval_foreachChrom <- function(i, features, reads, C) {
+countReadsInInterval_foreachChrom <- function(i, C, features, reads) {
 	# Which KG?  prb?
 	indxF   <- which(as.character(seqnames(features)) == C[i])
 	indxPrb <- which(as.character(seqnames(reads)) == C[i])
@@ -102,7 +102,7 @@ countReadsInInterval <- function(features, reads, ...) {
 	
 	## Run parallel version.
 	mcp <- mclapply(c(1:NROW(C)), countReadsInInterval_foreachChrom, 
-			features=features, reads=reads, C=C, ...)
+			C=C, features=features, reads=reads, ...)
 
 	## Convert to a vector.
 	F <- rep(0,NROW(features))
@@ -141,7 +141,7 @@ countReadsInInterval <- function(features, reads, ...) {
 ########################################################################
 
 
-countMappableReadsInInterval_foreachChrom <- function(i, features, UnMap, C) {
+countMappableReadsInInterval_foreachChrom <- function(i, C, features, UnMap) {
 	indxF   <- which(as.character(seqnames(features)) == C[i])
 
 	if(NROW(indxF) >0) {
@@ -210,7 +210,7 @@ countMappableReadsInInterval <- function(features, UnMap, debug=FALSE, ...) {
 	
 	## Run parallel version.
 	mcp <- mclapply(c(1:NROW(C)), countMappableReadsInInterval_foreachChrom, 
-					features=features, UnMap=UnMap, C=C, ...)
+					C=C, features=features, UnMap=UnMap, ...)
 
 	## Convert to a vector.
 	F <- rep(0,NROW(features))

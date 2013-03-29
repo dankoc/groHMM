@@ -38,7 +38,7 @@
 ########################################################################
 
 
-associateWithInterval_foreachChrom <- function(i, f, p, C) {
+associateWithInterval_foreachChrom <- function(i, C, f, p) {
 	# Which KG?  prb?
 	indxF   <- which(f[[1]] == C[i])
 	indxPrb <- which(p[[1]] == C[i])
@@ -79,7 +79,7 @@ associateWithInterval <- function(features, reads, ...) {
                                 end=as.integer(end(reads)), strand=as.character(strand(reads))) 
 
 	C <- as.character(unique(p[[1]]))
-	mcp <- mclapply(c(1:NROW(C)), associateWithInterval_foreachChrom, f, p, C, ...)
+	mcp <- mclapply(c(1:NROW(C)), associateWithInterval_foreachChrom, C=C, f=f, p=p, ...)
 
 	## Translate this into a single vector...
 	F <- rep(NA, NROW(p))

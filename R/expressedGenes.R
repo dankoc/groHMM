@@ -34,7 +34,7 @@
 ##
 ########################################################################
 
-expressedGenes_foreachChrom <- function(i, features, reads, Lambda, UnMap, debug) {
+expressedGenes_foreachChrom <- function(i, C, features, reads, Lambda, UnMap, debug) {
 		if(debug) {
 			print(paste("Doing chromosome", C[i]))
 		}
@@ -142,7 +142,7 @@ expressedGenes <- function(features, reads, genomeSize=3e9, Lambda= NULL, UnMap=
 	C <- sort(unique(as.character(seqnames(features))))
 	
 	## Run parallel version.
-	mcp <- mclapply(c(1:NROW(C)), expressedGenes_foreachChrom, features=features, reads=reads,
+	mcp <- mclapply(c(1:NROW(C)), expressedGenes_foreachChrom, C=C, features=features, reads=reads,
 				Lambda=Lambda, UnMap=UnMap, debug=debug, ...)
 
 	## Unlist... 
