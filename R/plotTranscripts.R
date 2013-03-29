@@ -328,7 +328,7 @@ plotTHistogramStrand <- function(tr, gr, strand, scale, runGenes="best", brokenA
 
 
 #-----------------------------------------------------------------------------------------------
-# plotTHistogram
+# plotTxDensity
 #-----------------------------------------------------------------------------------------------
 # tr: txn, gr: annotation
 # overlapGenes: c("best", "all", "none")
@@ -347,7 +347,7 @@ plotTHistogramStrand <- function(tr, gr, strand, scale, runGenes="best", brokenA
 #' @param brokenAnnotation Character.  One of "best", "all", or "none" for the transcripts breaking one annotation. Default: "best"
 #' @param filename Character.  File name for output. Default: NA
 #' @author Minho Chae
-plotTHistogram <- function(tx, features, chrom=NA, strand=NA, scale=TRUE, runGenes="best", brokenAnnotation="best", filename=NA) {
+plotTxDensity <- function(tx, features, chrom=NA, strand=NA, scale=TRUE, runGenes="best", brokenAnnotation="best", filename=NA) {
 	if (!is.na(chrom)) {
 		tx <- tx[as.character(seqnames(tx)) == chrom,]
 		features <- features[as.character(seqnames(features)) == chrom,]

@@ -3,5 +3,5 @@ import(MASS)
 export(countReadsInInterval, countMappableReadsInInterval, pausingIndex,  windowAnalysis, associateWithInterval, 
 	expressedGenes, metaGene, metaGeneMatrix, metaGene_nL, averagePlot, detectTranscripts, polymeraseWave, 
 	writeWiggle, RgammaMLE, Rnorm, Rnorm.exp, tlsLoess, tlsSvd, makeConsensusAnnotations, evaluateHMM, 
-	plotTranscripts, plotTHistogram, breakTranscriptsOnGenes, combineTranscripts, runMetaGene, 
+	plotTranscripts, plotTxDensity, breakTranscriptsOnGenes, combineTranscripts, runMetaGene, 
 	limitToXkb, readBed)
