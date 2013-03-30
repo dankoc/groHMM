@@ -1,9 +1,10 @@
 ###########################################################################
 ##
-##   Copyright 2009, 2010, 2011 Charles Danko.##
-##   This program is part of the GRO-seq R package
+##   Copyright 2009, 2010, 2011, 2012, 2013 Charles Danko and Minho Chae.
 ##
-##   GRO-seq is free software: you can redistribute it and/or modify it 
+##   This program is part of the groHMM R package
+##
+##   groHMM is free software: you can redistribute it and/or modify it 
 ##   under the terms of the GNU General Public License as published by 
 ##   the Free Software Foundation, either version 3 of the License, or  
 ##   (at your option) any later version.
