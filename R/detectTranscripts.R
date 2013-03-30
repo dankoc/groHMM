@@ -43,6 +43,8 @@
 #'
 #' Read counts can be specified as either a GRanges object (reads), or using a fixed-step wiggle-format passed in a list (Fp and Fm).  Either reads or BOTH Fp and Fm must be specified.
 #'
+#'  Reference: Hah N, Danko CG, Core L, Waterfall JJ, Siepel A, Lis JT, Kraus WL. A rapid, extensive, and transient transcriptional response to estrogen signaling in breast cancer cells. Cell. 2011 May 13;145(4):622-34. doi: 10.1016/j.cell.2011.03.042. 
+#'
 #' @param reads A GRanges object representing a set of mapped reads.
 #' @param Fp Wiggle-formatted read counts on "+" strand. Optionally, Fp and Fm represent list() filled with a vector of counts for each chromosome.  Can detect transcripts starting from a fixed-step wiggle.
 #' @param Fm Wiggle-formatted read counts on "-" strand. 
