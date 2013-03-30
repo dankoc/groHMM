@@ -54,7 +54,7 @@ extern "C" {
 
 /**************************************************************************************
  *
- * Viterbi Algorithm
+ * Viterbi Algorithm.  Initial implementation by Andre Martins.  Motified by Charles.
  *
  * hmm - hmm structure with appropriate functions
  * data - user data pointer
@@ -78,12 +78,10 @@ extern void viterbi_path(hmm_t hmm, double **data, int seq_len, double **matrix,
   double **emargs      = hmm.em_args;
   int n_emis           = hmm.n_emis;
 
-//  arc_func *prev_states    = hmm.prev;
   int i, k, l, emis_count;
   double * m_row, * m_row_prev;
   int * b_row;
   int z;
-//  int * prev;
 
   /* setup matrices */
   if (matrix == NULL)
@@ -107,10 +105,6 @@ extern void viterbi_path(hmm_t hmm, double **data, int seq_len, double **matrix,
     m_row_prev = matrix[i - 1];
     b_row = backptr[i];
 
-	// prev_states essentially returns an iterator representing all of the 
-	// states that may be reached by the current state.
-	// Unless HMM is really big & sparse, one spends more time checking
-//  for (prev = prev_states(hmm, l); (k = *prev) != -1; ++prev) { 
     for (l = 0; l < cols; ++l) {
 		double max = -HUGE_VAL;
 		int argmax = -1;
@@ -130,30 +124,23 @@ extern void viterbi_path(hmm_t hmm, double **data, int seq_len, double **matrix,
 				m_row[l] += (log_eProb[l+cols*emis_count])(data[emis_count][i], emargs[l+cols*emis_count], 4);
 		b_row[l] = argmax;
 	}
-  
   }
   
   /* backtrace */
   /* last state */
   i = rows - 1;
-//  {
-    double max = -HUGE_VAL;
-    int argmax = -1;
-    m_row = matrix[i];
-  
-    for (k = 0; k < cols; ++k) {
-      double value = m_row[k];
-      if (value > max) {
-        max = value;
-        argmax = k;
-      }
+  double max = -HUGE_VAL;
+  int argmax = -1;
+  m_row = matrix[i];
+
+  for (k = 0; k < cols; ++k) {
+    double value = m_row[k];
+    if (value > max) {
+	  max = value;
+      argmax = k;
     }
-//    if(argmax > 0)
-//	  Rprintf("WARNING: argmax != -1 -- argmax= %f\n", argmax);
-	//assert(argmax <= -1);
-    
-    path[i] = argmax;
-//  }
+  }
+  path[i] = argmax;
   
   /* other states */
   z = path[i];
@@ -175,7 +162,6 @@ extern void viterbi_path(hmm_t hmm, double **data, int seq_len, double **matrix,
  *	       Serves as a wrapper to Andre's Viterbi implementation.
  *
  *	emi	--	Vector of observed emission over all sequence.
- *  seqLength-- Length of the current sequence.
  *  nEmis   --  Number of emissions vectors.
  *	nstates	--	Number of states in the HMM.
  *	emiprobD-- 	Vector (1 x nstates) of strings representing the emission probability distirubitons.
@@ -198,13 +184,13 @@ extern void viterbi_path(hmm_t hmm, double **data, int seq_len, double **matrix,
  * 	2009-09-09: Wrote this function to integrate R with Andre's Viterbi implementation.
  *
  *****************************************************************************************/
-SEXP Rviterbi(SEXP emi, /*SEXP seqLength,*/ SEXP nEmis, SEXP nstates, SEXP emiprobDist, SEXP emiprobVars, SEXP tprob, SEXP iprob) {
+SEXP Rviterbi(SEXP emi, SEXP nEmis, SEXP nstates, SEXP emiprobDist, SEXP emiprobVars, SEXP tprob, SEXP iprob) {
 
 	// Init hmm_t.
 	hmm_t *hmm = setupHMM(nstates, emiprobDist, emiprobVars, nEmis, tprob, iprob);
 
 	// Set up emissions.
-	int maxT = Rf_nrows(VECTOR_ELT(emi, 0));//INTEGER(seqLength)[0];
+	int maxT = Rf_nrows(VECTOR_ELT(emi, 0));
 	double **emisDATA = (double**)R_alloc(hmm[0].n_emis, sizeof(double*));
 	for(int s=0;s<hmm[0].n_emis;s++) {
 		emisDATA[s]   = REAL(VECTOR_ELT(emi, s));

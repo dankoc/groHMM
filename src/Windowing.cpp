@@ -79,12 +79,10 @@ int *SlidingWindow(	int *Probe_Start, int *Probe_End, SEXP Probe_Strand, int NPr
 // Make a new *int counts, the proper size.
 //	Equal to the number of window START positions in the region.  Depends ONLY on step size -- not on window size.
 	int size  = ceil((double)(EndPosition-StartPosition)/(double)StepSize);
-//	int *counts = (int*)Salloc((size), int);
 	for(int i=0;i<size;i++)
 		counts[i] = 0;
 
 // Foreach Probe, (should scale linearly with the number of probes).
-//	printf("WindowSize: %d, StepSize: %d\n", WindowSize, StepSize);
 	for(int p=0;p<NProbes;p++) {
 
 //	Continue if we are outside the window.
@@ -106,7 +104,6 @@ int *SlidingWindow(	int *Probe_Start, int *Probe_End, SEXP Probe_Strand, int NPr
 		int indxFirst = floor((double)(Probe_Start[p]-StartPosition-WindowSize)/(double)StepSize);
 		int indxLast  = ceil((double)(Probe_End[p]-StartPosition)/(double)StepSize);
 
-//		printf("Probe: %d, First: %d, Last: %d\n", Probe_Start[p], indxFirst, indxLast);
 		for(int w=indxFirst;w<=indxLast;w++) {
 			if(  	(w >= 0) && (w < size) && // Some error checking!  Next, check both conditions:
 				(Probe_End[p] >= (StepSize*w+StartPosition)) && 
@@ -115,7 +112,6 @@ int *SlidingWindow(	int *Probe_Start, int *Probe_End, SEXP Probe_Strand, int NPr
 		}
 	}
 
-// Return *int.
 	return counts;
 }
 
@@ -215,7 +211,6 @@ int *MetaSlidingWindow(int Anchor_Start, const char *Anchor_Strand,
 	if((INDX > 0) && (Probe_Start[INDX-1] > First)) INDX = 0; // More error checking...
 
 	int size = mdUpstream + mdDownstream + 1; // Length up & down & the zero position (=1).
-//	int *ans = (int*)Salloc((size+1), int); // R_alloc this to size= size +1.  The +1 is for passing the last index.
 	for(int i=0;i<(size+1);i++)		// Init all to 0.
 		ans[i]=0;
 
@@ -246,12 +241,10 @@ int *MetaSlidingWindow(int Anchor_Start, const char *Anchor_Strand,
 		}
 		// Assuming that reads are in order -- cuts out after it passes the region with reads.
 		else if(Probe_Start[i] > Last) {
-//			if(!InWindow) ans[size] = 0; // Already set to 0 in the init loop.
 			return ans;
 		}
 	}
 
-//	ans[size]=0; // Already set to 0 in the init loop.
 	return ans; // Only gets here if it hits the end...  In this case, it should be all 0's.
 }
 
@@ -331,8 +324,6 @@ SEXP HistogramOfReadsByFeature(SEXP FeatureStart, SEXP FeatureStrand,
 	int *gSTART 	= INTEGER(FeatureStart);
 	int *PS 	= INTEGER(ReadStart);
 	int *PE 	= INTEGER(ReadEnd);
-//	const char *gSTR 	= CHAR(TAGS(PRINTNAME(FeatureStrand))); 	// ??
-//	const char *pSTR 	= CHAR(TAGS(PRINTNAME(ReadStrand)));	// ??
 
 	int SIZE 	= INTEGER(size)[0];
 	int UP 		= INTEGER(up)[0];

@@ -2,7 +2,7 @@
 **
 **   Copyright 2009, 2010, 2011 Charles Danko.
 **
-**   This program is part of the GRO-seq R package
+**   This program is part of the groHMM R package
 **
 **   groHMM is free software: you can redistribute it and/or modify it 
 **   under the terms of the GNU General Public License as published by 

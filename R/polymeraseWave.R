@@ -41,24 +41,6 @@
 ##	to be a constant, set based on a representative intergenic region.  This is accomidated in my
 ##	[1,*) framework by keeping the vairence constant, and scaling the mean for each gene.
 ##
-##	Arguments:
-##	reads1,reads2    -> GRanges to be compared.
-##	(deprecated: p1,p2	     -> data.frame of: CHR, START, END, STRAND.  These are to be compared.)
-##	genes	     -> A set of genes in which to search for the wave...
-##	size	     -> The size of the moving window.
-##	chrom        -> Chromosome to search (NULL for all).
-##	approxDist   ->
-##	upstreamDist ->
-##	prefix       -> Output graphs?
-##  MinKLDiv     -> Quality control -- keep the KL divergence in a good window (presently unused).
-##	debug        -> If TRUE, prints error messages.
-##  returnVal    -> "simple" (default) or "alldata". "simple" returns a data.frame with Pol II rates.  
-##					"alldata" returns all of the availiable data from each gene.
-##	## ALSO TAKE A LIST OF GENES.
-##
-##	TODO: 
-##	(1) Add in approximation of varience from intergenic regions.
-##
 ## Test with GREB1: 	chr2:11,591,693-11,700,363
 ##			GREB1 <- data.frame(chr="chr2", start=11591693, end=11700363, str="+")
 ########################################################################
@@ -89,8 +71,8 @@
 #'	@param size	The size of the moving window. Suggest using 50 for direct ligation data, and 200 for circular ligation data.  Default: 50.
 #'	@param upstreamDist The amount of upstream sequence to include Default: 10 kb.
 #'	@param TSmooth Optimonally, outlying windows are set a maximum value over the inter-quantile interval, specified by TSmooth.  Reasonable value: 20; Default: NA (for no smoothing).  Users are encouraged to use this parameter ONLY in combination with the normal distribution assumptions.
-#'	@param NonMap 
-#'	@param prefix
+#'	@param NonMap Optionally, un-mappable positions are trated as missing data.  NonMap passes in the list() structure for un-mappable regions.
+#'	@param prefix Optionally, writes out png images of each gene examined for a wave.  'Prefix' denotes the file prefix for image names written to disk.  Users are encouraged to create a new directory and write in a full path.
 #'  @param emissionDistAssumption Takes values "norm", "normExp", and "gamma".  Specifies the functional form of the 'emission' distribution for states I and II (i.e. 5' of the gene, and inside of the wave).  In our experience, "gamma" works best for highly-variable 'spikey' data, and "norm" works for smooth data.  As a general rule of thumb, "gamma" is used for libraries made using the direct ligation method, and "norm" for circular ligation data.  Default: "gamma".
 #'  @param finterWindowSize Method returns 'quality' information for each gene to which a wave was fit.  Included in these metrics are several that define a moving window.  The moving window size is specified by filterWindowSize.  Default: 10 kb.
 #'  @param limitPCRDups If true, counts only 1 read at each position with >= 1 read.  NOT recommended to set this to TRUE.  Defulat: FALSE.

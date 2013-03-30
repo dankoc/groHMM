@@ -213,8 +213,6 @@ extern double normal_exp_optimfn(int n, double *par, void *ex);
 // Returns the log(prob.) of  being in state=state, at sequence position=position, given the fwbk output= fwbk.
 static inline double MargainalizeSumLogProbOver(int state, int position, fwbk_t fwbk) {
 	double logPP = fwbk.forward[position][state]+fwbk.backward[position][state]-fwbk.log_px;
-//	Rprintf("\t--> logPP=%f, Forward=%f, Backward=%f, Prob=%f\n",logPP, fwbk.forward[position][state], fwbk.backward[position][state], fwbk.log_px);
-	// If is nan, return -Inf?!
 	return(logPP);
 }
   
@@ -239,7 +237,6 @@ static inline double expSum(double *logValues, int length) {
 
   for(int k=0;k<length;k++) {
     CurrentSum=logValues[k]-scalefactor;
-//    assert(CurrentSum <= 0); // Don't expect this when updating transitions, as it uses counts (not) probabilities.
     if(-1*CurrentSum < APPROX_EXP_VALUE_THRESHOLD)
 	TotalSum += exp(CurrentSum);
   }
@@ -266,10 +263,7 @@ static inline double expSum2(double v1, double v2) {
 extern inline double NORMAL			(double value, double *args, int nArgs) {	
     if(isnan(value)!=0) return 0;
 	bool useLowerTail = (round(pnorm(value, args[0], args[1], FALSE, TRUE))==0); // Check for underflow.
-//	bool useLowerTail = (abs(pnorm(value, args[0], args[1], FALSE, TRUE))<abs(pnorm(value, args[0], args[1], TRUE, TRUE))); // Check for underflow.
 	double funcVal= expDif(pnorm(value-0.5, args[0], args[1], useLowerTail, TRUE), pnorm(value+0.5, args[0], args[1], useLowerTail, TRUE));
-//	if(isnan(funcVal) || isinf(funcVal)) 
-//		Rprintf("IN NORMAL: value= %f ;\t useLowerTail= %d ; pnorm (w/ w/o)= %f\t%f ;\t args[0]= %f ;\targs[1]= %f ;\n", funcVal, useLowerTail, pnorm(value, args[0], args[1], useLowerTail, TRUE), pnorm(value, args[0], args[1], !useLowerTail, TRUE), args[0], args[1]);
 	return funcVal; 
 	}
 extern inline double dNORMAL		(double value, double *args, int nArgs) {
@@ -334,8 +328,6 @@ extern inline double NORMAL_EXP		(double value, double *args, int nArgs) {
 	double N= NORMAL(value, &args[1], 2);
 	double E= EXPONENTIAL(value, &args[3], 1);
 	double funcVal= expSum2(log(args[0])+N,log(1-args[0])+E);
-//	if(isnan(funcVal))
-//	  Rprintf("value= %f ; alpha= %f; N= %f ; E= %f ; funcVal= %f \n", value, args[0], N, E, funcVal);
 	return funcVal;
 	}
 // Can also write a function for a multinomial distribution given an index of possible emissions.
@@ -348,7 +340,5 @@ extern inline double NORMAL_EXP_MINUS		(double value, double *args, int nArgs) {
 	double N= NORMAL(value, &args[1], 2);
 	double E= EXPONENTIAL(value, &args[3], 1);
 	double funcVal= expSum2(log(args[0])+N,log(1-args[0])+E);
-//	if(isnan(funcVal))
-//	  Rprintf("value= %f ; alpha= %f; N= %f ; E= %f ; funcVal= %f \n", value, args[0], N, E, funcVal);
 	return funcVal;
 	}
