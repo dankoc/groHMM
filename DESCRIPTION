@@ -3,7 +3,7 @@ Version: 0.99.0
 Date: 2009-05-07
 Title: GRO-seq Analysis Pipeline.
 Author: Charles G. Danko <dankoc@gmail.com>, Minho Chae <minho.chae@gmail.com>, Andre Martins <alm253@cornell.edu>
-Maintainer: Charles G. Danko <dankoc@gmail.com>, Minho Chae<minho.chae@gmail.com>
+Maintainer: Minho Chae<minho.chae@gmail.com>, Charles G. Danko <dankoc@gmail.com>
 Depends: R (>= 2.14), MASS, GenomicRanges, parallel
 LinkingTo:
 Suggests:
