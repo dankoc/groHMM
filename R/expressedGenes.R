@@ -131,17 +131,17 @@ expressedGenes_foreachChrom <- function(i, C, features, reads, Lambda, UnMap, de
 #'
 #' @param features A GRanges object representing a set of genomic coordinates.  The meta-plot will be centered on the start position.  There can be optional "ID" column for gene ids.
 #' @param reads A GRanges object representing a set of mapped reads.
-#' @param genomeSize The size of the target genome.  Default: 3e9, or roughly the size of the human genome.
-#' @param Lambda Measurement of assay noise.  Default: # reads/ genome size (tends to be too high for GRO-seq data).
+#' @param Lambda Measurement of assay noise.  Default: 0.04 reads/ kb in a library of 10,751,533 mapped reads. (background computed in Core, Waterfall, Lis. (2008) Science.).
 #' @param UnMap List object representing the position of un-mappable reads.  Default: not used.
 #' @param debug If set to true, returns the number of positions.  Default: FALSE.
 #' @param ... Extra argument passed to mclapply
 #' @return A data.frame representing the expression p.values for features of interest.
 #' @author Charles G. Danko and Minho Chae
-expressedGenes <- function(features, reads, genomeSize=3e9, Lambda= NULL, UnMap=NULL, debug=FALSE, ...) {
+expressedGenes <- function(features, reads, Lambda= NULL, UnMap=NULL, debug=FALSE, ...) {
 	# Order -- Make sure, b/c this is one of our main assumptions.  Otherwise violated for DBTSS.
 	reads <- reads[order(as.character(seqnames(reads)), start(reads)),]	
 	C <- sort(unique(as.character(seqnames(features))))
+	if(is.null(Lambda))	Lambda <- 0.04*NROW(reads)/10751533/1000 #NROW(reads)/genomeSize
 	
 	## Run parallel version.
 	mcp <- mclapply(c(1:NROW(C)), expressedGenes_foreachChrom, C=C, features=features, reads=reads,
@@ -153,7 +153,6 @@ expressedGenes <- function(features, reads, genomeSize=3e9, Lambda= NULL, UnMap=
 	ANScounts <- rep(0,NROW(features))
 	ANSunmapp <- rep(0,NROW(features))
 	ANSgsize  <- rep(0,NROW(features))
-	if(is.null(Lambda))	Lambda <- NROW(reads)/genomeSize
 	for(i in 1:NROW(C)) {
 		indxF   <- which(as.character(seqnames(features)) == C[i])
 		indxPrb   <- which(as.character(seqnames(reads)) == C[i])
