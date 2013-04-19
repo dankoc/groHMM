@@ -1,10 +1,10 @@
 ###########################################################################
 ##
-##   Copyright 2009, 2010, 2011 Charles Danko.
+##   Copyright 2009, 2010, 2011, 2012, 2013 Charles Danko and Minho Chae.
 ##
-##   This program is part of the GRO-seq R package
+##   This program is part of the groHMM R package
 ##
-##   GRO-seq is free software: you can redistribute it and/or modify it 
+##   groHMM is free software: you can redistribute it and/or modify it 
 ##   under the terms of the GNU General Public License as published by 
 ##   the Free Software Foundation, either version 3 of the License, or  
 ##   (at your option) any later version.
@@ -18,6 +18,8 @@
 ##   with this program.  If not, see <http://www.gnu.org/licenses/>.
 ##
 ##########################################################################
+
+
 
 ########################################################################
 ##
@@ -34,28 +36,7 @@
 ##
 ########################################################################
 
-#' Function identifies expressed features using the methods introduced in Core, Waterfall, Lis; Science, Dec. 2008.
-#'
-#' @param features A GRanges object representing a set of genomic coordinates.  The meta-plot will be centered on the start position.  There can be optional "ID" column for gene ids.
-#' @param reads A GRanges object representing a set of mapped reads.
-#' @param genomeSize The size of the target genome.  Default: 3e9, or roughly the size of the human genome.
-#' @param Lambda Measurement of assay noise.  Default: # reads/ genome size (tends to be too high for GRO-seq data).
-#' @param UnMap List object representing the position of un-mappable reads.  Default: not used.
-#' @param debug If set to true, returns the number of positions.  Default: FALSE.
-#' @return A data.frame representing the expression p.values for features of interest.
-#' @author Charles G. Danko and Minho Chae
-expressedGenes <- function(features, reads, genomeSize=3e9, Lambda= NULL, UnMap=NULL, debug=FALSE) {
-	# Order -- Make sure, b/c this is one of our main assumptions.  Otherwise violated for DBTSS.
-	reads <- reads[order(as.character(seqnames(reads)), start(reads)),]
-
-	C <- sort(unique(as.character(seqnames(features))))
-	ANSgeneid <- rep("char", NROW(features))
-	ANSpvalue <- rep(0,NROW(features))
-	ANScounts <- rep(0,NROW(features))
-	ANSunmapp <- rep(0,NROW(features))
-	ANSgsize  <- rep(0,NROW(features))
-	if(is.null(Lambda))	Lambda <- NROW(reads)/genomeSize
-	for(i in 1:NROW(C)) {
+expressedGenes_foreachChrom <- function(i, C, features, reads, Lambda, UnMap, debug) {
 		if(debug) {
 			print(paste("Doing chromosome", C[i]))
 		}
@@ -128,14 +109,59 @@ expressedGenes <- function(features, reads, genomeSize=3e9, Lambda= NULL, UnMap=
 
 			## Calculate poisson prob. of each.
 			if ("ID" %in% colnames(mcols(features))) {  # there is "ID" column
-				ANSgeneid[indxF][Ford] <- elementMetadata(features[indxF,])$ID
+				ANSgeneid_c <- elementMetadata(features[indxF,])$ID
 			} else {
-				ANSgeneid[indxF][Ford] <- rep(NA, NROW(indxF)) 
+				ANSgeneid_c <- rep(NA, NROW(indxF)) 
 			}
-			ANSpvalue[indxF][Ford] <- ppois(NUMReads, (Lambda*MappablePositions), lower.tail=FALSE)
-			ANScounts[indxF][Ford] <- NUMReads
-			ANSunmapp[indxF][Ford] <- nonmappable
-			ANSgsize[indxF][Ford]  <- (FeatureEnd-FeatureStart)
+			 ANSpvalue_c <- ppois(NUMReads, (Lambda*MappablePositions), lower.tail=FALSE)
+			 ANScounts_c <- NUMReads
+			 ANSunmapp_c <- nonmappable
+			 ANSgsize_c <- (FeatureEnd-FeatureStart) #[indxF][Ford]
+			
+			return(list(ANSgeneid= ANSgeneid_c, ANSpvalue= ANSpvalue_c, ANScounts= ANScounts_c, 
+						ANSunmapp=  ANSunmapp_c, ANSgsize= ANSgsize_c, ord= Ford))
+		}
+	return(integer(0))
+}
+
+#' Function identifies expressed features using the methods introduced in Core, Waterfall, Lis; Science, Dec. 2008.
+#'
+#' Supports parallel processing using mclapply in the 'parallel' package.  To change the number of processors
+#' use the argument 'mc.cores'.
+#'
+#' @param features A GRanges object representing a set of genomic coordinates.  The meta-plot will be centered on the start position.  There can be optional "ID" column for gene ids.
+#' @param reads A GRanges object representing a set of mapped reads.
+#' @param Lambda Measurement of assay noise.  Default: 0.04 reads/ kb in a library of 10,751,533 mapped reads. (background computed in Core, Waterfall, Lis. (2008) Science.).
+#' @param UnMap List object representing the position of un-mappable reads.  Default: not used.
+#' @param debug If set to true, returns the number of positions.  Default: FALSE.
+#' @param ... Extra argument passed to mclapply
+#' @return A data.frame representing the expression p.values for features of interest.
+#' @author Charles G. Danko and Minho Chae
+expressedGenes <- function(features, reads, Lambda= NULL, UnMap=NULL, debug=FALSE, ...) {
+	# Order -- Make sure, b/c this is one of our main assumptions.  Otherwise violated for DBTSS.
+	reads <- reads[order(as.character(seqnames(reads)), start(reads)),]	
+	C <- sort(unique(as.character(seqnames(features))))
+	if(is.null(Lambda))	Lambda <- 0.04*NROW(reads)/10751533/1000 #NROW(reads)/genomeSize
+	
+	## Run parallel version.
+	mcp <- mclapply(c(1:NROW(C)), expressedGenes_foreachChrom, C=C, features=features, reads=reads,
+				Lambda=Lambda, UnMap=UnMap, debug=debug, ...)
+
+	## Unlist... 
+	ANSgeneid <- rep("char", NROW(features))
+	ANSpvalue <- rep(0,NROW(features))
+	ANScounts <- rep(0,NROW(features))
+	ANSunmapp <- rep(0,NROW(features))
+	ANSgsize  <- rep(0,NROW(features))
+	for(i in 1:NROW(C)) {
+		indxF   <- which(as.character(seqnames(features)) == C[i])
+		indxPrb   <- which(as.character(seqnames(reads)) == C[i])
+		if((NROW(indxF) >0) & (NROW(indxPrb) >0)) {
+			 ANSgeneid[indxF][mcp[[i]][["ord"]]] <- mcp[[i]][["ANSgeneid"]]
+			 ANSpvalue[indxF][mcp[[i]][["ord"]]] <- mcp[[i]][["ANSpvalue"]]
+			 ANScounts[indxF][mcp[[i]][["ord"]]] <- mcp[[i]][["ANScounts"]]
+			 ANSunmapp[indxF][mcp[[i]][["ord"]]] <- mcp[[i]][["ANSunmapp"]]
+			 ANSgsize[indxF][mcp[[i]][["ord"]]] <- mcp[[i]][["ANSgsize"]]
 		}
 	}
 

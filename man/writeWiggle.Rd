@@ -5,7 +5,7 @@ Currently only supports writing a fixed-step wiggle.}
 \usage{
   writeWiggle(reads, file, strand = "N", size = 50,
     normCounts = 1, sep.chrom = FALSE, reverse = FALSE,
-    track.type.line = TRUE, debug = FALSE)
+    track.type.line = TRUE, debug = FALSE, ...)
 }
 \arguments{
   \item{reads}{GenomicRanges object representing the
@@ -39,6 +39,8 @@ Currently only supports writing a fixed-step wiggle.}
 
   \item{debug}{If set to TRUE, provides additional print
   options. Default: FALSE}
+
+  \item{...}{Extra argument passed to mclapply}
 }
 \value{
   Writes a wiggle file to the specified file.

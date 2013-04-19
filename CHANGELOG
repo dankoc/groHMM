@@ -1,3 +1,14 @@
+Version 0.99.0 -- Date:3-30-13
+-- Added multicore support to linux installs using R's parallel package.
+-- Added significant functionality for evaluating called transcripts.
+-- R functions fully documented.
+-- Added package vignette.
+-- Some cleaning of C-source.  Many functions still too long for my taste.
+-- Switched to new package version numbers, in compliance with Bioconductor's recommendation.
+-- Now using Bioconductor's GRanges to represent short reads and genomic regions.
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
 Version 2.0.6 -- Date:6-6-12
 -- Meta-Gene (and most windowing functions) should now work with strand -- CAUTION: IT'S STILL UNTESTED!!
 -- Added a (non-optional) pseudocount of 1 read to gene body in pausing index calculation.

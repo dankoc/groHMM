@@ -1,9 +1,10 @@
 ###########################################################################
 ##
-##   Copyright 2009, 2010, 2011 Charles Danko.##
-##   This program is part of the GRO-seq R package
+##   Copyright 2009, 2010, 2011, 2012, 2013 Charles Danko and Minho Chae.
 ##
-##   GRO-seq is free software: you can redistribute it and/or modify it 
+##   This program is part of the groHMM R package
+##
+##   groHMM is free software: you can redistribute it and/or modify it 
 ##   under the terms of the GNU General Public License as published by 
 ##   the Free Software Foundation, either version 3 of the License, or  
 ##   (at your option) any later version.
@@ -43,6 +44,8 @@
 #'
 #' Read counts can be specified as either a GRanges object (reads), or using a fixed-step wiggle-format passed in a list (Fp and Fm).  Either reads or BOTH Fp and Fm must be specified.
 #'
+#'  Reference: Hah N, Danko CG, Core L, Waterfall JJ, Siepel A, Lis JT, Kraus WL. A rapid, extensive, and transient transcriptional response to estrogen signaling in breast cancer cells. Cell. 2011 May 13;145(4):622-34. doi: 10.1016/j.cell.2011.03.042. 
+#'
 #' @param reads A GRanges object representing a set of mapped reads.
 #' @param Fp Wiggle-formatted read counts on "+" strand. Optionally, Fp and Fm represent list() filled with a vector of counts for each chromosome.  Can detect transcripts starting from a fixed-step wiggle.
 #' @param Fm Wiggle-formatted read counts on "-" strand. 
@@ -52,11 +55,12 @@
 #' @param size Log probability of t... .  Default: -5.
 #' @param threshold Threshold change in total likelihood, below which EM exits. 
 #' @param debug If set to TRUE, provides additional print options. Default: FALSE
+#' @param ... Extra argument passed to mclapply
 #' @return Returns a GRanges object representing the predicted genomic coordinates of transcripts on both the + and - strand.
 #' @author Charles G. Danko and Minho Chae
 
 ## CGD: TODO: Test switch over to gamma, rather than dGamma?!
-detectTranscripts <- function(reads=NULL, Fp=NULL, Fm=NULL, LtProbA=-5, LtProbB=-5, UTS=5, size=50, threshold=0.1, debug=TRUE) {
+detectTranscripts <- function(reads=NULL, Fp=NULL, Fm=NULL, LtProbA=-5, LtProbB=-5, UTS=5, size=50, threshold=0.1, debug=TRUE, ...) {
 
 	stopifnot(!is.null(reads)|(!is.null(Fp) & !is.null(Fm)))
 
@@ -64,8 +68,8 @@ detectTranscripts <- function(reads=NULL, Fp=NULL, Fm=NULL, LtProbA=-5, LtProbB=
 	epsilon <- 0.001
 	
 	if(is.null(Fp) & is.null(Fm)) { ## Allow equilavent form of Fp and Fm to be spcified in the function automatically.
-	 Fp <- windowAnalysis(reads=reads, strand="+", step_size=size, debug=FALSE)
-	 Fm <- windowAnalysis(reads=reads, strand="-", step_size=size, debug=FALSE)
+	 Fp <- windowAnalysis(reads=reads, strand="+", step_size=size, debug=FALSE, ...)
+	 Fm <- windowAnalysis(reads=reads, strand="-", step_size=size, debug=FALSE, ...)
 	}
 	
 	nFp <- NROW(Fp)

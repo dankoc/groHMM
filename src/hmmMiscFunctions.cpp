@@ -4,7 +4,7 @@
 **
 **   This program is part of the GRO-seq R package
 **
-**   GRO-seq is free software: you can redistribute it and/or modify it 
+**   groHMM is free software: you can redistribute it and/or modify it 
 **   under the terms of the GNU General Public License as published by 
 **   the Free Software Foundation, either version 3 of the License, or  
 **   (at your option) any later version.
@@ -209,8 +209,6 @@ extern void SStatsGamma(int state, int emis_indx, void* ss, fwbk_t fwbk) {
   ssGamma *SS = (ssGamma*)ss;
   for(int position=0;position<fwbk.N;position++) {
 	logPP =  MargainalizeSumLogProbOver(state, position, fwbk);
-//	if(position <= 5 || position >= (fwbk.N-5))
-//	  Rprintf("Position: %d; Log Post Prob= %f; \n", position, logPP);
 
 	// If the contribution matters at all within the bounds of the machine ... add its contribution.
 	if(!(logPP <= epsilon)) Rprintf("[SSallocGamma] -- Assertion about to fail!  logPP= %d\n", logPP);
@@ -224,8 +222,6 @@ extern void SStatsGamma(int state, int emis_indx, void* ss, fwbk_t fwbk) {
 		SS[0].sumPiXiSq  += PP*data_i*data_i;
 		SS[0].sumLogPiXi += PP*log(data_i);
 	}
-//	if(position <= 5 || position >= (fwbk.N-5))
-//	  Rprintf("[SStatsGamma]:\t--> Position: %d; Post Prob= %f; N= %f\n", position, PP, SS[0].N);
 
   }
 //  Rprintf("[SStatsGamma]: SS.N: %f; SS.sumPiXi: %f; SS.sumLogPiXi: %f\n", SS[0].N, SS[0].sumPiXi, SS[0].sumLogPiXi);
@@ -258,8 +254,6 @@ extern void UpdateGamma(int state, void* ss, hmm_t *hmm) {
   else {
 	Rprintf("WARNING! [UpdateGamma]\t--> Gamma for state %d update failed due to instibility!  Using Shape: %f; Scale: %f\n", state, hmm[0].em_args[state][0], hmm[0].em_args[state][1]);
   }
-//  Rprintf("[UpdateGamma]\t--> N: %f; sumPiXi: %f; sumLogPiXi: %f\n", SS[0].N, SS[0].sumPiXi, SS[0].sumLogPiXi);
-//  Rprintf("[UpdateGamma]\t--> Shape: %f; Scale: %f\n", hmm[0].em_args[state][0], hmm[0].em_args[state][1]);
 }
 // Used to fit a constrained gamma, where E[x] = 1, and shape=1/scale.
 extern void UpdateGamma_SHAPEeq1overSCALE(int state, void* ss, hmm_t *hmm) {
@@ -319,8 +313,6 @@ extern void UpdateNormal(int state, void* ss, hmm_t *hmm) {
 //  Rprintf("[UpdateNormal]\t--> N: %f; Mean: %f; sumPiXiSq: %f\n", SS[0].N, stateParams[0], SS[0].sumPiXiSq);
   stateParams[1] = SS[0].sumPiXiSq/SS[0].N-(stateParams[0]*stateParams[0]);
 
-  // stdev=sqrt(var)
-  // error check
   assert(stateParams[1] > -1); // Rounding error can makes this quantity JUST BARELY <1 for samples with 0 varience.
 				// This just checks that the error is not excessive (and thus explained by a bug in
 				// addition to rounding error).
@@ -514,8 +506,6 @@ extern void  TransUpdate(int state, int sequence, void* ss, emiss_func EMI, fwbk
 	/* Calculates sum over chromsome using scalefactor ... */
   	for(int i=0;i<(N-1);i++) {
 		CurrentSum = A[i]-scalefactor;
-//	    if(!(CurrentSum <= 0)) Rprintf("Assertion about to fail. CurrentSum= %f, A[%d]= %f\n", CurrentSum, i, A[i]); //likely nan
-//		assert(CurrentSum <= 0); /* Failing here ... possibly because -Inf is causing an nan value ?! Seems to happen at the beginning of a chain for unreachable states. */
 		if(-1*CurrentSum < APPROX_EXP_VALUE_THRESHOLD)
 			ChromSum += exp(CurrentSum);
  	}
@@ -539,9 +529,6 @@ extern void  TransUpdateP(int state, int nSequences, void* ss, hmm_t *hmm) {
   double *ExpectedTransitions = (double*)calloc(hmm[0].n_states, sizeof(double));
   for(int l=0;l<hmm[0].n_states;l++){
     ExpectedTransitions[l] = expSum(SS[0].totalTransK[l], nSequences); // Foreach state, state->l, sum over training sequences.
-/*	for(int seq=0;seq<nSequences;seq++)  // This will show the indexing.
-		Rprintf("[UpdateTransitionProb]\t\t--> SS.totalTransK[%d][%d]= %f; ExpTrans=%f\n", l, seq, 
-				SS[0].totalTransK[l][seq], ExpectedTransitions[l]);*/
   }
 
   // Calculate sum_l' {Akl'}  --> i.e. Bottom of equation 3.18.
@@ -557,12 +544,10 @@ extern void  TransUpdateP(int state, int nSequences, void* ss, hmm_t *hmm) {
 		error("CurrentDiff is nan.");
 	}
     assert(CurrentDiff <= 0.001); // Allow for some rounding error...
-//    assert((-1*CurrentDiff) < APPROX_EXP_VALUE_THRESHOLD); // No reason it can't be -Inf.
 
     hmm[0].log_tProb[state][l] = CurrentDiff;
 
     Rprintf("[UpdateTransitionProb]\t--> TP_{%d->%d}: %f\n", state, l, hmm[0].log_tProb[state][l]);
-//    Rprintf("[UpdateTransitionProb]\t--> ExpectedTransitions: %f; TotalSum: %f\n",ExpectedTransitions[l], TotalSum);
   }
 
   free(ExpectedTransitions);

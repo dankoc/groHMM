@@ -1,10 +1,10 @@
 ###########################################################################
 ##
-##   Copyright 2009, 2010, 2011 Charles Danko.
+##   Copyright 2009, 2010, 2011, 2012, 2013 Charles Danko and Minho Chae.
 ##
-##   This program is part of the GRO-seq R package
+##   This program is part of the groHMM R package
 ##
-##   GRO-seq is free software: you can redistribute it and/or modify it 
+##   groHMM is free software: you can redistribute it and/or modify it 
 ##   under the terms of the GNU General Public License as published by 
 ##   the Free Software Foundation, either version 3 of the License, or  
 ##   (at your option) any later version.
@@ -37,10 +37,39 @@
 ##
 ########################################################################
 
+
+associateWithInterval_foreachChrom <- function(i, C, f, p) {
+	# Which KG?  prb?
+	indxF   <- which(f[[1]] == C[i])
+	indxPrb <- which(p[[1]] == C[i])
+
+	if((NROW(indxF) >0) & (NROW(indxPrb) >0)) {
+		# Type coersions.
+		FeatureStart <- as.integer(f[[2]][indxF])
+		FeatureEnd <- as.integer(f[[3]][indxF])
+		PROBEStart <- as.integer(p[[2]][indxPrb])
+		PROBELength <- as.integer(p[[3]][indxPrb] - p[[2]][indxPrb])
+
+		# Set dimensions.
+		dim(PROBEStart) <- c(NROW(PROBEStart), NCOL(PROBEStart))
+		dim(FeatureStart) <- c(NROW(FeatureStart), NCOL(FeatureStart))
+		dim(FeatureEnd) <- c(NROW(FeatureEnd), NCOL(FeatureEnd))
+		dim(PROBELength) <- c(NROW(PROBELength), NCOL(PROBELength))
+
+		Fprime <- .Call("AssociateRegionWithFeatures", FeatureStart, FeatureEnd, PROBEStart, PROBELength, PACKAGE = "groHMM")
+		return(Fprime)
+	}
+	return(integer(0))
+}
+
 #' associateWithInterval associates reads with the first feature that they fall inside of.
+#'
+#' Supports parallel processing using mclapply in the 'parallel' package.  To change the number of processors
+#' use the argument 'mc.cores'.
 #'
 #' @param features A GRanges object representing a set of genomic coordinates.  The meta-plot will be centered on the start position.
 #' @param reads A GRanges object representing a set of mapped reads.
+#' @param ... Extra argument passed to mclapply
 #' @return Returns index of the feature in which a each read is found.  Will be a vector of integers, the same size as the number of reads.  NA indicates that the reads does not fall inside of any feature.
 #' @author Charles G. Danko and Minho Chae
 associateWithInterval <- function(features, reads, ...) {
@@ -50,31 +79,17 @@ associateWithInterval <- function(features, reads, ...) {
                                 end=as.integer(end(reads)), strand=as.character(strand(reads))) 
 
 	C <- as.character(unique(p[[1]]))
+	mcp <- mclapply(c(1:NROW(C)), associateWithInterval_foreachChrom, C=C, f=f, p=p, ...)
+
+	## Translate this into a single vector...
 	F <- rep(NA, NROW(p))
-#	for(i in 1:NROW(C)) {
-    mclapply(c(1:NROW(C)), function(i) {
-		# Which KG?  prb?
+	for(i in 1:NROW(C)) {
 		indxF   <- which(f[[1]] == C[i])
 		indxPrb <- which(p[[1]] == C[i])
-
 		if((NROW(indxF) >0) & (NROW(indxPrb) >0)) {
-			# Type coersions.
-			FeatureStart <- as.integer(f[[2]][indxF])
-			FeatureEnd <- as.integer(f[[3]][indxF])
-			PROBEStart <- as.integer(p[[2]][indxPrb])
-			PROBELength <- as.integer(p[[3]][indxPrb] - p[[2]][indxPrb])
-
-			# Set dimensions.
-			dim(PROBEStart) <- c(NROW(PROBEStart), NCOL(PROBEStart))
-			dim(FeatureStart) <- c(NROW(FeatureStart), NCOL(FeatureStart))
-			dim(FeatureEnd) <- c(NROW(FeatureEnd), NCOL(FeatureEnd))
-			dim(PROBELength) <- c(NROW(PROBELength), NCOL(PROBELength))
-
-			Fprime <- .Call("AssociateRegionWithFeatures", FeatureStart, FeatureEnd, PROBEStart, PROBELength, PACKAGE = "groHMM")
-
-			F[indxPrb] <- as.character(f[[4]][indxF][as.vector(Fprime)])
+			F[indxPrb] <- as.character(f[[4]][indxF][as.vector(mcp[[i]])])
 		}
-	})
+	}
 
     return(F)
 }

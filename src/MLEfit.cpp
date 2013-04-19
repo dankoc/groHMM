@@ -4,7 +4,7 @@
 **
 **   This program is part of the GRO-seq R package
 **
-**   GRO-seq is free software: you can redistribute it and/or modify it 
+**   groHMM is free software: you can redistribute it and/or modify it 
 **   under the terms of the GNU General Public License as published by 
 **   the Free Software Foundation, either version 3 of the License, or  
 **   (at your option) any later version.
@@ -241,12 +241,9 @@ extern double normal_exp_optimfn(int n, double *par, void *ex) {
 	double *data = (double*)ex; 
 	int n_x = (int)(data[0]);
 	int maxn = 2*n_x+1, cnt=0;
-//	double *sumCpt = (double*)calloc(n_x, sizeof(double));
 	double value=0;
 	for(int i=1;i<maxn;i+=2) {
 		value += data[i+1]*NORMAL_EXP(data[i], par, 4); // cnt is the same as (i-1)/2. Avoid division by keeping counter.
-//		if(isnan(NORMAL_EXP(data[i], par, 4))) 
-//		 Rprintf("value= %f\t data[%d+1]= %f\t NORM_EXP(data[%d]=%f, ...)= %f\n", value, i, data[i+1], i, data[i], NORMAL_EXP(data[i], par, 4));
 		cnt++;
 	}  //	Previously -- worked in log-space.  double value = expSum(sumCpt, n_x);
 	
@@ -268,18 +265,6 @@ extern void normal_exp_optimgr(int n, double *par, double *gr, void *ex) {
 	int maxn = 2*n_x+1;//, cnt=0;
 	double xi, wi, lwi, ximm, N, E, D;
 
-/*	double *alpha = (double*)calloc(n_x, sizeof(double));
-	double *mu = (double*)calloc(n_x, sizeof(double));
-	double *sigma = (double*)calloc(n_x, sizeof(double));*/
-	
-/*	int n_lP=0, n_lM=0;
-	for(int k=1;k<maxn;k++) {
-	  if(data[k]>0 && ((log(fabs(data[k]))-log(par[3]))>0)) n_lM++;
-	  else n_lP++;
-	}
-	double *lambdaP = (double*)calloc(n_lP, sizeof(double));
-	double *lambdaM = (double*)calloc(n_lM, sizeof(double));
-	*/
 	for(int j=0;j<n;j++)
 		gr[j] = 0;
 
@@ -291,31 +276,14 @@ extern void normal_exp_optimgr(int n, double *par, double *gr, void *ex) {
 	  ximm = xi - par[1]; // xi-mu.
 	  
 	  // Compute N and E and D
-	  N = (NORMAL(xi, &par[1], 2)); // NOT SURE IF THIS SYNTAX WILL WORK?! Seems to work fine!! :)
-	  E = (EXPONENTIAL(xi, &par[3], 1)); // NOT SURE IF THIS SYNTAX WILL WORK?!	  
+	  N = (NORMAL(xi, &par[1], 2));
+	  E = (EXPONENTIAL(xi, &par[3], 1));
 	  D = (NORMAL_EXP(xi, par, 4));//expSum2(log(par[0])+N,log(1-par[0])+E); // Compute (alpha*N+(1-alpha)*E).  Same as NORMAL_EXP(), but don't have to recompute N and E.
 
 	  gr[0]+= (N>E?1:-1)*exp(lwi+expDif(N,E)-D); // expDif returns the absolute value... but N>0 and E>0, so abs shoudl be the magnitude.  N>E calculates the sign.
 	  gr[1]+= ximm*exp(lwi+N-D);
 	  gr[2]+= ((ximm*ximm)/(par[2]*par[2])-1)*exp(lwi+N-D);
 	  
-	  // Lambda tends to overflow ... have to do this VERY robustly...
-/*  	  if(xi>0 && ((log(fabs(xi))-log(par[3]))>0)) {
-	    lambdaM[c_lM]= expDif(0,log(xi)-log(par[3]))+lwi-xi/par[3]-D;
-		c_lM++;
-	  }
-	  else{
-	    lambdaP[c_lP]= (xi>0?(expDif(0,log(xi)-log(par[3]))):(expSum2(0,log(fabs(xi))-log(par[3]))))+lwi-xi/par[3]-D;
-	    c_lP++;
-	  }*/
-
-	  /* double sign= ((xi>0 && ((log(fabs(xi))-log(par[3]))>0))?-1:1);
-	   double paren= (xi>0?(expDif(0,log(xi)-log(par[3]))):(expSum2(0,log(fabs(xi))-log(par[3])))); 
-	   double TMPVAR= sign*exp(paren+lwi-xi/par[3]-D);
-  	   gr[3]+= TMPVAR; // lambda= 1/rate*/
-	   //Rprintf("gr[3]= %f ;\t TMPVAR= %f ;\t sign= %f ;\t paren= %f ;\t xi= %f ;\t D= %f\t \n", gr[3], TMPVAR, sign, paren, xi, D);
-	  
-	  //cnt++;
 	}
 	gr[0]= (-1)*gr[0];//exp(expSum(alpha,n_x));
 	gr[1]= (-1)*gr[1]*par[0]/par[2]/par[2];//exp(par[0]+expSum(mu,n_x)-par[2]-par[2]);
@@ -330,11 +298,6 @@ extern void normal_exp_optimgr(int n, double *par, double *gr, void *ex) {
 	 parr[3] = par[3]+h;
 	 gr[3]= (normal_exp_optimfn(4, parr, ex)-normal_exp_optimfn(4, parl, ex))/(2*h); // DON'T Multiply by -1 for finitDif method.
 
-/*	double lM =expSum(lambdaM, n_lM), lP= expSum(lambdaP, n_lP);
-	Rprintf("lM= %f ;\t lP= %f ;\t n_lM= %d ;\t n_lP= %d ;\t\n", lM, lP, n_lM, n_lP);
-	gr[3]= (-1)*(lP>lM?1:-1)*(1-par[0])*exp(expDif(lP,lM));*/
-
-	//	gr[3]= (-1)*gr[3]*(1-par[0]);//exp(log(1-par[0])+log(1-par[3])+expSum(lambda,n_x));
 	return;
 }
 
@@ -348,9 +311,7 @@ extern void normal_exp_optimgr_fn_diff_approx(int n, double *par, double *gr, vo
 	 parl[i] = par[i]-h;
 	 parr[i] = par[i]+h;
 	 gr[i]= (normal_exp_optimfn(4, parr, ex)-normal_exp_optimfn(4, parl, ex))/(2*h); // DON'T Multiply by -1 for finitDif method.
-//	 Rprintf("Grad[%d]= %f \t; R= %f \t; L= %f \t", i, gr[i], normal_exp_optimfn(4, parr, ex), normal_exp_optimfn(4, parl, ex));
 	}
-//	Rprintf("\n");
 	
 	return;
 }
@@ -394,28 +355,15 @@ SEXP RNormExpMLE(SEXP xi, SEXP wi, SEXP init_guess, SEXP TOL, SEXP maxit) {
 	setAttrib(returnList, R_NamesSymbol, returnNames);
 
 	// Convert return values to C compatable format.
-	double *par= /*(double*)calloc(4, sizeof(double));*/REAL(PAR);
-	double *fmin= /*(double*)calloc(1, sizeof(double));/*/REAL(FMIN);
-	int *fncount= /*(int*)calloc(1, sizeof(int));/*/INTEGER(FNCOUNT);
-	int *grcount= /*(int*)calloc(1, sizeof(int));/*/INTEGER(GRCOUNT);
-	int *fail= /*(int*)calloc(1, sizeof(int))*/INTEGER(FAIL);
+	double *par= REAL(PAR);
+	double *fmin= REAL(FMIN);
+	int *fncount= INTEGER(FNCOUNT);
+	int *grcount= INTEGER(GRCOUNT);
+	int *fail= INTEGER(FAIL);
 
 	// Do the minimization...
-//	fmin[0]= normal_exp_optimfn(4, guess, ex);
-//	Rprintf("%f\n",fmin[0]);
-/*	double *gr_fn_dif_approx= (double*)calloc(4, sizeof(double));
-	double *gr_anal= (double*)calloc(4, sizeof(double));
-	normal_exp_optimgr_fn_diff_approx(4, guess, gr_fn_dif_approx, ex);
-	normal_exp_optimgr(4, guess, gr_anal, ex);
-	for(int i=0;i<4;i++) {
-        Rprintf("gr[par[%d]]= %f (fin.dif)\t%f (analy)\n", i, gr_fn_dif_approx[i], gr_anal[i]);
-	}*/
 	cgmin(4, guess, par, fmin, normal_exp_optimfn, normal_exp_optimgr, fail, tol, tol, ex, 1, 0, fncount, grcount, MAXIT);
 
-/*	for(int i=0;i<4;i++) Rprintf("par: %f\t guess: %f\n", par[i], guess[i]);
-	Rprintf("\n%f\n", fmin[0]);
-	Rprintf("%f\t%f\t%f\n", fncount[0], grcount[0], fail[0]);*/
-	
 	unprotect(2);
 	return(returnList);
 }

@@ -2,9 +2,9 @@
 **
 **   Copyright 2009, 2010, 2011 Andre Martins and Charles Danko.
 **
-**   This program is part of the GRO-seq R package
+**   This program is part of the groHMM R package
 **
-**   GRO-seq is free software: you can redistribute it and/or modify it 
+**   groHMM is free software: you can redistribute it and/or modify it 
 **   under the terms of the GNU General Public License as published by 
 **   the Free Software Foundation, either version 3 of the License, or  
 **   (at your option) any later version.
@@ -22,7 +22,7 @@
 
 /********************************************************************************
  *
- *	Forward/Backward algorithms implemented by Andre Martins (alm253@cornell.edu).
+ *	Forward/Backward algorithms.  Initial implementation by Andre Martins.
  *
  *	2009-11-23 File pulled in from implementation by Andre Martins (thanks!). 
  *
@@ -117,9 +117,6 @@ void forward(fwbk_t *data) {
     m_col[k] =  log_iProb[k]; // 	+ (log_eProb[k])(edata[0], emisargs[k][0], emisargs[k][1], emisargs[k][2]);
 	for(emis_count=0;emis_count<n_emis;emis_count++) 
 		matrix[0][k] += (log_eProb[k+n*emis_count])(edata[emis_count][0], emargs[k+n*emis_count], 4);
-//    Rprintf("DEBUG first\t%d\t%f\t%f\t%f\t%f\t%f\n", k,
-//		log_iProb[k], (log_eProb[k])(edata[0], emisargs[k][0], emisargs[k][1], emisargs[k][2]), edata[0],
-//		emisargs[k][0], emisargs[k][1]);
   }
 // Recursion step.
   for (i = 1; i < N; ++i) {
@@ -137,7 +134,7 @@ void forward(fwbk_t *data) {
       // Choose n=-max(val in sum); I should likely check to make sure that this is defined?!
       // Foreach value in the sum, check that n-valInSum does not over/under-flow.
       // n ==> scalefactor.
-      // Thanks, Melissa!  Also mentioned in Durbin et. al.'s HMM book.
+      // Thanks, Melissa Hubisz!  Also mentioned in Durbin et. al.'s HMM book.
       scalefactor = (m_col_prev[0] + log_tProb[0][l]); // Init to first value.
       for(k=1; k<n; k++)
         scalefactor = max((m_col_prev[k] + log_tProb[k][l]), scalefactor);
@@ -149,15 +146,11 @@ void forward(fwbk_t *data) {
 //       Happens because (scalefactor --> -inf) (it is the max); 
 //	 This causes (currentsum --> nan) because -inf+inf --> nan
 //	if(!(current_sum <= 0))
-//		Rprintf("[forward] ERROR: k= %i; l= %i; current_sum= %f; m_col_prevK= %f; log_tProbKL= %f; scalefactor= %f.\n", k, l, current_sum, m_col_prev[k], log_tProb[k][l], scalefactor);
 //        assert(current_sum <= 0);
         if((-1*current_sum) < APPROX_EXP_VALUE_THRESHOLD)
           sum += exp(current_sum);
-			      // i   l   k  prev[k] scalefactor product sum log_tProb[k][l]
-//	  Rprintf("%d\t%f\t%f\t%f\t%f\t%f\t", 
-//			k, m_col_prev[k], log_tProb[k][l], current_sum, exp(current_sum), sum);
 
-        if(i>(N-2) || i<2) // Report the first and last case for debuging...
+	    if(i>(N-2) || i<2) // Report the first and last case for debuging...
 			Rprintf("i=%d, l=%d, k=%d, prev[k]=%f, scalefactor=%f, prod=%f, sum=%f\n", 
 						i, l, k, m_col_prev[k], scalefactor, current_sum, sum);
       }
@@ -166,13 +159,7 @@ void forward(fwbk_t *data) {
       m_col[l] = log(sum)+scalefactor;
       for(emis_count=0;emis_count<n_emis;emis_count++) {
 		m_col[l] += (log_eProb[l+n*emis_count])(edata[emis_count][i], emargs[l+n*emis_count], 4);
-		//Rprintf("%f ==> %f,", edata[emis_count][i], (log_eProb[l+n_emis*emis_count])(edata[emis_count][i], emargs[l+n*emis_count], 4);
       }
-	  //Rprintf("\n");
-
-			      // i   l   sum log(sum) scalefactor log_eProb
-//	  Rprintf("%f\t%f\t%f\t%f\n", 
-//			sum, log(sum), (log_eProb[l])(edata[i], emisargs[l][0], emisargs[l][1], emisargs[l][2]), scalefactor);
     }
   }
 

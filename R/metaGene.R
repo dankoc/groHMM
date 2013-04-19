@@ -1,10 +1,10 @@
 ###########################################################################
 ##
-##   Copyright 2009, 2010, 2011 Charles Danko.
+##   Copyright 2009, 2010, 2011, 2012, 2013 Charles Danko and Minho Chae.
 ##
-##   This program is part of the GRO-seq R package
+##   This program is part of the groHMM R package
 ##
-##   GRO-seq is free software: you can redistribute it and/or modify it 
+##   groHMM is free software: you can redistribute it and/or modify it 
 ##   under the terms of the GNU General Public License as published by 
 ##   the Free Software Foundation, either version 3 of the License, or  
 ##   (at your option) any later version.
@@ -18,7 +18,6 @@
 ##   with this program.  If not, see <http://www.gnu.org/licenses/>.
 ##
 ##########################################################################
-
 
 ########################################################################
 ##
@@ -49,7 +48,49 @@
 ##
 ########################################################################
 
+metaGene_foreachChrom <- function(i, C, features, reads, size, up, down, debug) {
+	# Which KG?  prb?
+	indxF   <- which(as.character(seqnames(features)) == C[i])
+	indxPrb <- which(as.character(seqnames(reads)) == C[i])
+
+	if((NROW(indxF) >0) & (NROW(indxPrb) >0)) {
+		# Order -- Make sure, b/c this is one of our main assumptions.  Otherwise violated for DBTSS.
+		ord <- order(start(features[indxF,])) 
+
+		# Type coersions.
+		FeatureStart 	<- start(features[indxF,][ord])
+		FeatureStr	<- as.character(strand(features[indxF,][ord]))
+		PROBEStart 	<- start(reads[indxPrb,])
+		PROBEEnd 	<- end(reads[indxPrb,])
+		PROBEStr	<- as.character(strand(reads[indxPrb,]))
+		size		<- as.integer(size)
+		up			<- as.integer(up)
+		down		<- as.integer(down)
+
+		# Set dimensions.
+		dim(FeatureStart)	<- c(NROW(FeatureStart), NCOL(FeatureStart))
+		dim(FeatureStr)		<- c(NROW(FeatureStr), 	 NCOL(FeatureStr))
+		dim(PROBEStart) 	<- c(NROW(PROBEStart), 	 NCOL(PROBEStart))
+		dim(PROBEEnd) 		<- c(NROW(PROBEEnd), 	 NCOL(PROBEEnd))
+		dim(PROBEStr)		<- c(NROW(PROBEStr), 	 NCOL(PROBEStr))
+
+		if(debug) {
+			print(paste(C[i],": Counting reads in specified region.",sep=""))
+		}
+		Hprime <- .Call("HistogramOfReadsByFeature", FeatureStart, FeatureStr, 
+						PROBEStart, PROBEEnd, PROBEStr, 
+						size, up, down, PACKAGE = "groHMM")
+
+		#H <- H + as.integer(Hprime)
+		return(as.integer(Hprime))
+	}
+	return(integer(0))
+}
+
 #' Returns a histogram of the number of reads in each section of a moving window centered on a certain feature.
+#'
+#' Supports parallel processing using mclapply in the 'parallel' package.  To change the number of processors
+#' use the argument 'mc.cores'.
 #'
 #' @param features A GRanges object representing a set of genomic coordinates.  The meta-plot will be centered on the start position.
 #' @param reads A GRanges object representing a set of mapped reads.
@@ -57,56 +98,28 @@
 #' @param up Distance upstream of each features to align and histogram Default: 1 kb.
 #' @param down Distance downstream of each features to align and histogram Default: same as up.
 #' @param debug If set to TRUE, provides additional print options. Default: FALSE
+#' @param ... Extra argument passed to mclapply
 #' @return A vector representing the 'typical' signal centered on a point of interest.
 #' @author Charles G. Danko and Minho Chae
-metaGene <- function(features, reads, size, up=1000, down=up, debug=FALSE) {
+metaGene <- function(features, reads, size, up=1000, down=up, debug=FALSE, ...) {
 	if(is.null(down)) {
 		down <- up
 	}
 
 	C <- sort(unique(as.character(seqnames(features))))
+	
+	## Run parallel version.
+	mcp <- mclapply(c(1:NROW(C)), metaGene_foreachChrom, C=C, features=features, reads=reads,
+			size=size, up=up, down=down, debug=debug, ...)
+	
+	## Add together all chromosomes.
 	H <- rep(0,(up + down + 1))
 	for(i in 1:NROW(C)) {
-		if(debug) {
-			print(C[i])
-		}
-
-		# Which KG?  prb?
 		indxF   <- which(as.character(seqnames(features)) == C[i])
 		indxPrb <- which(as.character(seqnames(reads)) == C[i])
 
 		if((NROW(indxF) >0) & (NROW(indxPrb) >0)) {
-			# Order -- Make sure, b/c this is one of our main assumptions.  Otherwise violated for DBTSS.
-			ord <- order(start(features[indxF,])) 
-
-			# Type coersions.
-			FeatureStart 	<- start(features[indxF,][ord])
-			FeatureStr	<- as.character(strand(features[indxF,][ord]))
-			PROBEStart 	<- start(reads[indxPrb,])
-			PROBEEnd 	<- end(reads[indxPrb,])
-			PROBEStr	<- as.character(strand(reads[indxPrb,]))
-			size		<- as.integer(size)
-			up			<- as.integer(up)
-			down		<- as.integer(down)
-
-			# Set dimensions.
-			dim(FeatureStart)	<- c(NROW(FeatureStart), NCOL(FeatureStart))
-			dim(FeatureStr)		<- c(NROW(FeatureStr), 	 NCOL(FeatureStr))
-			dim(PROBEStart) 	<- c(NROW(PROBEStart), 	 NCOL(PROBEStart))
-			dim(PROBEEnd) 		<- c(NROW(PROBEEnd), 	 NCOL(PROBEEnd))
-			dim(PROBEStr)		<- c(NROW(PROBEStr), 	 NCOL(PROBEStr))
-
-			if(debug) {
-				print(paste(C[i],": Counting reads in specified region.",sep=""))
-			}
-			Hprime <- .Call("HistogramOfReadsByFeature", FeatureStart, FeatureStr, 
-							PROBEStart, PROBEEnd, PROBEStr, 
-							size, up, down, PACKAGE = "groHMM")
-
-			H <- H + as.integer(Hprime)
-		}
-		if(debug) {
-			print(paste(C[i],": Done!",sep=""))
+			H <- H + mcp[[i]]
 		}
 	}
 
@@ -133,24 +146,7 @@ metaGene <- function(features, reads, size, up=1000, down=up, debug=FALSE) {
 ##
 ########################################################################
 
-#' Returns a matrix, with rows representing read counts across a specified gene, or other features of interest.
-#'
-#' @param features A GRanges object representing a set of genomic coordinates. 
-#' @param reads A GRanges object representing a set of mapped reads. 
-#' @param size The size of the moving window.
-#' @param up Distance upstream of each f to align and histogram Default: 1 kb.
-#' @param down Distance downstream of each f to align and histogram Default: same as up.
-#' @param debug If set to TRUE, provides additional print options. Default: FALSE
-#' @return A vector representing the 'typical' signal across genes of different length.
-#' @author Charles G. Danko and Minho Chae
-metaGeneMatrix <- function(features, reads, size= 50, up=1000, down=up, debug=FALSE) {
-
-	C <- sort(unique(as.character(seqnames(features))))
-	H <- NULL
-	for(i in 1:NROW(C)) {
-		if(debug) {
-			print(C[i])
-		}
+metaGeneMatrix_foreachChrom <- function(i, C, features, reads, size, up, down, debug) {
 
 		# Which KG?  prb?
 		indxF   <- which(as.character(seqnames(features)) == C[i])
@@ -182,10 +178,43 @@ metaGeneMatrix <- function(features, reads, size= 50, up=1000, down=up, debug=FA
 			Hprime <- .Call("MatrixOfReadsByFeature", FeatureStart, FeatureStr, 
 							PROBEStart, PROBEEnd, PROBEStr, 
 							size, up, down, PACKAGE = "groHMM")
-			H <- rbind(H, Hprime)
+			return(Hprime)
 		}
-		if(debug) {
-			print(paste(C[i],": Done!",sep=""))
+	return(integer(0))
+}
+
+
+#' Returns a matrix, with rows representing read counts across a specified gene, or other features of interest.
+#'
+#' Supports parallel processing using mclapply in the 'parallel' package.  To change the number of processors
+#' use the argument 'mc.cores'.
+#'
+#' @param features A GRanges object representing a set of genomic coordinates. 
+#' @param reads A GRanges object representing a set of mapped reads. 
+#' @param size The size of the moving window.
+#' @param up Distance upstream of each f to align and histogram Default: 1 kb.
+#' @param down Distance downstream of each f to align and histogram Default: same as up.
+#' @param debug If set to TRUE, provides additional print options. Default: FALSE
+#' @param ... Extra argument passed to mclapply
+#' @return A vector representing the 'typical' signal across genes of different length.
+#' @author Charles G. Danko and Minho Chae
+metaGeneMatrix <- function(features, reads, size= 50, up=1000, down=up, debug=FALSE, ...) {
+
+	C <- sort(unique(as.character(seqnames(features))))
+
+	## Run parallel version.
+	mcp <- mclapply(c(1:NROW(C)), metaGeneMatrix_foreachChrom, C=C, features=features, reads=reads, 
+					size=size, up=up, down=down, debug=debug, ...)
+	
+	## Append data from all chromosomes.
+	H <- NULL
+	for(i in 1:NROW(C)) {
+		# Which KG?  prb?
+		indxF   <- which(as.character(seqnames(features)) == C[i])
+		indxPrb <- which(as.character(seqnames(reads)) == C[i])
+
+		if((NROW(indxF) >0) & (NROW(indxPrb) >0)) {
+			H <- rbind(H, mcp[[i]])
 		}
 	}
 
@@ -219,13 +248,17 @@ metaGeneMatrix <- function(features, reads, size= 50, up=1000, down=up, debug=FA
 
 #' Returns a histogram of the number of reads in each section of a moving window of variable size across genes.
 #'
+#' Supports parallel processing using mclapply in the 'parallel' package.  To change the number of processors
+#' use the argument 'mc.cores'.
+#'
 #' @param features A GRanges object representing a set of genomic coordinates. 
 #' @param reads A GRanges object representing a set of mapped reads. 
 #' @param n_windows The number of windows to break genes into.
 #' @param debug If set to TRUE, provides additional print options. Default: FALSE
+#' @param ... Extra argument passed to mclapply
 #' @return A vector representing the 'typical' signal across genes of different length.
 #' @author Charles G. Danko and Minho Chae
-metaGene_nL <- function(features, reads, n_windows=1000, debug=FALSE) {
+metaGene_nL <- function(features, reads, n_windows=1000, debug=FALSE, ...) {
 	C <- sort(unique(as.character(seqnames(features))))
 	H <- rep(0,n_windows)
 	for(i in 1:NROW(C)) {
@@ -256,7 +289,8 @@ metaGene_nL <- function(features, reads, n_windows=1000, debug=FALSE) {
 			dim(PROBEEnd) 		<- c(NROW(PROBEEnd), 	 NCOL(PROBEEnd))
 			dim(PROBEStr)		<- c(NROW(PROBEStr), 	 NCOL(PROBEStr))
 
-			for(iFeatures in 1:NROW(FeatureStart)) {
+			#for(iFeatures in 1:NROW(FeatureStart)) {
+			mcpg <- mclapply(c(1:NROW(FeatureStart)), function(iFeatures) {
 				ws <- (FeatureEnd[iFeatures]-FeatureStart[iFeatures])/n_windows ## This WILL be an interger.
 				if(debug) {
 					print(paste(C[i],": Counting reads in specified region:",
@@ -285,7 +319,13 @@ metaGene_nL <- function(features, reads, n_windows=1000, debug=FALSE) {
 				if(FeatureStr[iFeatures] == "-")
 					Hprime <- rev(Hprime)
 
-				H <- H + Hprime/ws ## Put in units of: number of reads/base
+				#H <- H + Hprime/ws ## Put in units of: number of reads/base
+				return(Hprime/ws)
+			}, ...)
+
+			## Add genes from mclapply together.
+			for(iFeatures in 1:NROW(FeatureStart)) { 
+				H<- H+mcpg[[i]] 
 			}
 		}
 		if(debug) {
@@ -316,6 +356,9 @@ metaGene_nL <- function(features, reads, n_windows=1000, debug=FALSE) {
 ########################################################################
 
 #' Returns the average profile of tiling array probe intensity values or wiggle-like count data centered on a set of genomic positions (specified by 'Peaks').
+#'
+#' Supports parallel processing using mclapply in the 'parallel' package.  To change the number of processors
+#' use the argument 'mc.cores'.
 #'
 #' @param ProbeData Data.frame representing chromosome, window center, and a value.
 #' @param Peaks Data.frame representing chromosome, and window center.
@@ -352,6 +395,9 @@ averagePlot <- function(ProbeData, Peaks, size=50, bins= seq(-1000,1000,size)) {
 #'
 #' Returns a histogram of the number of reads in each section of a moving window centered on a certain feature for both sense and anntisense directions.  It has option for subsampling.
 #'
+#' Supports parallel processing using mclapply in the 'parallel' package.  To change the number of processors
+#' use the argument 'mc.cores'.
+#'
 #' @param features GRanges whose length is 1, i.e., Transcription Start Site (TSS) 
 #' @param reads GRanges of reads. 
 #' @param size Numeric.  The size of the moving window. Default: 100
@@ -361,14 +407,15 @@ averagePlot <- function(ProbeData, Peaks, size=50, bins= seq(-1000,1000,size)) {
 #' @param sampling Logical.  If TRUE, subsampling of Metagene is used.  Default: FALSE
 #' @param nSampling Numeric. Number of subsampling.  Default: 1000
 #' @param debug Logical. If set to TRUE, provides additional print options. Default: FALSE 
+#' @param ... Extra argument passed to mclapply
 #' @return List of vectors representing the 'typical' signal centered on the genomic features of interest.
 #' @author Minho Chae
-runMetaGene <- function(features, reads, size=100, up=10000, down=NULL, normCounts=1, sampling=FALSE, nSampling=1000, debug=FALSE) {
+runMetaGene <- function(features, reads, size=100, up=10000, down=NULL, normCounts=1, sampling=FALSE, nSampling=1000, debug=FALSE, ...) {
 	if (sampling) {
 		plus <- samplingMetaGene(features=features, reads=reads, size=size, up=up, down=down, normCounts=normCounts, 
 			nSampling=nSampling, debug=debug)
     	} else {
-		plus <- metaGene(features=features, reads=reads, size=size, up=up, down=down, debug=debug)
+		plus <- metaGene(features=features, reads=reads, size=size, up=up, down=down, debug=debug, ...)
 		plus <- plus / NROW(features)
 		plus <- plus*normCounts / NROW(reads)
     	}
@@ -380,7 +427,7 @@ runMetaGene <- function(features, reads, size=100, up=10000, down=NULL, normCoun
 		minus <- samplingMetaGene(features=features, reads=reads, size=size, up=up, down=down, normCounts=normCounts, 
 			nSampling=nSampling, debug=debug)
 	} else {
-		minus <- metaGene(features=features, reads=reads, size=size, up=up, down=down, debug=debug)
+		minus <- metaGene(features=features, reads=reads, size=size, up=up, down=down, debug=debug, ...)
 		minus <- minus / NROW(features)
 		minus <- minus*normCounts / NROW(reads)
 	}
@@ -388,7 +435,7 @@ runMetaGene <- function(features, reads, size=100, up=10000, down=NULL, normCoun
 }
 
 
-samplingMetaGene <- function(features, reads, size=100, up=10000, down=NULL, normCounts=1, nSampling=1000, debug=FALSE) {
+samplingMetaGene <- function(features, reads, size=100, up=10000, down=NULL, normCounts=1, nSampling=1000, debug=FALSE, ...) {
 	if (is.null(down))
 		down <- up
 
@@ -399,7 +446,7 @@ samplingMetaGene <- function(features, reads, size=100, up=10000, down=NULL, nor
 	print("Preparing...")
 	pb <- txtProgressBar(min=0, max=NROW(features), style=3)
 	for(i in 1:NROW(features)) {
-		tss_vector <- rbind(tss_vector, metaGene(features=features[i,], reads=reads, size=size, up=up, down=down))
+		tss_vector <- rbind(tss_vector, metaGene(features=features[i,], reads=reads, size=size, up=up, down=down, ...))
 		setTxtProgressBar(pb, i)
 	}
 	cat("\n")

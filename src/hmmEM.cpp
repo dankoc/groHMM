@@ -4,7 +4,7 @@
 **
 **   This program is part of the GRO-seq R package
 **
-**   GRO-seq is free software: you can redistribute it and/or modify it 
+**   groHMM is free software: you can redistribute it and/or modify it 
 **   under the terms of the GNU General Public License as published by 
 **   the Free Software Foundation, either version 3 of the License, or  
 **   (at your option) any later version.
@@ -57,10 +57,8 @@ extern "C" {
  * rBaumWelchEM -- Implementation of the Baum Welch Expectation Maximazation algorithm used to 
  *	estimate the paremeters of an HMM.
  *
- *  nSeq        -- 
  *	nstates	    --	Number of states in the HMM.
  *	emi	        --	List of real vectors representing the emissions over different sequences (e.g. chromosomes).
- *  seqLength   --  1x n ... Vector of sequence lengths.
  *  nEmis       --  Number of emission probabilities for each sequence.
  *	emiprobD    -- 	Vector (1 x nstates) of strings representing the emission probability distirubitons.
  *	emiprobV    --	Matrix (3 x nstates) representing arguments to pdist*.  Unused paremeters can be set to 0.
@@ -84,12 +82,13 @@ extern "C" {
  *	   the future depending on how support is done in R.  It is also possible to implement this support
  *	   on the C-side, but will require additional dependencies.
  *	-- Removes data from each hmm run as quickly as possible to prevent memory from blowing up!
+ *  -- Nasty long function.  Considering re-factoring R-side into separate functions (e.g. R_var_setup(); R_return_var()).
  *	
  *	Updates/Information:
  *	2009-11-24 Wrote this function.
  *
  **********************************************************************************************/
-SEXP RBaumWelchEM(/*SEXP nSeq,*/ SEXP nstates, SEXP emi, /*SEXP seqLength*/ SEXP nEmis, SEXP emiprobDist, SEXP emiprobVars, SEXP tprob, SEXP iprob, 
+SEXP RBaumWelchEM(SEXP nstates, SEXP emi, SEXP nEmis, SEXP emiprobDist, SEXP emiprobVars, SEXP tprob, SEXP iprob, 
 			SEXP threshold, SEXP updatetrans, SEXP updateemis, SEXP output, SEXP verbose) {
 
 /*************************************************************
@@ -116,10 +115,10 @@ SEXP RBaumWelchEM(/*SEXP nSeq,*/ SEXP nstates, SEXP emi, /*SEXP seqLength*/ SEXP
     fwbk_t *fwbk;
 
 	/* number of sequences (chromosomes) and total sequence length */
-	int n_seq = /*INTEGER(nSeq)[0];//*/Rf_nrows(emi)/ hmm[0].n_emis;
+	int n_seq = Rf_nrows(emi)/ hmm[0].n_emis;
 	int total_seq_length = 0;
 	for(int i=0;i<n_seq;i++)
-		total_seq_length += /*seq_length[i];//*/Rf_nrows(VECTOR_ELT(emi, i));
+		total_seq_length += Rf_nrows(VECTOR_ELT(emi, i));
 
 	if(verb) 
 	  for(int k=0;k<hmm[0].n_states;k++)
@@ -188,24 +187,6 @@ SEXP RBaumWelchEM(/*SEXP nSeq,*/ SEXP nstates, SEXP emi, /*SEXP seqLength*/ SEXP
 			update_emis[i]  = UpdateNormExp;
 			free_emis_s[i]  = SSfreeNormExp;
 		}
-/*		else if(strcmp(CHAR(STRING_ELT(emiprobDist, i)), "gamma_scale1") == 0)	{
-			sstats_alloc[i] = SSallocGamma;
-			sstats_emis[i]  = SStatsGamma;
-			update_emis[i]  = UpdateGamma_SCALE1;
-			free_emis_s[i]  = SSfreeGamma;
-		}
-		else if(strcmp(CHAR(STRING_ELT(emiprobDist, i)), "gamma_SHAPEeq1overSCALE") == 0)	{
-			sstats_alloc[i] = SSallocGamma;
-			sstats_emis[i]  = SStatsGamma;
-			update_emis[i]  = UpdateGamma_SHAPEeq1overSCALE;
-			free_emis_s[i]  = SSfreeGamma;
-		}
-		else if(strcmp(CHAR(STRING_ELT(emiprobDist, i)), "gamma_p1") == 0)	{
-			sstats_alloc[i] = SSallocGamma;
-			sstats_emis[i]  = SStatsGamma_p1;
-			update_emis[i]  = UpdateGamma;
-			free_emis_s[i]  = SSfreeGamma;
-		}*/
 		else if(strcmp(CHAR(STRING_ELT(emiprobDist, i)), "pois") == 0)	{
 			sstats_alloc[i] = SSallocPoisson;
 			sstats_emis[i]  = SStatsPoisson;
@@ -240,7 +221,6 @@ SEXP RBaumWelchEM(/*SEXP nSeq,*/ SEXP nstates, SEXP emi, /*SEXP seqLength*/ SEXP
          Q = 0;		// (4)
 
 		 /* (1) Initialize counts of sufficient stats. */
-		 //Rprintf(" (1) Initialize counts of sufficient stats. \n");
          for(int state=0;state<hmm[0].n_states;state++)  {
 			if(updateTrans[state]) TransSS[state] = (AllocTssFunc[state])(hmm[0].n_states, n_seq);
 
@@ -249,24 +229,18 @@ SEXP RBaumWelchEM(/*SEXP nSeq,*/ SEXP nstates, SEXP emi, /*SEXP seqLength*/ SEXP
 		 }
 
 		 /* (2) Foreach training sequence (chromosomes) ... */
-		 //Rprintf(" (2) Foreach training sequence (chromosomes) ... \n");
          for(int seq=0;seq<n_seq;seq++) { // (2)
             // Make the *data variable from the R list type...
-            int maxT = Rf_nrows(VECTOR_ELT(emi, seq));//INTEGER(seqLength)[seq];//Rf_nrows(VECTOR_ELT(emi, seq));
+            int maxT = Rf_nrows(VECTOR_ELT(emi, seq));
 			double **data = (double**)R_alloc(hmm[0].n_emis, sizeof(double*));
 			for(int s=0;s<hmm[0].n_emis;s++) {
 				data[s]   = REAL(VECTOR_ELT(emi, seq+s*n_seq)); //Correctly indexed?!
 				assert(Rf_nrows(VECTOR_ELT(emi, seq+s*n_seq))==maxT); // Make sure!
 			}
-		
-//            double *data = REAL(VECTOR_ELT(emi, seq)); 
 			
 			/*	(2a) Run forward/backward algorithms. */
-			//Rprintf("  (2a) Run forward/backward algorithms... Allocate\n");
             fwbk= fwbk_alloc(data /* Emission data */, maxT /*(size of *data)*/, hmm);
-			//Rprintf("  (2b) Run forward.\n");
             forward(fwbk);  // (2a)
-			//Rprintf("  (2c) Run backward.\n");
             backward(fwbk); // (2a)
 
 			if(verb) Rprintf("Forward prob: %f   Backward prob: %f", fwbk[0].log_px, fwbk[0].bk_log_px);
@@ -280,7 +254,6 @@ SEXP RBaumWelchEM(/*SEXP nSeq,*/ SEXP nstates, SEXP emi, /*SEXP seqLength*/ SEXP
 			}
 			
             Q+= fwbk[0].log_px;
-//            if(verb) Rprintf("-- Likelihood on seq %d= %f;\n", seq, fwbk[0].log_px);
 
 			/* (2c) Cleanup! */
             fwbk_free(fwbk); // (2c)
@@ -324,12 +297,10 @@ SEXP RBaumWelchEM(/*SEXP nSeq,*/ SEXP nstates, SEXP emi, /*SEXP seqLength*/ SEXP
 	PROTECT(ListObject = allocVector(VECSXP, RETURN_SIZE));
 	SET_VECTOR_ELT(ListObject, RETURN_INDX++, emiprobVars);
 	SET_VECTOR_ELT(ListObject, RETURN_INDX++, tprob);
-//	SET_VECTOR_ELT(ListObject, 2, Q);
 
 	// Run Viterbi to get the most likely state paths?!
 	SET_VECTOR_ELT(ListObject, RETURN_INDX++, hiddenStatesR=allocVector(VECSXP, n_seq));
 	if(outopt > 1) {
-//		SEXP posteriors;
 		SET_VECTOR_ELT(ListObject, RETURN_INDX++, posteriors=allocVector(VECSXP, n_seq));
 	}
 	if(outopt == 10) {
@@ -339,7 +310,7 @@ SEXP RBaumWelchEM(/*SEXP nSeq,*/ SEXP nstates, SEXP emi, /*SEXP seqLength*/ SEXP
 	for(int seq=0;seq<n_seq;seq++) {
 
 		// Data in types.
-		int maxT = Rf_nrows(VECTOR_ELT(emi, seq));//INTEGER(seqLength)[seq];//Rf_nrows(VECTOR_ELT(emi, seq));
+		int maxT = Rf_nrows(VECTOR_ELT(emi, seq));
 		double **data = (double**)R_alloc(hmm[0].n_emis, sizeof(double*));
 		for(int s=0;s<hmm[0].n_emis;s++) {
 			data[s]   = REAL(VECTOR_ELT(emi, seq+s*n_seq)); //Correctly indexed?!

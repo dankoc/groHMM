@@ -5,7 +5,7 @@
   windowAnalysis(reads, strand = "N",
     window_size = (step_size - 1),
     step_size = (window_size + 1), chrom = NULL, start = 0,
-    end = NULL, limitPCRDups = FALSE, debug = FALSE)
+    end = NULL, limitPCRDups = FALSE, debug = FALSE, ...)
 }
 \arguments{
   \item{reads}{GenomicRanges object representing the
@@ -36,14 +36,17 @@
 
   \item{debug}{If set to TRUE, provides additional print
   options. Default: FALSE}
+
+  \item{...}{Extra argument passed to mclapply}
 }
 \value{
   List object, each element of which represents a
   chromosome.
 }
 \description{
-  windowAnalysis Returns a vector of integers representing
-  the counts of reads in a moving window.
+  Supports parallel processing using mclapply in the
+  'parallel' package.  To change the number of processors
+  use the argument 'mc.cores'.
 }
 \author{
   Charles G. Danko and Minho Chae

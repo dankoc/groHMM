@@ -4,7 +4,7 @@
 \usage{
   runMetaGene(features, reads, size = 100, up = 10000,
     down = NULL, normCounts = 1, sampling = FALSE,
-    nSampling = 1000, debug = FALSE)
+    nSampling = 1000, debug = FALSE, ...)
 }
 \arguments{
   \item{features}{GRanges whose length is 1, i.e.,
@@ -33,6 +33,8 @@
 
   \item{debug}{Logical. If set to TRUE, provides additional
   print options. Default: FALSE}
+
+  \item{...}{Extra argument passed to mclapply}
 }
 \value{
   List of vectors representing the 'typical' signal
@@ -43,6 +45,11 @@
   section of a moving window centered on a certain feature
   for both sense and anntisense directions.  It has option
   for subsampling.
+}
+\details{
+  Supports parallel processing using mclapply in the
+  'parallel' package.  To change the number of processors
+  use the argument 'mc.cores'.
 }
 \author{
   Minho Chae
