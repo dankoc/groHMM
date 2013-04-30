@@ -221,7 +221,7 @@ evaluateHMM <- function(tx, annotations) {
 
         brokenAnno <-  unique(subjectHits(ol[duplicated(subjectHits(ol)),]))
         brokenError <- sum(unlist(lapply(brokenAnno, function(x) {
-                                        (NROW(ol[subjectHits(ol) == x,])-1)})))
+                                        (length(ol[subjectHits(ol) == x,])-1)})))
         brokenAnnoNo <- NROW(brokenAnno)
         brokenTx <- unique(queryHits(ol[subjectHits(ol) %in% brokenAnno,]))
         brokenTxNo <- NROW(brokenTx)
