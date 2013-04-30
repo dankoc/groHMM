@@ -100,7 +100,7 @@ plotTranscripts <- function(tx, features, chrom=NA, strand=NA, scale=TRUE, runGe
 	if (!is.na(filename))
 		dev.off()
 
-	print(paste("No of transcripts:", length(t)))
+	print(paste("No of matched transcripts:", length(t)))
 }
 
 plotTranscriptsStrand <- function(tr, gr, strand, scale, runGenes="best", brokenAnnotation="best") {
@@ -111,8 +111,9 @@ plotTranscriptsStrand <- function(tr, gr, strand, scale, runGenes="best", broken
 
 	# Run over genes
 	dupTrans <- queryHits(ol)[which(duplicated(queryHits(ol)))]
+        strandChar <- paste("(", as.character(strand), ")", sep="")
 	if (NROW(dupTrans) > 0) {
-		print(paste("Run over genes:", NROW(dupTrans)))
+		print(paste(strandChar, " Run genes together:", NROW(dupTrans)))
 		int <- pintersect(tr[queryHits(ol),], gr[subjectHits(ol),])
 		#int.df <- cbind(as.data.frame(ol), width(int) / width(tr[queryHits(ol),]))
 		int.df <- data.frame(tr=queryHits(ol), gr=subjectHits(ol), oRatio=width(int) / width(tr[queryHits(ol),]))
@@ -132,7 +133,7 @@ plotTranscriptsStrand <- function(tr, gr, strand, scale, runGenes="best", broken
 	# transcript which broken annotation
 	dupGenes <- subjectHits(ol)[which(duplicated(subjectHits(ol)))]
 	if (NROW(dupGenes) > 0) {
-		print(paste("Broken annotation:", NROW(dupGenes)))
+		print(paste(strandChar, " Broken up single annotation:", NROW(dupGenes)))
 		int <- pintersect(tr[queryHits(ol),], gr[subjectHits(ol),])
 		# int.df <- cbind(as.data.frame(ol), width(int) / width(gr[subjectHits(ol),]))
 		int.df <- data.frame(tr=queryHits(ol), gr=subjectHits(ol), oRatio=width(int) / width(tr[queryHits(ol),]))
@@ -200,55 +201,66 @@ plotTranscriptsStrand <- function(tr, gr, strand, scale, runGenes="best", broken
 #' @return  List of evaluation information; runGeneError, brokenError, overlapQuality.
 #' @author Minho Chae
 evaluateHMM <- function(tx, annotations) {
-	gr <- annotations
-	ol <- findOverlaps(tx, gr)
-	rgError <-  NROW(unique(queryHits(ol[duplicated(queryHits(ol)),])))
-	brokenError <- NROW(unique(subjectHits(ol[duplicated(subjectHits(ol)),])))
-	print("=======================================")
-	print("HMM Errors")
-	print("=======================================")
-	print(paste("Run genes together:", rgError))
-	print(paste("Broken up a single annotation:", brokenError))
+        ol <- findOverlaps(tx, annotations) # query: tx subject: annotations
 
-	#intx <- pintersect(tx[queryHits(ol),], gr[subjectHits(ol),])
-	#oQuality <- data.frame(tID=elementMetadata(tx[queryHits(ol),])$ID,
-	#                             gID=elementMetadata(gr[subjectHits(ol),])$ID,
-	#                             gSymbol=elementMetadata(gr[subjectHits(ol),])$symbol,
-	#                             tOverlap=width(intx)/width(tx[queryHits(ol),]),
-	#                             gOverlap=width(intx)/width(gr[subjectHits(ol),]),
-	#                             overBases=width(intx),
-	#                             similarity=width(intx)/pmax(width(tx[queryHits(ol),]), width(gr[subjectHits(ol),])))
+        rgTx <- NULL            # unique tx which run genes together
+        rgAnno <- NULL          # unique anno which were run by tx
+        rgError <- 0            # number of occurences
 
-	intx <- pintersect(tx[queryHits(ol),], gr[subjectHits(ol),])
-	oQuality <- data.frame(tOverlap=width(intx)/width(tx[queryHits(ol),]),
-			    gOverlap=width(intx)/width(gr[subjectHits(ol),]),
-			    overBases=width(intx),
-			    similarity=width(intx)/pmax(width(tx[queryHits(ol),]), width(gr[subjectHits(ol),])))
+        rgError <-  NROW(queryHits(ol[duplicated(queryHits(ol)),]))  # No of instances
+        rgTx <- unique(queryHits(ol[duplicated(queryHits(ol)),]))
+        rgTxNo <- NROW(rgTx)
+        rgAnno <- unique(unlist(lapply(rgTx, function(x) {
+                                                subjectHits(ol[queryHits(ol) == x,]) })))
+        rgAnnoNo <- NROW(rgAnno)
+        #print(paste("rgTxNo:", rgTxNo, "rgAnnoNo:", rgAnnoNo, "rgError:", rgError))
 
+        brokenTx <- NULL        # unique tx which broken up an annotation
+        brokenAnno <- NULL  # unique anno which were broken up by tx
+        brokenError <- 0        # number of occurrences
 
-	txWidth <- summary(width(tx[queryHits(ol),]))
-	grWidth <- summary(width(gr[subjectHits(ol),]))
-	txOverlap <- summary(oQuality$tOverlap)
-	grOverlap <- summary(oQuality$gOverlap)
-	overBases <- summary(oQuality$overBases)
-	similarity <- summary(oQuality$similarity)
-	print("=======================================")
-	print(paste("Overlap quality (Median Mean)"))
-	print("=======================================")
-	print(paste("Tx length:", txWidth["Median"], txWidth["Mean"]))
-	print(paste("Gene length:", grWidth["Median"], grWidth["Mean"]))
-	print(paste("Tx overlap:", txOverlap["Median"], txOverlap["Mean"]))
-	print(paste("Gene overlap:", grOverlap["Median"], grOverlap["Mean"]))
-	print(paste("Overbases:", overBases["Median"], overBases["Mean"]))
-	print(paste("Similarity:", similarity["Median"], similarity["Mean"]))
+        brokenAnno <-  unique(subjectHits(ol[duplicated(subjectHits(ol)),]))
+        brokenError <- sum(unlist(lapply(brokenAnno, function(x) {
+                                        (NROW(ol[subjectHits(ol) == x,])-1)})))
+        brokenAnnoNo <- NROW(brokenAnno)
+        brokenTx <- unique(queryHits(ol[subjectHits(ol) %in% brokenAnno,]))
+        brokenTxNo <- NROW(brokenTx)
+        #print(paste("brokenTxNo:", brokenTxNo, "brokenAnnoNo:", brokenAnnoNo, "brokenError:", brokenError))
+       print("=======================================")
+        print("HMM Errors")
+        print("=======================================")
+        print(paste("Run genes together:", rgError))
+        print(paste("Broken up a single annotation:", brokenError))
+        intx <- pintersect(tx[queryHits(ol),], annotations[subjectHits(ol),])
+        oQuality <- data.frame(tOverlap=width(intx)/width(tx[queryHits(ol),]),
+                            gOverlap=width(intx)/width(annotations[subjectHits(ol),]),
+                            overBases=width(intx),
+                            similarity=width(intx)/pmax(width(tx[queryHits(ol),]), width(annotations[subjectHits(ol),])))
 
-	return(list(runGeneError=rgError, brokenError=brokenError, overlapQuality=oQuality))
+        txWidth <- summary(width(tx[queryHits(ol),]))
+        grWidth <- summary(width(annotations[subjectHits(ol),]))
+        txOverlap <- summary(oQuality$tOverlap)
+        grOverlap <- summary(oQuality$gOverlap)
+        overBases <- summary(oQuality$overBases)
+        similarity <- summary(oQuality$similarity)
+        print("=======================================")
+        print(paste("Overlap quality (Median Mean)"))
+        print("=======================================")
+        print(paste("Tx length:", txWidth["Median"], txWidth["Mean"]))
+        print(paste("Gene length:", grWidth["Median"], grWidth["Mean"]))
+        print(paste("Tx overlap:", txOverlap["Median"], txOverlap["Mean"]))
+        print(paste("Gene overlap:", grOverlap["Median"], grOverlap["Mean"]))
+        print(paste("Overbases:", overBases["Median"], overBases["Mean"]))
+        print(paste("Similarity:", similarity["Median"], similarity["Mean"]))
+
+        return(list(runGeneError=rgError, brokenError=brokenError, overlapQuality=oQuality))
+
 }
 
 #-----------------------------------------------------------------------------------------------
-# plotTHistogram
+# plotTxDensity
 #-----------------------------------------------------------------------------------------------
-plotTHistogramStrand <- function(tr, gr, strand, scale, runGenes="best", brokenAnnotation="best") {
+plotTxDensityStrand <- function(tr, gr, strand, scale, runGenes="best", brokenAnnotation="best") {
 	# Assume tr and gr has only one strand
 	ol <- findOverlaps(tr, gr)
 	ini.ol <- ol
@@ -269,8 +281,9 @@ plotTHistogramStrand <- function(tr, gr, strand, scale, runGenes="best", brokenA
 
 	# transcripts which run over genes
 	dupTrans <- queryHits(ol)[which(duplicated(queryHits(ol)))]
+	strandChar <- paste("(", as.character(strand), ")", sep="")
 	if (NROW(dupTrans)>0) {
-		print(paste("Runover genes:", NROW(dupTrans)))
+		print(paste(strandChar, " Run genes together:", NROW(dupTrans)))
 		int <- pintersect(tr[queryHits(ol),], gr[subjectHits(ol),])
 		#int.df <- cbind(as.data.frame(ol), width(int) / width(tr[queryHits(ol),]))
 		int.df <- data.frame(tr=queryHits(ol), gr=subjectHits(ol), oRatio=width(int) / width(tr[queryHits(ol),]))
@@ -290,7 +303,7 @@ plotTHistogramStrand <- function(tr, gr, strand, scale, runGenes="best", brokenA
     # transcript which broken annotation
 	dupGenes <- subjectHits(ol)[which(duplicated(subjectHits(ol)))]
 	if (NROW(dupGenes) > 0) {
-		print(paste("Broken annotation:", NROW(dupGenes)))
+		print(paste(strandChar, " Broken up a single annotation:", NROW(dupGenes)))
 		int <- pintersect(tr[queryHits(ol),], gr[subjectHits(ol),])
 		# int.df <- cbind(as.data.frame(ol), width(int) / width(gr[subjectHits(ol),]))
 		int.df <- data.frame(tr=queryHits(ol), gr=subjectHits(ol), oRatio=width(int) / width(tr[queryHits(ol),]))
@@ -380,13 +393,13 @@ plotTxDensity <- function(tx, features, chrom=NA, strand=NA, scale=TRUE, runGene
 		fePlus <- features[strand(features)=="+",]
 		txMinus <- tx[strand(tx)=="-",]
 		feMinus <- features[strand(features)=="-",]
-		plusResult <- plotTHistogramStrand(txPlus, fePlus, strand="+", scale=scale, runGenes=runGenes, brokenAnnotation=brokenAnnotation)
-		minusResult <- plotTHistogramStrand(txMinus, feMinus, strand="-", scale=scale, runGenes=runGenes, brokenAnnotation=brokenAnnotation)
+		plusResult <- plotTxDensityStrand(txPlus, fePlus, strand="+", scale=scale, runGenes=runGenes, brokenAnnotation=brokenAnnotation)
+		minusResult <- plotTxDensityStrand(txMinus, feMinus, strand="-", scale=scale, runGenes=runGenes, brokenAnnotation=brokenAnnotation)
 
 		t <- c(plusResult[[1]], minusResult[[1]])
 		g <- c(plusResult[[2]], minusResult[[2]])
 	} else {
-		result <- plotTHistogramStrand(tx[strand(tx)==strand,], features[strand(features)==strand,],
+		result <- plotTxDensityStrand(tx[strand(tx)==strand,], features[strand(features)==strand,],
 			strand=strand, scale=scale, runGenes=runGenes, brokenAnnotation=brokenAnnotation)
 		t <- result[[1]]
 		g <- result[[2]]
@@ -429,8 +442,8 @@ plotTxDensity <- function(tx, features, chrom=NA, strand=NA, scale=TRUE, runGene
 		TN <- 30000*nT - FP5prime
 		accuracy <- (TP + TN)/ total
 		cat("\n")
-		print(paste("FT Density:", round(FP5prime/block,2), "TT Density:", round(TP/block,2), "PostTTS:",
-			round(PostTTS/block,2), "accuracy:", round(accuracy,2)))
+		print(paste("FTD:", round(FP5prime/block,2), "TTD:", round(TP/block,2), "PostTTS:",
+			round(PostTTS/block,2), "AUC:", round(accuracy,2)))
 		abline(v=-30000, col="blue", lty=2)
 	} else {
 		plot(min(start(t)):max(end(t)), hist, type="l", ylim=c(0, length(t)))
@@ -441,7 +454,7 @@ plotTxDensity <- function(tx, features, chrom=NA, strand=NA, scale=TRUE, runGene
 	dev.off()
 
 	#title(paste(chrom, strand))
-	print(paste("No of transcripts:", length(t)))
+	print(paste("No of matched transcripts:", length(t)))
 	#return(hist)
 }
 
