@@ -2,8 +2,8 @@
 \alias{expressedGenes}
 \title{Function identifies expressed features using the methods introduced in Core, Waterfall, Lis; Science, Dec. 2008.}
 \usage{
-  expressedGenes(features, reads, genomeSize = 3e+09,
-    Lambda = NULL, UnMap = NULL, debug = FALSE, ...)
+  expressedGenes(features, reads, Lambda = NULL,
+    UnMap = NULL, debug = FALSE, ...)
 }
 \arguments{
   \item{features}{A GRanges object representing a set of
@@ -14,12 +14,10 @@
   \item{reads}{A GRanges object representing a set of
   mapped reads.}
 
-  \item{genomeSize}{The size of the target genome.
-  Default: 3e9, or roughly the size of the human genome.}
-
-  \item{Lambda}{Measurement of assay noise.  Default: #
-  reads/ genome size (tends to be too high for GRO-seq
-  data).}
+  \item{Lambda}{Measurement of assay noise.  Default: 0.04
+  reads/ kb in a library of 10,751,533 mapped reads.
+  (background computed in Core, Waterfall, Lis. (2008)
+  Science.).}
 
   \item{UnMap}{List object representing the position of
   un-mappable reads.  Default: not used.}

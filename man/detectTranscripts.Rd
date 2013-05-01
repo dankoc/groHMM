@@ -47,6 +47,13 @@
   list (Fp and Fm).  Either reads or BOTH Fp and Fm must be
   specified.
 }
+\details{
+  Reference: Hah N, Danko CG, Core L, Waterfall JJ, Siepel
+  A, Lis JT, Kraus WL. A rapid, extensive, and transient
+  transcriptional response to estrogen signaling in breast
+  cancer cells. Cell. 2011 May 13;145(4):622-34. doi:
+  10.1016/j.cell.2011.03.042.
+}
 \author{
   Charles G. Danko and Minho Chae
 }

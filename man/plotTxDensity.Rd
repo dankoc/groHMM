@@ -4,7 +4,7 @@
 \usage{
   plotTxDensity(tx, features, chrom = NA, strand = NA,
     scale = TRUE, runGenes = "best",
-    brokenAnnotation = "best", filename = NA)
+    brokenAnnotation = "best", filename = NA, pBar = TRUE)
 }
 \arguments{
   \item{tx}{GRanges of transcripts.}
@@ -30,6 +30,9 @@
 
   \item{filename}{Character.  File name for output.
   Default: NA}
+
+  \item{pBar}{Logical.  If TRUE, progress bar is shown.
+  Default: TRUE}
 }
 \description{
   Plots transcripts stacked together for their associated
