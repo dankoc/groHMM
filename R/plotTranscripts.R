@@ -381,8 +381,10 @@ plotTxDensityStrand <- function(tr, gr, strand, scale, runGenes="best", brokenAn
 #' @param runGenes Character.  One of "best", "all", or "none" for the transcripts running over multiple gene annotations. Default: "best"
 #' @param brokenAnnotation Character.  One of "best", "all", or "none" for the transcripts breaking one annotation. Default: "best"
 #' @param filename Character.  File name for output. Default: NA
+#' @param pBar Logical.  If TRUE, progress bar is shown.  Default: TRUE
 #' @author Minho Chae
-plotTxDensity <- function(tx, features, chrom=NA, strand=NA, scale=TRUE, runGenes="best", brokenAnnotation="best", filename=NA) {
+plotTxDensity <- function(tx, features, chrom=NA, strand=NA, scale=TRUE, runGenes="best", brokenAnnotation="best", 
+		filename=NA, pBar=TRUE) {
 	if (!is.na(chrom)) {
 		tx <- tx[as.character(seqnames(tx)) == chrom,]
 		features <- features[as.character(seqnames(features)) == chrom,]
@@ -413,9 +415,11 @@ plotTxDensity <- function(tx, features, chrom=NA, strand=NA, scale=TRUE, runGene
 
 	min <- min(start(t))
 	offset <- -1*min(start(t))
-	pb <- txtProgressBar(min=0, max=NROW(g), style=3)
+	if (pBar)
+		pb <- txtProgressBar(min=0, max=NROW(g), style=3)
 	for (i in 1:length(g)) {
-		setTxtProgressBar(pb, i)
+		if(pBar)
+			setTxtProgressBar(pb, i)
 		# access by name
 		#hist[as.character(start(t[i,]):end(t[i,]))] <-  hist[as.character(start(t[i,]):end(t[i,]))] + 1
 		#histMat[i,(start(t[i,])+offset+1):(end(t[i,])+offset+1)] <- 1
