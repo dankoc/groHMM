@@ -85,7 +85,7 @@ detectTranscripts <- function(reads=NULL, Fp=NULL, Fm=NULL, LtProbA=-5, LtProbB=
 	HMM$nstates <- as.integer(2)
 	HMM$ePrDist <- c("dgamma", "dgamma") ## CGD: 3-3-13: Still legacy. Switch to integrating gamma between read and read+1
 
-	HMM$iProb <- as.real(log(c(1.0,0.0)))
+	HMM$iProb <- as.double(log(c(1.0,0.0)))
 									## Non-transcribed,  transcribed.
 	HMM$ePrVars <- as.list(data.frame(c(UTS, 1/UTS, -1), c(0.5, 10, -1)))
 	HMM$tProb <- as.list(data.frame(c(log(1-exp(LtProbA)), LtProbA), c(LtProbB, log(1-exp(LtProbB))) ))
@@ -93,8 +93,8 @@ detectTranscripts <- function(reads=NULL, Fp=NULL, Fm=NULL, LtProbA=-5, LtProbB=
 	## Cast counts to a real, and combine +/- strand into one list variable.  
 	##  Treat like separate training sequences (they really are).
 	F <- list()
-	for(i in 1:nFp) F[[i]]     <- as.real(Fp[[i]]+1) ## CGD: 3-3-13: Still legacy.  Switch to integrating gamma between read and read+1
-	for(i in 1:nFm) F[[i+nFp]] <- as.real(Fm[[i]]+1) ## CGD: 3-3-13: Still legacy.  Switch to integrating gamma between read and read+1
+	for(i in 1:nFp) F[[i]]     <- as.double(Fp[[i]]+1) ## CGD: 3-3-13: Still legacy.  Switch to integrating gamma between read and read+1
+	for(i in 1:nFm) F[[i+nFp]] <- as.double(Fm[[i]]+1) ## CGD: 3-3-13: Still legacy.  Switch to integrating gamma between read and read+1
 
 	## In case the above command copies, rather than points ... free unused memory.
 	remove(Fp)
@@ -103,12 +103,12 @@ detectTranscripts <- function(reads=NULL, Fp=NULL, Fm=NULL, LtProbA=-5, LtProbB=
 	## Run EM algorithm.
 	BWem <- .Call("RBaumWelchEM", HMM$nstates, F, as.integer(1),
 				HMM$ePrDist, HMM$ePrVars, HMM$tProb, HMM$iProb, 
-				as.real(threshold), c(TRUE, FALSE), c(FALSE, TRUE), as.integer(1), TRUE, PACKAGE="groHMM")
+				as.double(threshold), c(TRUE, FALSE), c(FALSE, TRUE), as.integer(1), TRUE, PACKAGE="groHMM")
 						# Update Transitions, Emissions.
 
 	## Translate these into transcript positions.
 	for(i in 1:NROW(CHRp)) {
-		ans <- .Call("getTranscriptPositions", as.real(BWem[[3]][[i]]), as.real(0.5), size, PACKAGE="groHMM")
+		ans <- .Call("getTranscriptPositions", as.double(BWem[[3]][[i]]), as.double(0.5), size, PACKAGE="groHMM")
 		Nrep <- NROW(ans$Start)
 		# ANS <- rbind(ANS, data.frame(chrom =rep(CHRp[i], Nrep), chromStart =ans$Start, chromEnd =ans$End, 
 		#	name =rep("N", Nrep), score =rep("1", Nrep), strand =rep("+", Nrep)))
@@ -116,7 +116,7 @@ detectTranscripts <- function(reads=NULL, Fp=NULL, Fm=NULL, LtProbA=-5, LtProbB=
 	}
 
 	for(i in 1:NROW(CHRm)) {
-		ans <- .Call("getTranscriptPositions", as.real(BWem[[3]][[i+nFp]]), as.real(0.5), size, PACKAGE="groHMM")
+		ans <- .Call("getTranscriptPositions", as.double(BWem[[3]][[i+nFp]]), as.double(0.5), size, PACKAGE="groHMM")
 		Nrep <- NROW(ans$Start)
 		# ANS <- rbind(ANS, data.frame(chrom =rep(CHRm[i], NROW(ans$Start)), chromStart =ans$Start, chromEnd =ans$End,
 		# 	name =rep("N", Nrep), score =rep("1", Nrep), strand =rep("-", Nrep)))

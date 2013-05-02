@@ -201,7 +201,7 @@ polymeraseWave <- function(reads1, reads2, genes, approxDist, size=50, upstreamD
 			log(c((1-(1/uTrans)),(1/uTrans),0)),
 			log(c(0,(1-(1/(iTrans-uTrans))),(1/(iTrans-uTrans)))), 
 			log(c(0, 0, 1))))  # Trans. prob.
-		iProb  <- as.real(log(c(1, 0, 0))) # iProb.
+		iProb  <- as.double(log(c(1, 0, 0))) # iProb.
 
 		## Fit initial distribution paremeters for emission probabilities.
 		parInt  <- Rnorm(gene[c(1:uTrans)])

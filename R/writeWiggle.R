@@ -80,10 +80,10 @@ writeWiggle <- function(reads, file, strand="N", size=50, normCounts=1, sep.chro
 
 		write(paste("fixedStep chrom=", CHR[i], " start=1 step=", size, " span=", size, sep=""), file=filename, append=TRUE)
 		if(!reverse) {
-			write(as.real(F[[CHR[i]]]*normCounts), file=filename, ncolumns=1, append=TRUE)
+			write(as.double(F[[CHR[i]]]*normCounts), file=filename, ncolumns=1, append=TRUE)
 		}
 		else {
-			write(as.real(-1*F[[CHR[i]]]*normCounts), file=filename, ncolumns=1, append=TRUE)
+			write(as.double(-1*F[[CHR[i]]]*normCounts), file=filename, ncolumns=1, append=TRUE)
 		}
         setTxtProgressBar(pb, i)
 	}

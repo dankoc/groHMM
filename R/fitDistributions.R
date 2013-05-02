@@ -44,9 +44,9 @@
 #' @author Charles G. Danko
 RgammaMLE <- function(X) {
     if(sum(X<0) > 0) message("Negative values not allowed!")
-	N <- as.real(NROW(X))
-	sumxis <- as.real(sum(X))
-	sumlogxis <- as.real(sum(log(X)))
+	N <- as.double(NROW(X))
+	sumxis <- as.double(sum(X))
+	sumlogxis <- as.double(sum(log(X)))
 	Fit <- .Call("RgammaMLE", N, sumxis, sumlogxis, PACKAGE = "groHMM")
 	return(Fit)
 }

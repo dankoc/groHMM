@@ -184,9 +184,9 @@ pausingIndex_foreachChrom <- function(i, C, f, p, gLEFT, gRIGHT, c_tss, size, up
 			} ))
 
 		## Make return values.
-			Pause_c 	<- as.real(HPause/size)
-			Body_c 	<- as.real((HGeneBody+1)/Difference) ## 6-5-2012 -- Add a pseudocount here, forcing at least 1 read in the gene body.   
-			Fish_c	<- as.real(HFish)
+			Pause_c 	<- as.double(HPause/size)
+			Body_c 	<- as.double((HGeneBody+1)/Difference) ## 6-5-2012 -- Add a pseudocount here, forcing at least 1 read in the gene body.   
+			Fish_c	<- as.double(HFish)
 			GeneID_c	<- as.character(f[indxF,5][Ford])
 			
 			PauseCounts_c <- HPause
@@ -196,8 +196,8 @@ pausingIndex_foreachChrom <- function(i, C, f, p, gLEFT, gRIGHT, c_tss, size, up
 
 			aCI <- approx.ratios.CI(HPause, HGeneBody)
 			scaleFactor <- Difference/size ## Body/ pause, must be 1/ PI units.
-			CIl_c <- as.real(aCI[,1]*scaleFactor)
-			CIu_c <- as.real(aCI[,2]*scaleFactor)
+			CIl_c <- as.double(aCI[,1]*scaleFactor)
+			CIu_c <- as.double(aCI[,2]*scaleFactor)
 			
 			return(list(Pause= Pause_c, Body= Body_c, Fish= Fish_c, GeneID= GeneID_c, PauseCounts= PauseCounts_c, BodyCounts= BodyCounts_c, 
 						UpCounts= UpCounts_c, UgCounts= UgCounts_c, CIl= CIl_c, CIu= CIu_c, ord= Ford))
