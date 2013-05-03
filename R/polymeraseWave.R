@@ -137,7 +137,7 @@ polymeraseWave <- function(reads1, reads2, genes, approxDist, size=50, upstreamD
           gene  <- gene +(-1)*(min(gene))+1 ## Must translate points if gamma distributed (gamma undefined <0).
 		}
 		
-		if(is.real(TSmooth)) { ## Interperts it as a fold over the inter quantile interval to filter.
+		if(is.double(TSmooth)) { ## Interperts it as a fold over the inter quantile interval to filter.
 			print(paste("TSmooth is.integer:", TSmooth))
 			medGene <- median(gene)
 			iqrGene <- IQR(gene)
