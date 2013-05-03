@@ -234,9 +234,10 @@ running HMM multiple times over a certain range of the parameters.   Among the
 nine test cases, the sum of errors show minimal at case  \#4 and \#7, as shown
 below.   \#4 is chosen over \#7 for further analysis due to the lower error
 rate per called transcript.  The variation of errors should be greater if whole chromosomes
-are used.  Also, a larger set of the parameters might be used in practice.
+are used.  Also, a larger set of the parameters might be used in practice.  This tunning step
+takes long time, so you may skip it for quick review of the package. 
 
-<<tuning HMM, eval=TRUE, keep.source=TRUE, results=hide>>=
+<<tuning HMM, eval=FALSE, keep.source=TRUE, results=hide>>=
 tune <- data.frame(LtProbB=c(rep(-100,3), rep(-200,3), rep(-300,3)),
            UTS=rep(c(5,10,15), 3),  runGenes=rep(0,9),
            brokenUp=rep(0,9), totalError=rep(0,9), txSize=rep(0,9),
@@ -252,6 +253,10 @@ for (i in 1:9) {
     tune[i,"txSize"] <- NROW(tx)
     tune[i,"errorRate"] <- tune[i,"totalError"] / tune[i,"txSize"]
 }
+
+<<load Vignette data, eval=TRUE, echo=FALSE, results=hide>>=
+load(system.file("extdata", "Vignette.RData", package="groHMM"))
+@
 
 <<HMM output, eval=TRUE, keep.source=TRUE>>=
 tune
@@ -436,17 +441,17 @@ at each position in the transcription unit over the samples is used for final
 metagene result.  Using subsampling results in an image that is more robust to
 outliers, especially when the size of sample is relatively small.
 
-<<metagene analysis, eval=TRUE, keep.source=TRUE, results=hide>>=
+<<metagene analysis, eval=FALSE, keep.source=TRUE, results=hide>>=
 upGenes <- rgChr7[de==1,]
 TSS <- resize(upGenes, width=1)
-
 expReads <- mean(c(NROW(S0m), NROW(S10m), NROW(S40m), NROW(S160m)))
-
 count0m <- runMetaGene(features=TSS, reads=S0m, size=100, 
                        normCounts=expReads, sampling=TRUE)
 count40m <- runMetaGene(features=TSS, reads=S40m, size=100, 
                         normCounts=expReads, sampling=TRUE)
+@
 
+<<plot metagene, eval=TRUE, keep.source=TRUE, results=hide>>=
 plotMetaGene <- function(POS=c(-10000:+10000), counts, MIN, MAX){
     plot(POS, counts$sense, col="red", type="h", xlim=c(-5000, 5000),
         ylim=c(floor(MIN),ceiling(MAX)), ylab="Read Density",
@@ -468,6 +473,10 @@ dev.off()
 png(filename="metagen40m.png", width=480, height=480)
 plotMetaGene(counts=count40m, MIN=MIN, MAX=MAX)
 dev.off()
+@
+
+<<save data for vignette, eval=FALSE, echo=FALSE, results=hide>>=
+save(tune, count0m, count40m, file="Vignette.RData")
 @
 
 \begin{figure}

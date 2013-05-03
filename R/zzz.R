@@ -19,11 +19,13 @@
 ##
 ##########################################################################
 
-.First.lib <-
+#.First.lib <-
+.onLoad <-
     function(libname, pkgname)
     library.dynam("groHMM", pkgname, libname)
 
-.Last.lib <-
+#.Last.lib <-
+.onUnload <-
     function(libpath)
     dyn.unload(file.path(libpath,
                          "libs",
