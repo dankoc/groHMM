@@ -208,6 +208,7 @@ extern void SStatsGamma(int state, int emis_indx, void* ss, fwbk_t fwbk) {
   double epsilon=0.001;
   ssGamma *SS = (ssGamma*)ss;
   for(int position=0;position<fwbk.N;position++) {
+    if(isnan(fwbk.data[emis_indx][position]) != 0) continue;
 	logPP =  MargainalizeSumLogProbOver(state, position, fwbk);
 
 	// If the contribution matters at all within the bounds of the machine ... add its contribution.
@@ -289,6 +290,7 @@ extern void SStatsNormal(int state, int emis_indx, void* ss, fwbk_t fwbk) {
   double PP, logPP;
   ssNormal *SS = (ssNormal*)ss;
   for(int position=0;position<fwbk.N;position++) {
+    if(isnan(fwbk.data[emis_indx][position]) != 0) continue;
 	logPP =  MargainalizeSumLogProbOver(state, position, fwbk);
 
 	// If the contribution matters at all within the bounds of the machine ... add its contribution.
@@ -357,6 +359,7 @@ extern void SStatsNormExp(int state, int emis_indx, void* ss, fwbk_t fwbk) {
   
   // Put in new data from this chromsome.
   for(int position=0;position<fwbk.N;position++) {
+    if(isnan(fwbk.data[emis_indx][position]) != 0) continue;
 	newEx[(position+oldSize)*2+1] = fwbk.data[emis_indx][position]; // xi
 	newEx[(position+oldSize)*2+2] = exp(MargainalizeSumLogProbOver(state, position, fwbk)); // wi
   }
@@ -409,6 +412,7 @@ extern void SStatsPoisson(int state, int emis_indx, void* ss, fwbk_t fwbk) {
   double PP, logPP;
   ssPoisson *SS = (ssPoisson*)ss;
   for(int position=0;position<fwbk.N;position++) {
+    if(isnan(fwbk.data[emis_indx][position]) != 0) continue;
 	logPP =  MargainalizeSumLogProbOver(state, position, fwbk);
 
 	if(-1*logPP < APPROX_EXP_VALUE_THRESHOLD && !isnan(fwbk.data[emis_indx][position])) {
@@ -443,6 +447,7 @@ extern void SStatsExp(int state, int emis_indx, void* ss, fwbk_t fwbk) {
   double PP, logPP;
   ssExp *SS = (ssExp*)ss;
   for(int position=0;position<fwbk.N;position++) {
+    if(isnan(fwbk.data[emis_indx][position]) != 0) continue;
 	logPP =  MargainalizeSumLogProbOver(state, position, fwbk);
 
 	if(-1*logPP < APPROX_EXP_VALUE_THRESHOLD && !isnan(fwbk.data[emis_indx][position])) {
