@@ -261,50 +261,50 @@ static inline double expSum2(double v1, double v2) {
  **************/
 
 extern inline double NORMAL			(double value, double *args, int nArgs) {	
-    if(isnan(value)!=0) return 1;
+    if(isnan(value)!=0) return 0;
 	bool useLowerTail = (round(pnorm(value, args[0], args[1], FALSE, TRUE))==0); // Check for underflow.
 	double funcVal= expDif(pnorm(value-0.5, args[0], args[1], useLowerTail, TRUE), pnorm(value+0.5, args[0], args[1], useLowerTail, TRUE));
 	return funcVal; 
 	}
 extern inline double dNORMAL		(double value, double *args, int nArgs) {
-    if(isnan(value)!=0) return 1;
+    if(isnan(value)!=0) return 0;
 	return dnorm(value, args[0], args[1], TRUE);
 	} // Sometimes we have continuous value ...
 extern inline double BETA			(double value, double *args, int nArgs) {
-    if(isnan(value)!=0) return 1;
+    if(isnan(value)!=0) return 0;
 	bool useLowerTail = (round(pbeta(value, args[0], args[1], FALSE, TRUE))==0); // Check for underflow.
 	return expDif(pbeta(value-0.5, args[0], args[1], useLowerTail, TRUE), pbeta(value+0.5, args[0], args[1], useLowerTail, TRUE)); 
 	}
 extern inline double NONCENTRALBETA	(double value, double *args, int nArgs) {
-    if(isnan(value)!=0) return 1;
+    if(isnan(value)!=0) return 0;
 	bool useLowerTail = (round(pnbeta(value, args[0], args[1], args[2], FALSE, TRUE))==0); // Check for underflow.
 	return expDif(pnbeta(value-0.5, args[0], args[1], args[2], useLowerTail, TRUE), pnbeta(value+0.5, args[0], args[1], args[2], useLowerTail, TRUE)); 
 	}
 extern inline double BINOMIAL		(double value, double *args, int nArgs) {
-    if(isnan(value)!=0) return 1;
+    if(isnan(value)!=0) return 0;
 	return dbinom(value, args[0], args[1], TRUE);
 	}
 extern inline double EXPONENTIAL	(double value, double *args, int nArgs) {
-    if(isnan(value)!=0) return 1;
+    if(isnan(value)!=0) return 0;
 	bool useLowerTail = (round(pexp(value, args[0], FALSE, TRUE))==0); // Check for underflow.
 	return expDif(pexp(value-0.5, args[0], useLowerTail, TRUE), pexp(value+0.5, args[0], useLowerTail, TRUE)); 
 	}
 extern inline double GAMMA			(double value, double *args, int nArgs) {
-    if(isnan(value)!=0) return 1;
+    if(isnan(value)!=0) return 0;
 	bool useLowerTail = (round(pgamma(value, args[0], args[1], FALSE, TRUE))==0); // Check for underflow.
 	return expDif(pgamma(value-0.5, args[0], args[1], useLowerTail, TRUE), pgamma(value+0.5, args[0], args[1], useLowerTail, TRUE)); 
 	}
 extern inline double dGAMMA			(double value, double *args, int nArgs) {
-    if(isnan(value)!=0) return 1;
+    if(isnan(value)!=0) return 0;
 	return dgamma(value, args[0], args[1], TRUE);
 	} // Included for legacy support of the transcript detection HMM in Hah et al. 2011.
 extern inline double GAMMA_p1		(double value, double *args, int nArgs) {
-    if(isnan(value)!=0) return 1;
+    if(isnan(value)!=0) return 0;
 	bool useLowerTail = (round(pgamma(value+1,args[0], args[1], FALSE, TRUE))==0); // Check for underflow.
 	return expDif(pgamma(value-0.5+1, args[0], args[1], useLowerTail, TRUE), pgamma(value+0.5+1, args[0], args[1], useLowerTail, TRUE)); 
 	} // Gamma of random variable (x+1).
 extern inline double HYPERGEOMETRIC	(double value, double *args, int nArgs) {
-    if(isnan(value)!=0) return 1;
+    if(isnan(value)!=0) return 0;
 	return dhyper(value, args[0], args[1], args[2], TRUE);
 	}
 extern inline double NEGATIVEBINOMIAL	(double value, double *args, int nArgs) {
@@ -312,17 +312,17 @@ extern inline double NEGATIVEBINOMIAL	(double value, double *args, int nArgs) {
 	return dnbinom(value, args[0], args[1], TRUE);
 	}
 extern inline double POISSON		(double value, double *args, int nArgs) {
-    if(isnan(value)!=0) return 1;
+    if(isnan(value)!=0) return 0;
 	return dpois(value, args[0], TRUE);
 	}
 extern inline double UNIFORM		(double value, double *args, int nArgs) {
-    if(isnan(value)!=0) return 1;
+    if(isnan(value)!=0) return 0;
 	bool useLowerTail = (round(punif(value, args[0], args[1], FALSE, TRUE))==0); // Check for underflow.
 	return expDif(punif(value-0.5, args[0], args[1], useLowerTail, TRUE), punif(value+0.5, args[0], args[1], useLowerTail, TRUE)); 
 	}
 // args order: alpha, mu, sigma, lambda
 extern inline double NORMAL_EXP		(double value, double *args, int nArgs) {
-    if(isnan(value)!=0) return 1;
+    if(isnan(value)!=0) return 0;
 	bool useLowerTailN = (round(pnorm(value, args[1], args[2], FALSE, TRUE))==0); // Check for underflow.
 	bool useLowerTailE = (round(pexp(value, args[3], FALSE, TRUE))==0); // Check for underflow.
 	double N= NORMAL(value, &args[1], 2);
@@ -333,7 +333,7 @@ extern inline double NORMAL_EXP		(double value, double *args, int nArgs) {
 // Can also write a function for a multinomial distribution given an index of possible emissions.
 
 extern inline double NORMAL_EXP_MINUS		(double value, double *args, int nArgs) {
-    if(isnan(value)!=0) return 1;
+    if(isnan(value)!=0) return 0;
 	value= -1*value; // reverse the VALUE.
 	bool useLowerTailN = (round(pnorm(value, args[1], args[2], FALSE, TRUE))==0); // Check for underflow.
 	bool useLowerTailE = (round(pexp(value, args[3], FALSE, TRUE))==0); // Check for underflow.
