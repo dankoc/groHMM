@@ -15,9 +15,11 @@ General:
 
 1.a - Packages used in the vignette (GenomicFeatures, edgeR, org.Hs.eg.db) need
   to be listed in the Suggests field.
+=> Done!
 
 1.b - Please remove inst.tgz from the groHMM/inst/ folder, and groHMM.R from
   the groHMM/inst/doc/ folder.
+=> Done!
 
 1.c - Description field in DESCRIPTION file:
 
@@ -26,6 +28,7 @@ General:
   Using a less verbose style is preferred:
 
     A pipeline for the analysis of GRO-seq data.
+=> Done!
 
 1.d - Why implement your own writeWiggle() function when exporting a GRanges
   object to a wig file is already supported by the export() function in
