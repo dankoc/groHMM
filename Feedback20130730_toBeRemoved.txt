@@ -85,6 +85,7 @@ Man pages:
   exactly what "multiply covered isoforms" are and how they are used to
   "represent a genomic range for the gene". Also what do you mean by
   "to save starting site of a gene for overlapping gene annotations"?
+=> Done!
 
 Vignette:
 
@@ -139,6 +140,7 @@ Vignette:
   that means that this function needs to be fixed, not that the knownGene
   track is not a good track. More on this below.
 
+=> Done!
 R code:
 
 4.a - Don't use the assignment operator (<-) for passing named arguments:
@@ -207,6 +209,7 @@ R code:
   mean that you need to be able to reduce the annotation if this happens.
   Raising an error is perfectly fine, but your code needs to check for this
   situation and fail gracefully if it happens.
+=> Done!
 
 4.d - makeConsensusAnnotations() has many other problems. For example, it
   breaks in an obscure way if all the genes only have 1 transcript:
@@ -226,6 +229,7 @@ elementTypeX)) :
   Please revisit the implementation of the function and make sure your
   code is clean, robust, efficient, and that the function is well tested
   and well documented.
+=> Done!
 
 4.e - Use the standard idioms whereever you can. For example, in the
   countReadsInInterval() function, use 'seq_along(C)' instead of

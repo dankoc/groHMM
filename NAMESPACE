@@ -1,5 +1,6 @@
 useDynLib(groHMM)
 import(MASS)
+importFrom(IRanges, unlist, split)
 export(countReadsInInterval, countMappableReadsInInterval, pausingIndex,  windowAnalysis, associateWithInterval, 
 	expressedGenes, metaGene, metaGeneMatrix, metaGene_nL, averagePlot, detectTranscripts, polymeraseWave, 
 	writeWiggle, RgammaMLE, Rnorm, Rnorm.exp, tlsLoess, tlsSvd, makeConsensusAnnotations, evaluateHMM, 

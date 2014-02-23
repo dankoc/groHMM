@@ -2,27 +2,38 @@
 \alias{makeConsensusAnnotations}
 \title{makeConsensusAnnotations Makes a consensus annotation}
 \usage{
-  makeConsensusAnnotations(annotations,
-    keytype = "gene_id")
+makeConsensusAnnotations(ar, minGap = 1L, ...)
 }
 \arguments{
-  \item{annotations}{GRanges of annotations to be
-  collapsed.}
+  \item{ar}{GRanges of annotations to be collapsed.}
 
-  \item{keytype}{Character.  Keytype to collapse isoforms.
-  Default: "gene_id"}
+  \item{minGap}{Minimun gap between overlapped annotations
+  after truncated. Default: 1L}
 }
 \value{
-  GenomicRanges object of reads.
+GenomicRanges object of annotations.
 }
 \description{
-  Makes a consensus annotation which is a non overlapping
-  annotation where multiply covered isoforms are used to
-  represent a genomic ranges for the gene.  This also
-  reduces annotations in a way to save starting site of a
-  gene for overlapping gene annotations.
+Makes a non-overlapping consensus annotation.  Gene
+annotations are often overalpping due to multiple isoforms
+for a gene.  In consensus annotation, isoforms are first
+reduced so that only redundant intervals are used to
+represent a genomic interval for a gene, i.e., a gene id.
+Remaining unresolved annotations are further reduced by
+truncating 3' end of annotations.
+}
+\details{
+Supports parallel processing using mclapply in the
+'parallel' package.  To change the number of processors use
+the argument 'mc.cores'.
+}
+\examples{
+library(TxDb.Hsapiens.UCSC.hg19.knownGene)
+tx <- transcripts(txdb, vals=list(tx_chrom="chr7"), columns=c("gene_id", "tx_id", "tx_name"))
+tx <- tx[grep("random", as.character(seqnames(tx)), invert=TRUE),]
+ca <- makeConsensusAnnotations(tx)
 }
 \author{
-  Minho Chae
+Minho Chae
 }
 

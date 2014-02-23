@@ -22,209 +22,114 @@
 
 
 
-########################################################################
-##
-##      makeConsensusAnnotations
-##      Date: 2012-11-27 
-## 
-##	Makes a consensus annotation which is a non overlapping annotation where multiply covered isoforms are used
-##	to represent a genomic ranges for the gene.   This also reduces annotations in a way to save starting site of
-##	a gene for overlapping gene annotations.
-##
-##      Arguments:
-##      anno     -> GRanges of annotation
-## 	    keytype  -> Keytype to collapse gene annotation, i.e., gene_id 
-##
-##      Assumptions:
-##      (1) 
-##
-##      TODO: 
-##      (1) 
-##
-########################################################################
 
+##########################################################################
+##      makeConsensusAnnotations
+##      Date: 2014-2-19 
 #' makeConsensusAnnotations Makes a consensus annotation 
 #'
-#' Makes a consensus annotation which is a non overlapping annotation where multiply covered isoforms are used
-#' to represent a genomic ranges for the gene.   This also reduces annotations in a way to save starting site of
-#' a gene for overlapping gene annotations.
+#' Makes a non-overlapping consensus annotation.  Gene annotations are often overalpping due to 
+#' multiple isoforms for a gene.  In consensus annotation, isoforms are first reduced so that only
+#' redundant intervals are used to represent a genomic interval for a gene, i.e., a gene id.
+#' Remaining unresolved annotations are further reduced by truncating 3' end of annotations. 
 #'
-#' @param annotations GRanges of annotations to be collapsed. 
-#' @param keytype Character.  Keytype to collapse isoforms.  Default: "gene_id"
-#' @return GenomicRanges object of reads. 
+#' Supports parallel processing using mclapply in the 'parallel' package.  To change the number of processors
+#' use the argument 'mc.cores'.
+#'
+#' @param ar GRanges of annotations to be collapsed. 
+#' @param minGap Minimun gap between overlapped annotations after truncated. Default: 1L
+#' @return GenomicRanges object of annotations. 
 #' @author Minho Chae
-makeConsensusAnnotations <- function(annotations, keytype="gene_id") {
-	# First reduce by keytype, collapsing isoforms
-	annoByKeytype <- reduceAnnotationByKeytype(annotations, keytype=keytype)
-	return(reduceOverlappingAnnotation(annoByKeytype))
-}
-
-
-reduceAnnotationByKeytype <- function(anno, keytype="gene_id") {
-	if (!(keytype %in% colnames(mcols(anno))))
-		stop("Please supply a keytype argument.")
-
-	# No isoforms 
-	annoList <- GenomicRanges::split(anno, GenomicRanges::unlist(mcols(anno)[,keytype]))
-	uInx <- elementLengths(annoList) == 1  
-
-	uniGenes <- GenomicRanges::unlist(annoList[names(which(uInx))])
-	print(paste("Genes with no isoforms:", NROW(uniGenes)))
-
-	# process genes with isoforms
-	isoList <- annoList[!uInx]
-	isoGenes <- GenomicRanges::unlist(endoapply(isoList, function(x) x[1,]))
-	print(paste("Genes with isoforms:", NROW(isoGenes)))
-
-	print(paste("Reducing by ", keytype, "...", sep=""))
-	pb <- txtProgressBar(min=0, max=NROW(isoList), style=3)
-
-	for (i in 1:NROW(isoList)) {
-	x <- isoList[[i]] # Make sure they are all same strand
-	geneID <- GenomicRanges::unlist(elementMetadata(x)$gene_id)[1]
-	nPlus <- sum(strand(x)=="+")
-	nMinus <- sum(strand(x)=="-")
-	if (nPlus*nMinus != 0) {  # mixed strand
-		if ((nPlus > nMinus) || (nPlus == nMinus)) {
-			x <- x[strand(x)=="+",]
-		} else {
-			x <- x[strand(x)=="-",]
-		}
+#' @examples
+#' library(TxDb.Hsapiens.UCSC.hg19.knownGene)
+#' tx <- transcripts(txdb, vals=list(tx_chrom="chr7"), columns=c("gene_id", "tx_id", "tx_name"))
+#' tx <- tx[grep("random", as.character(seqnames(tx)), invert=TRUE),]
+#' ca <- makeConsensusAnnotations(tx)
+##########################################################################
+makeConsensusAnnotations <- function(ar, minGap=1L, ...) {
+	# check missing gene_id
+	missing <- elementLengths(mcols(ar)[,"gene_id"]) == 0 
+	if (any(missing)) {
+		ar <- ar[!missing,]
+		warning(sum(missing), " ranges do not have gene_id and they are dropped")
 	}
 
-	d <- disjoin(x)
-	if (NROW(d) == 1) {   # there is only one disjoint interval
-		result <- d
-	} else {
-		o <- findOverlaps(d, x)
-		multi <- queryHits(o)[duplicated(queryHits(o))]  # disjoint interval with multiple overlapping (coverage)
-		if (NROW(multi) == 0) {
-			result <- d[1,]                              # take just any disjoint interval
-		} else {
-			single <- setdiff(1:NROW(d), multi)              # disjoint interval with single coverage
-			if (NROW(single) == 0 ) {
-				reduced <- reduce(d)
+	many <-	elementLengths(mcols(ar)[,"gene_id"]) > 1 
+	if (any(many)) {
+		ar <- ar[!many,]
+		warning(sum(many), " ranges have multiple gene_id and they are dropped")
+	}
+
+	ar_list <- split(ar, unlist(mcols(ar)[,"gene_id"]))
+	singles <- unlist(ar_list[elementLengths(ar_list) == 1])
+	isoforms <- ar_list[elementLengths(ar_list) > 1]
+	
+	message("Reduce isoforms(", length(isoforms),") ... ", appendLF=FALSE)
+
+	noiso <- GRangesList(mclapply(isoforms, function(x) { 
+		dx <- disjoin(x)
+		mcols(dx)$gene_id <- mcols(x)$gene_id[1]
+		olcnt <- countOverlaps(dx, x) 
+			
+		multi_dx <- dx[olcnt > 1] 		# Use disjoint ranges covered more than once
+		if (length(multi_dx) == 0) {
+			multi_dx <- dx
+		} else if (length(multi_dx) == 1) {
+			return(multi_dx)
+		} else {	
+			# In order to preserve TSS of the annotations, 
+			# choose 5' or 3' most one for plus or minus strand, respectively.
+			multi_dx_str <- unique(as.character(strand(multi_dx))) 
+			if (length(multi_dx_str) == 1) {  	
+				multi_dx <- sort(multi_dx)      
+											
+				if (multi_dx_str == "+") {
+					return(multi_dx[1,])
+				} else {
+					return(multi_dx[length(multi_dx),])
+				}	
+			} else {  # for mixed strands, choose the longest
+				return(multi_dx[which.max(width(multi_dx)),])
+			}
+		}
+	},...))
+	noiso <- unlist(noiso)
+	message("OK")
+
+	noiso <- sort(c(noiso, singles[,"gene_id"])) 
+	# query within or equal to subject "
+	ol_w <- findOverlaps(noiso, type="within", ignoreSelf=TRUE, ignoreRedundant=TRUE) 
+	if (length(ol_w)) {
+		noiso <- noiso[-unique(queryHits(ol_w)),]
+	}
+	
+	message("Truncate overlapped ranges ... ", appendLF=FALSE)		# with different gene_ids
+	while(!isDisjoint(noiso)) { 
+		ol <- findOverlaps(noiso, ignoreSelf=TRUE, ignoreRedundant=TRUE)
+		ol_gr <- GRangesList(lapply(1:length(ol), function(x) {
+						sort(c(noiso[queryHits(ol)[x]], noiso[subjectHits(ol)[x]])) 
+					}))
+
+		ol_gr <- unlist(endoapply(ol_gr, function(x) {
+			if (as.character(strand(x[1])) == "+") {
+				end(x[1]) <- start(x[2]) - minGap 	# first range's end is truncated
 			} else {
-				reduced <- reduce(d[-single,])
+				start(x[2]) <- end(x[1]) + minGap 	# sencond range's end is truncated
 			}
+			x
+		}))
 
-			if (NROW(reduced) == 1) {
-				result <- reduced
-			} else {    # merge reduced by filling gaps
-					result <- GRanges(seqnames=seqnames(reduced[1,]),
-						ranges=IRanges(start=min(start(reduced)), end=max(end(reduced))),
-						strand=strand(reduced[1,]))
-			}
-		}
+		# Remove any ranges with duplicated names since they already adujsted in the previous call
+		ol_gr <- ol_gr[!duplicated(names(ol_gr)),]
+		
+		noiso <- noiso[-unique(c(queryHits(ol), subjectHits(ol))),] # update noiso
+		noiso <- c(noiso, ol_gr)
 	}
+	message("OK")
 
-	seqnames(isoGenes[geneID]) <- seqnames(result)
-	ranges(isoGenes[geneID]) <- ranges(result)
-	strand(isoGenes[geneID]) <- strand(result)
-	setTxtProgressBar(pb, i)
-	}
-	cat("\n")
+	return(sort(noiso))
 
-	final <- c(uniGenes, isoGenes)
-	return(final[order(as.character(seqnames(final)), start(final))])
+
 }
-
- # There are still overlapping annotations
-reduceOverlappingAnnotation <- function(anno) {
-	ol <- findOverlaps(anno, ignoreSelf=TRUE, ignoreRedundant=TRUE)
-
-	intx <- pintersect(anno[queryHits(ol),], anno[subjectHits(ol),])
-	oQual <- data.frame( query=queryHits(ol), subject=subjectHits(ol),
-			   qOverlap=width(intx)/width(anno[queryHits(ol),]),
-			    sOverlap=width(intx)/width(anno[subjectHits(ol),]),
-			    overBases=width(intx),
-			    similarity=width(intx)/pmax(width(anno[queryHits(ol),]), width(anno[subjectHits(ol),])))
-
-	print(paste("No of total overlappings:", NROW(oQual)))
-	# Remove cases where one annotation is totally contained by another, this will be taken care by "reduce" later
-	oQual <- oQual[!(oQual$qOverlap == 1 | oQual$sOverlap == 1),]
-	if (NROW(oQual) == 0 ) {
-		consensus <- anno
-	} else {
-		print(paste("No of partial containment::", NROW(oQual)))
-		cat("Reducing overlapping annotations...\n")
-		pb <- txtProgressBar(min=0, max=NROW(oQual), style=3)
-		brAnno <- GRanges()
-
-		for (i in 1:NROW(oQual)) {
-			overlapped <- anno[as.integer(oQual[i,c("query","subject")]),]
-			overlapped <- overlapped[order(start(overlapped))]
-			dis <- disjoin(overlapped)  # three fragments
-			if (as.character(strand(dis[1,])) == "+") {  # last two combined
-				one <- overlapped[1,]
-				ranges(one) <- ranges(dis[1,])
-				end(one) <- end(one) - 1
-				combined <- overlapped[2,]
-				ranges(combined) <- ranges(dis[2,])
-				end(combined) <- end(dis[3,])
-			} else {        # first two combined
-				one <- overlapped[2,]  # use it as a template
-				ranges(one) <- ranges(dis[3,])
-				start(one) <- start(one) + 1 # Need more gap, otherwised it's going to be reduced
-				combined <- overlapped[1,]
-				ranges(combined) <- ranges(dis[1,])
-				end(combined) <- end(dis[2,])
-			}
-			brAnno <- c(brAnno, one)
-			brAnno <- c(brAnno, combined)
-			setTxtProgressBar(pb, i)
-		}
-
-        	# Now remove overlapped one from anno and add disjoint ones
-        	consensus <- anno[-unique(c(oQual$query, oQual$subject)),]
-        	consensus <- c(consensus, brAnno)
-        	cat("\n")
-	}
-
-	# reduce by saving metadata
-	return(reduceBySavingMetadata(consensus))
-}
-
-reduceBySavingMetadata <- function(anno) {
-	ol <- findOverlaps(anno, ignoreSelf=TRUE, ignoreRedundant=TRUE)
-	if (length(ol) == 0)
-		return(anno[order(as.character(seqnames(anno)), start(anno))])
-
-	olInx <- sort(unique(c(queryHits(ol), subjectHits(ol))))
-	nonOverlapped <- anno[setdiff(1:NROW(anno), olInx),]   # non overlapped annotations
-	overlapped <- anno[olInx,]                             # overlapped annotations
-
-	reduced <- reduce(overlapped)
-
-	rol <- findOverlaps(reduced, overlapped)
-	rol.df <- data.frame(reduced=queryHits(rol), overlapped=subjectHits(rol))
-
-	curRed <- rol.df[1,"reduced"]
-	curMax <- rol.df[1, "overlapped"]
-	maxList <- numeric()
-	for (i in 2:NROW(rol.df)) {
-		newRed <- rol.df[i, "reduced"]
-		newOver <- rol.df[i, "overlapped"]
-		if (curRed == newRed) {
-			if (which.max(c(width(overlapped[curMax,]), width(overlapped[newOver,]))) == 1) {
-			# Same 
-			} else {
-				curMax <- newOver
-			}
-		} else {  # current reduce index changed
-			maxList <- c(maxList, curMax)
-			curRed <- newRed
-			curMax <- newOver
-		}
-	}
-	# last one
-	maxList <- c(maxList, curMax)
-
-	# add metadata
-	elementMetadata(reduced) <- elementMetadata(overlapped[maxList,])
-
-	final <- c(nonOverlapped, reduced)
-	return(final[order(as.character(seqnames(final)), start(final))])
-}
-
-
+	#H <- mclapply(chrom, makeConsensusAnnotations_foreachChrom, ar=ar, minGap=minGap, ...)
+	#return(sort(unlist(GRangesList(H))))
