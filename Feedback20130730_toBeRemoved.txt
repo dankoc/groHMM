@@ -102,6 +102,7 @@ Vignette:
   The extdata/ folder is for data files that do not contain serialized objects
   (e.g. GTF, BAM, FASTA, etc...), or for data files that contain serialized
   objects that are not accessed directly by the user.
+=> Done!
 
 3.b - Please use consistent case for GRO-seq (sometimes you use GRO-Seq,
   sometimes GRO-seq).
