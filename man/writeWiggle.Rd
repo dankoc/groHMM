@@ -1,33 +1,27 @@
 \name{writeWiggle}
 \alias{writeWiggle}
-\title{writeWiggle writes a wiggle track suitable for uploading to the UCSC genome browser.
-Currently only supports writing a fixed-step wiggle.}
+\title{writeWiggle writes a wiggle track or BigWig file suitable for uploading to the UCSC genome browser.}
 \usage{
-  writeWiggle(reads, file, strand = "N", size = 50,
-    normCounts = 1, sep.chrom = FALSE, reverse = FALSE,
-    track.type.line = TRUE, debug = FALSE, ...)
+writeWiggle(reads, file, strand = "*", fileType = "wig",
+  normCounts = NULL, reverse = FALSE, track.type.line = FALSE, ...)
 }
 \arguments{
   \item{reads}{GenomicRanges object representing the
   position of reads mapping in the genome.}
 
-  \item{file}{Specifies the file prefix for the output
-  wiggle.}
+  \item{file}{Specifies the filename for output.}
 
-  \item{strand}{Takes values of "+", "-", or "N".  Computes
-  Writes a wiggle on the speicified strand.  "N" denotes
-  collapsing reads on both strands.  Default: "N".}
+  \item{strand}{Takes values of "+", "-", or "*".  Computes
+  Writes a wiggle on the speicified strand.  "*" denotes
+  collapsing reads on both strands.  Default: "*".}
 
-  \item{size}{Size of non-overlapping windows to write.
-  Default: 50 bp.}
+  \item{fileType}{Takes values of "wig" or "BigWig".
+  Default: "wig".}
 
   \item{normCounts}{A normalization factor correcting for
   library size or other effects.  For example, total
   mappible read counts might be a reasonable value.
   Default: 1 (i.e. no normalization).}
-
-  \item{sep.chrom}{If set to TRUE, will write a separate
-  wiggle file for each chromosome.  Default: FALSE}
 
   \item{reverse}{If set to TRUE, multiplies values by -1.
   Used for reversing GRO-seq data on the negative (-)
@@ -37,20 +31,22 @@ Currently only supports writing a fixed-step wiggle.}
   identifying the file as a wiggle.  Necessary to upload a
   custom track to the UCSC genome browser.  Default: TRUE}
 
-  \item{debug}{If set to TRUE, provides additional print
-  options. Default: FALSE}
-
-  \item{...}{Extra argument passed to mclapply}
+  \item{...}{Extra argument passed to export function in
+  rtracklayer package.}
 }
 \value{
-  Writes a wiggle file to the specified file.
+Writes a wiggle file to the specified file.
 }
 \description{
-  writeWiggle writes a wiggle track suitable for uploading
-  to the UCSC genome browser. Currently only supports
-  writing a fixed-step wiggle.
+writeWiggle writes a wiggle track or BigWig file suitable
+for uploading to the UCSC genome browser.
+}
+\examples{
+S0mR1 <- as(readGAlignments(system.file("extdata", "S0mR1.bam", package="groHMM")), "GRanges")
+writeWiggleNew(reads=S0mR1, file="S0mR1_Plus.wig", fileType="wig", strand="+", reverse=FALSE)
+writeWiggleNew(reads=S0mR1, file="S0mR1_Plus.bw", fileType="BigWig", strand="+", reverse=FALSE)
 }
 \author{
-  Charles G. Danko
+Charles G. Danko and Minho Chae
 }
 

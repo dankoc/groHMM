@@ -10,6 +10,7 @@ Depends:
     R (>= 2.14),
     MASS,
     GenomicRanges,
+    rtracklayer,
     parallel
 LinkingTo: 
 Suggests:

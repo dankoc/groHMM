@@ -24,8 +24,10 @@
 
 
 ##########################################################################
+##
 ##      makeConsensusAnnotations
 ##      Date: 2014-2-19 
+##
 #' makeConsensusAnnotations Makes a consensus annotation 
 #'
 #' Makes a non-overlapping consensus annotation.  Gene annotations are often overalpping due to 
@@ -45,6 +47,7 @@
 #' tx <- transcripts(txdb, vals=list(tx_chrom="chr7"), columns=c("gene_id", "tx_id", "tx_name"))
 #' tx <- tx[grep("random", as.character(seqnames(tx)), invert=TRUE),]
 #' ca <- makeConsensusAnnotations(tx)
+##
 ##########################################################################
 makeConsensusAnnotations <- function(ar, minGap=1L, ...) {
 	# check missing gene_id

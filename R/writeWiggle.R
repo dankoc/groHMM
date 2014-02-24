@@ -19,74 +19,56 @@
 ##
 ##########################################################################
 
-########################################################################
+##########################################################################
 ##
 ##	WriteWiggle
-##	Date: 2009-07-17
+##	Date: 2014-02-24
 ##
-##	Writes a wiggle file suitable for uploading to the UCSC genome browser!
-##
-########################################################################
-
-#' writeWiggle writes a wiggle track suitable for uploading to the UCSC genome browser.
-#' Currently only supports writing a fixed-step wiggle.
+#' writeWiggle writes a wiggle track or BigWig file suitable for uploading to the UCSC genome browser.
 #'
 #' @param reads GenomicRanges object representing the position of reads mapping in the genome.
-#' @param file Specifies the file prefix for the output wiggle.
-#' @param strand Takes values of "+", "-", or "N".  Computes Writes a wiggle on the speicified strand.  "N" denotes collapsing reads on both strands.  Default: "N".
-#' @param size Size of non-overlapping windows to write. Default: 50 bp.
+#' @param file Specifies the filename for output. 
+#' @param strand Takes values of "+", "-", or "*".  Computes Writes a wiggle on the speicified strand.  "*" denotes collapsing reads on both strands.  Default: "*".
+#' @param fileType Takes values of "wig" or "BigWig". Default: "wig".
 #' @param normCounts A normalization factor correcting for library size or other effects.  For example, total mappible read counts might be a reasonable value.  Default: 1 (i.e. no normalization).
-#' @param sep.chrom If set to TRUE, will write a separate wiggle file for each chromosome.  Default: FALSE
 #' @param reverse If set to TRUE, multiplies values by -1.  Used for reversing GRO-seq data on the negative (-) strand. Default: FALSE
 #' @param track.type.line If set to TRUE, prints a header identifying the file as a wiggle.  Necessary to upload a custom track to the UCSC genome browser.  Default: TRUE
-#' @param debug If set to TRUE, provides additional print options. Default: FALSE
-#' @param ... Extra argument passed to mclapply
+#' @param ... Extra argument passed to export function in rtracklayer package. 
 #' @return Writes a wiggle file to the specified file.
-#' @author Charles G. Danko
-writeWiggle <- function(reads, file, strand="N", size=50, normCounts=1, sep.chrom=FALSE, reverse=FALSE, track.type.line=TRUE, debug=FALSE, ...) { #color="0,0,0", OtherOptions="", 
-
-	## Error checking. ... 
-	if(!(strand=="N"|strand=="+"|strand=="-")) {
-	  stop("Strand should be specified as '+', '-', or 'N'.")
-	}
+#' @author Charles G. Danko and Minho Chae
+#' @examples
+#' S0mR1 <- as(readGAlignments(system.file("extdata", "S0mR1.bam", package="groHMM")), "GRanges")
+#' writeWiggleNew(reads=S0mR1, file="S0mR1_Plus.wig", fileType="wig", strand="+", reverse=FALSE)
+#' writeWiggleNew(reads=S0mR1, file="S0mR1_Plus.bw", fileType="BigWig", strand="+", reverse=FALSE)
+##
+##########################################################################
+writeWiggle <- function(reads, file, strand="*", fileType="wig",  
+							normCounts=NULL, reverse=FALSE, track.type.line=FALSE, ...) {
+	if (strand == "*") {
+		reads_str <- reads
+		strand(reads_str) <- "*"
+		reads_str <- unique(reads_str)
+	} else 
+		reads_str <- unique(reads[as.character(strand(reads))==strand,])
 	
-	F <- windowAnalysis(reads=reads, strand=strand, window_size=size, debug=debug, ...)
-	CHR <- as.character(names(F))
 
-	## If we are not separating, prepare the file before the loop
-	if(!sep.chrom) {
-		filename <- paste(file,".wig", sep="")
-		unlink(filename)
-		if(track.type.line) {
-			write(paste("track type=wiggle_0", sep=""), file=filename, append=TRUE)
-		}
+	if (is.null(score(reads_str))) {
+		reads_str$score <- countOverlaps(reads_str, reads) 
 	}
+	 
+	if (reverse) 
+		reads_str$score <- (-1)*reads_str$score
 
-    cat("Writing...\n")
-    pb <- txtProgressBar(min=0, max=NROW(CHR), style=3)
-	for(i in 1:NROW(CHR)) {
-		if(debug) {
-			print(paste("Writing:", CHR[i]))
-		}
-
-		## If we are separating, prepare the file during the loop!
-		if(sep.chrom) {
-			filename <- paste(file,CHR[i],".wig", sep="")
-			unlink(filename)
-			if(track.type.line) {
-				write(paste("track type=wiggle_0", sep=""), file=filename, append=TRUE)
-			}
-		}
-
-		write(paste("fixedStep chrom=", CHR[i], " start=1 step=", size, " span=", size, sep=""), file=filename, append=TRUE)
-		if(!reverse) {
-			write(as.double(F[[CHR[i]]]*normCounts), file=filename, ncolumns=1, append=TRUE)
-		}
-		else {
-			write(as.double(-1*F[[CHR[i]]]*normCounts), file=filename, ncolumns=1, append=TRUE)
-		}
-        setTxtProgressBar(pb, i)
-	}
-    cat("\n")
+	if (!is.null(normCounts)) 
+		reads_str$score <- normCounts*reads_str$score
+	
+	if (fileType=="wig") {
+		if (track.type.line) {
+			wigfile <- export(reads_str, format="wig", ...)
+			cat("type wiggle_0\n", file=file)
+			cat(wigfile, file=file, append=TRUE)
+		} else 
+			export(reads_str, file, format="wig", ...)
+	} else 
+		export(reads_str, file, format="BigWig", ...)
 }
-
