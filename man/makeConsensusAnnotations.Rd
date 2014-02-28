@@ -2,13 +2,16 @@
 \alias{makeConsensusAnnotations}
 \title{makeConsensusAnnotations Makes a consensus annotation}
 \usage{
-makeConsensusAnnotations(ar, minGap = 1L, ...)
+makeConsensusAnnotations(ar, minGap = 1L, minWidth = 1000L, ...)
 }
 \arguments{
   \item{ar}{GRanges of annotations to be collapsed.}
 
   \item{minGap}{Minimun gap between overlapped annotations
   after truncated. Default: 1L}
+
+  \item{minWidth}{Minimun width of consensus annotations.
+  Default: 1000L}
 }
 \value{
 GenomicRanges object of annotations.
@@ -29,6 +32,7 @@ the argument 'mc.cores'.
 }
 \examples{
 library(TxDb.Hsapiens.UCSC.hg19.knownGene)
+txdb <- TxDb.Hsapiens.UCSC.hg19.knownGene
 tx <- transcripts(txdb, vals=list(tx_chrom="chr7"), columns=c("gene_id", "tx_id", "tx_name"))
 tx <- tx[grep("random", as.character(seqnames(tx)), invert=TRUE),]
 ca <- makeConsensusAnnotations(tx)
