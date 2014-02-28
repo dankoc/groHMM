@@ -141,7 +141,7 @@ makeConsensusAnnotations <- function(ar, minGap=1L, minWidth=1000L, ...) {
 	}
 	message("OK")
 
-	noiso <- noiso[width(ar) >= minWidth,]
+	noiso <- noiso[width(noiso) >= minWidth,]
 	return(sort(noiso))
 }
 
