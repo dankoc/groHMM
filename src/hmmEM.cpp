@@ -98,12 +98,8 @@ SEXP RBaumWelchEM(SEXP nstates, SEXP emi, SEXP nEmis, SEXP emiprobDist, SEXP emi
 	/* Init logical variables. */
 	bool verb = INTEGER(verbose)[0];
 	int outopt = INTEGER(output)[0];
-
+	
 	if(verb) Rprintf("Initializing Baum-Welch EM.\n");
-
-	/* booleans indicating whether or not to update by EM */
-	int *updateTrans = INTEGER(updatetrans);
-	int *updateEmis  = INTEGER(updateemis);
 
 	/* likelihoods */
 	double Qprev = -999999999999999.0;
@@ -112,95 +108,14 @@ SEXP RBaumWelchEM(SEXP nstates, SEXP emi, SEXP nEmis, SEXP emiprobDist, SEXP emi
 
 	/* transfer info from R vars into hmm struct */
 	hmm_t *hmm = setupHMM(nstates, emiprobDist, emiprobVars, nEmis, tprob, iprob);
+	em_t *em = setupEM(hmm, emiprobDist);
     fwbk_t *fwbk;
 
 	/* number of sequences (chromosomes) and total sequence length */
-	int n_seq = Rf_nrows(emi)/ hmm[0].n_emis;
+	int n_seq = Rf_nrows(emi)/ hmm->n_emis;
 	int total_seq_length = 0;
 	for(int i=0;i<n_seq;i++)
 		total_seq_length += Rf_nrows(VECTOR_ELT(emi, i));
-
-	if(verb) 
-	  for(int k=0;k<hmm[0].n_states;k++)
-		for(int l=0;l<hmm[0].n_states;l++)
-			Rprintf("[BWem] k=%d; l=%d; Tprob=%f\n", k, l, hmm[0].log_tProb[k][l]);
-
-	/***************************************************
-	* Set up the transition probability distributions.   
-	****************************************************/
-	alloc_trans_sstats  AllocTssFunc = (alloc_trans_sstats) R_alloc(hmm[0].n_states, sizeof( alloc_trans_sstats ));
-	update_trans_SS    UpdateTssFunc = (update_trans_SS)    R_alloc(hmm[0].n_states, sizeof( update_trans_SS ));
-	update_trans_Prob   UpdateTPFunc = (update_trans_Prob)  R_alloc(hmm[0].n_states, sizeof( update_trans_Prob ));
-	free_trans_sstats    FreeTssFunc = (free_trans_sstats)  R_alloc(hmm[0].n_states, sizeof( free_trans_sstats ));
-	void** TransSS = (void**)R_alloc(hmm[0].n_states, sizeof(void*));
-
-	for(int i=0;i<(hmm[0].n_states);i++) {
-	  AllocTssFunc[i]   = TransAlloc;
-	  UpdateTssFunc[i]  = TransUpdate;
-	  UpdateTPFunc[i]   = TransUpdateP;
-	  FreeTssFunc[i]    = TransFree;
-	}
-
-	/***************************************************
-	* Set up the emission probability distributions.   
-	****************************************************/
-	alloc_emis_sstats sstats_alloc = (alloc_emis_sstats) R_alloc(hmm[0].n_states*hmm[0].n_emis, sizeof( alloc_emis_sstats ));
-	update_sstat_func sstats_emis  = (update_sstat_func) R_alloc(hmm[0].n_states*hmm[0].n_emis, sizeof( update_sstat_func ));
-	update_emiss_func update_emis  = (update_emiss_func) R_alloc(hmm[0].n_states*hmm[0].n_emis, sizeof( update_emiss_func ));
-	free_emis_sstats  free_emis_s  =  (free_emis_sstats) R_alloc(hmm[0].n_states*hmm[0].n_emis, sizeof( free_emis_sstats  ));
-	void** ss = (void**)R_alloc(hmm[0].n_states, sizeof(void*));
-
-	for(int i=0;i<(hmm[0].n_states*hmm[0].n_emis);i++) {
-		if(strcmp(CHAR(STRING_ELT(emiprobDist, i)), "norm") == 0)	{
-			sstats_alloc[i] = SSallocNormal;
-			sstats_emis[i]  = SStatsNormal;
-			update_emis[i]  = UpdateNormal;
-			free_emis_s[i]  = SSfreeNormal;
-		}
-		else if(strcmp(CHAR(STRING_ELT(emiprobDist, i)), "dnorm") == 0)	{
-			sstats_alloc[i] = SSallocNormal;
-			sstats_emis[i]  = SStatsNormal;
-			update_emis[i]  = UpdateNormal;
-			free_emis_s[i]  = SSfreeNormal;
-		}
-		else if(strcmp(CHAR(STRING_ELT(emiprobDist, i)), "gamma") == 0)	{
-			sstats_alloc[i] = SSallocGamma;
-			sstats_emis[i]  = SStatsGamma;
-			update_emis[i]  = UpdateGamma;
-			free_emis_s[i]  = SSfreeGamma;
-		}
-		else if(strcmp(CHAR(STRING_ELT(emiprobDist, i)), "dgamma") == 0)	{
-			sstats_alloc[i] = SSallocGamma;
-			sstats_emis[i]  = SStatsGamma;
-			update_emis[i]  = UpdateGamma;
-			free_emis_s[i]  = SSfreeGamma;
-		}
-		else if(strcmp(CHAR(STRING_ELT(emiprobDist, i)), "normexp") == 0)	{
-			sstats_alloc[i] = SSallocNormExp;
-			sstats_emis[i]  = SStatsNormExp;
-			update_emis[i]  = UpdateNormExp;
-			free_emis_s[i]  = SSfreeNormExp;
-		}
-		else if(strcmp(CHAR(STRING_ELT(emiprobDist, i)), "normexpminus") == 0)	{
-			sstats_alloc[i] = SSallocNormExp;
-			sstats_emis[i]  = SStatsNormExp;
-			update_emis[i]  = UpdateNormExp;
-			free_emis_s[i]  = SSfreeNormExp;
-		}
-		else if(strcmp(CHAR(STRING_ELT(emiprobDist, i)), "pois") == 0)	{
-			sstats_alloc[i] = SSallocPoisson;
-			sstats_emis[i]  = SStatsPoisson;
-			update_emis[i]  = UpdatePoisson;
-			free_emis_s[i]  = SSfreePoisson;		
-		}
-		else if(strcmp(CHAR(STRING_ELT(emiprobDist, i)), "exp") == 0)	{
-			sstats_alloc[i] = SSallocExp;
-			sstats_emis[i]  = SStatsExp;
-			update_emis[i]  = UpdateExp;
-			free_emis_s[i]  = SSfreeExp;		
-		}
-		else error("Distribution ('%s') not recognized!", CHAR(STRING_ELT(emiprobDist, i)));
-	}
 
 /**********************************************************************************
  *
@@ -221,19 +136,19 @@ SEXP RBaumWelchEM(SEXP nstates, SEXP emi, SEXP nEmis, SEXP emiprobDist, SEXP emi
          Q = 0;		// (4)
 
 		 /* (1) Initialize counts of sufficient stats. */
-         for(int state=0;state<hmm[0].n_states;state++)  {
-			if(updateTrans[state]) TransSS[state] = (AllocTssFunc[state])(hmm[0].n_states, n_seq);
+         for(int state=0;state<hmm->n_states;state++)  {
+			if(em->updateTrans[state]) em->TransSS[state] = (em->AllocTssFunc[state])(hmm->n_states, n_seq);
 
-		   for(int emis=0;emis<hmm[0].n_emis;emis++)
-            if(updateEmis[state+hmm[0].n_states*emis])  ss[state+hmm[0].n_states*emis] = (sstats_alloc[state+hmm[0].n_states*emis])(total_seq_length);
+		   for(int emis=0;emis<hmm->n_emis;emis++)
+            if(em->updateEmis[state+hmm->n_states*emis])  em->ss[state+hmm->n_states*emis] = (em->sstats_alloc[state+hmm->n_states*emis])(total_seq_length);
 		 }
 
 		 /* (2) Foreach training sequence (chromosomes) ... */
          for(int seq=0;seq<n_seq;seq++) { // (2)
             // Make the *data variable from the R list type...
             int maxT = Rf_nrows(VECTOR_ELT(emi, seq));
-			double **data = (double**)R_alloc(hmm[0].n_emis, sizeof(double*));
-			for(int s=0;s<hmm[0].n_emis;s++) {
+			double **data = (double**)R_alloc(hmm->n_emis, sizeof(double*));
+			for(int s=0;s<hmm->n_emis;s++) {
 				data[s]   = REAL(VECTOR_ELT(emi, seq+s*n_seq)); //Correctly indexed?!
 				assert(Rf_nrows(VECTOR_ELT(emi, seq+s*n_seq))==maxT); // Make sure!
 			}
@@ -246,11 +161,11 @@ SEXP RBaumWelchEM(SEXP nstates, SEXP emi, SEXP nEmis, SEXP emiprobDist, SEXP emi
 			if(verb) Rprintf("Forward prob: %f   Backward prob: %f", fwbk[0].log_px, fwbk[0].bk_log_px);
 
 			/* (2b) Update sufficient statistics and transition/emission variables. */
-            for(int state=0;state<hmm[0].n_states;state++) {// (2b)
-              if(updateTrans[state]) (UpdateTssFunc[state])(state, seq, TransSS[state], hmm[0].log_eProb, fwbk[0]);
+            for(int state=0;state<hmm->n_states;state++) {// (2b)
+              if(em->updateTrans[state]) (em->UpdateTssFunc[state])(state, seq, em->TransSS[state], hmm->log_eProb, fwbk[0]);
 
-			  for(int emis=0;emis<hmm[0].n_emis;emis++)
-                if(updateEmis[state+hmm[0].n_states*emis]) (sstats_emis[state+hmm[0].n_states*emis])(state, emis, ss[state+hmm[0].n_states*emis], fwbk[0]);
+			  for(int emis=0;emis<hmm->n_emis;emis++)
+                if(em->updateEmis[state+hmm->n_states*emis]) (em->sstats_emis[state+hmm->n_states*emis])(state, emis, em->ss[state+hmm->n_states*emis], fwbk[0]);
 			}
 			
             Q+= fwbk[0].log_px;
@@ -261,11 +176,11 @@ SEXP RBaumWelchEM(SEXP nstates, SEXP emi, SEXP nEmis, SEXP emiprobDist, SEXP emi
 
 		 /* (3) Update variables transition and emission variables with new sufficient stats. */
          if(verb) Rprintf("-- Updating emissions paremeters.\n");
-         for(int state=0;state<hmm[0].n_states;state++) { // (3)
-          if(updateTrans[state]) (UpdateTPFunc[state])(state, n_seq, TransSS[state], hmm);
+         for(int state=0;state<hmm->n_states;state++) { // (3)
+          if(em->updateTrans[state]) (em->UpdateTPFunc[state])(state, n_seq, em->TransSS[state], hmm);
 
-		  for(int emis=0;emis<hmm[0].n_emis;emis++) // DOES THIS ACTUALLY UPDATE SECOND SETS OF EMISSIONS?!
- 		    if(updateEmis[state+hmm[0].n_states*emis]) (update_emis[state+hmm[0].n_states*emis])(state, ss[state+hmm[0].n_states*emis], hmm);
+		  for(int emis=0;emis<hmm->n_emis;emis++) // DOES THIS ACTUALLY UPDATE SECOND SETS OF EMISSIONS?!
+ 		    if(em->updateEmis[state+hmm->n_states*emis]) (em->update_emis[state+hmm->n_states*emis])(state, em->ss[state+hmm->n_states*emis], hmm);
 		 }
 		
 		 /* (4) Compare change in log-likelihood */
@@ -274,11 +189,11 @@ SEXP RBaumWelchEM(SEXP nstates, SEXP emi, SEXP nEmis, SEXP emiprobDist, SEXP emi
          Qprev = Q;		// (4)
 
 		 /* (5) Cleanup! */
-         for(int state=0;state<hmm[0].n_states;state++) { // (5) 
-            if(updateTrans[state])	(FreeTssFunc[state])(TransSS[state]);
+         for(int state=0;state<hmm->n_states;state++) { // (5) 
+            if(em->updateTrans[state])	(em->FreeTssFunc[state])(em->TransSS[state]);
 
-          for(int emis=0;emis<hmm[0].n_emis;emis++)
-            if(updateEmis[state+hmm[0].n_states*emis]) 	(free_emis_s[state+hmm[0].n_states*emis])(ss[state+hmm[0].n_states*emis]);	
+          for(int emis=0;emis<hmm->n_emis;emis++)
+            if(em->updateEmis[state+hmm->n_states*emis]) 	(em->free_emis_s[state+hmm->n_states*emis])(em->ss[state+hmm->n_states*emis]);	
 		 }
 
       } while(Qdiff > T);
@@ -311,8 +226,8 @@ SEXP RBaumWelchEM(SEXP nstates, SEXP emi, SEXP nEmis, SEXP emiprobDist, SEXP emi
 
 		// Data in types.
 		int maxT = Rf_nrows(VECTOR_ELT(emi, seq));
-		double **data = (double**)R_alloc(hmm[0].n_emis, sizeof(double*));
-		for(int s=0;s<hmm[0].n_emis;s++) {
+		double **data = (double**)R_alloc(hmm->n_emis, sizeof(double*));
+		for(int s=0;s<hmm->n_emis;s++) {
 			data[s]   = REAL(VECTOR_ELT(emi, seq+s*n_seq)); //Correctly indexed?!
 			assert(Rf_nrows(VECTOR_ELT(emi, seq+s*n_seq))==maxT); // Make sure!
 		}
@@ -327,7 +242,7 @@ SEXP RBaumWelchEM(SEXP nstates, SEXP emi, SEXP nEmis, SEXP emiprobDist, SEXP emi
 		if(outopt > 1) {
 			// Set up R data types.  
 			// How to set up a matrix?!
-			SET_VECTOR_ELT(posteriors, seq, allocMatrix(REALSXP, hmm[0].n_states, maxT)); // REALSXP an actual type?!
+			SET_VECTOR_ELT(posteriors, seq, allocMatrix(REALSXP, hmm->n_states, maxT)); // REALSXP an actual type?!
 			double *Rpost = REAL(VECTOR_ELT(posteriors, seq));
 			
 			// Run forward/ backward.
@@ -337,17 +252,17 @@ SEXP RBaumWelchEM(SEXP nstates, SEXP emi, SEXP nEmis, SEXP emiprobDist, SEXP emi
 			Q= fwbk[0].log_px;
 
 			// Foreach state, calculate posteriors.  Construction similar to: http://stat.ethz.ch/R-manual/R-devel/doc/manual/R-exts.html#Attributes
-			for(int state=0;state<hmm[0].n_states;state++)
+			for(int state=0;state<hmm->n_states;state++)
 			  for(int position=0;position<maxT;position++)
-				Rpost[state + hmm[0].n_states*position] = fwbk[0].forward[position][state]+fwbk[0].backward[position][state]-Q; // Durbin book, eq. 3.14.
+				Rpost[state + hmm->n_states*position] = fwbk[0].forward[position][state]+fwbk[0].backward[position][state]-Q; // Durbin book, eq. 3.14.
 				
 			if(outopt == 10) { // Return post. prob. of transition between states 2 and 3.
 				SET_VECTOR_ELT(postTrans, seq, allocVector(REALSXP, (maxT-1)));
 				double *post_trans = REAL(VECTOR_ELT(postTrans, seq));
 				for(int position=0;position<(maxT-1);position++) {
-				  post_trans[position] = fwbk[0].forward[position][1]+fwbk[0].backward[position+1][2]+hmm[0].log_tProb[1][2] -Q; // +emission // Durbin book, eq. 3.19.
-  		 		  for(int emis_count=0;emis_count<hmm[0].n_emis;emis_count++) 
- 				    post_trans[position] += (hmm[0].log_eProb[2+hmm[0].n_emis*emis_count])(data[emis_count][position+1], hmm[0].em_args[2+hmm[0].n_emis*emis_count], 4);
+				  post_trans[position] = fwbk[0].forward[position][1]+fwbk[0].backward[position+1][2]+hmm->log_tProb[1][2] -Q; // +emission // Durbin book, eq. 3.19.
+  		 		  for(int emis_count=0;emis_count<hmm->n_emis;emis_count++) 
+ 				    post_trans[position] += (hmm->log_eProb[2+hmm->n_emis*emis_count])(data[emis_count][position+1], hmm->em_args[2+hmm->n_emis*emis_count], 4);
 				}
 			}
 			

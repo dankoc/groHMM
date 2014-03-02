@@ -44,6 +44,26 @@ typedef double (**emiss_func)(double value, double* args, int nArgs);//(double d
  * components.
  *
  ****************************************/
+ typedef struct {
+    // Store function pointers for Transition sufficient stats.
+    alloc_trans_sstats  AllocTssFunc;
+	update_trans_SS    UpdateTssFunc;
+	update_trans_Prob   UpdateTPFunc;
+	free_trans_sstats    FreeTssFunc;
+	void** TransSS;
+	
+    // Store function pointers for Emission sufficient stats.
+	alloc_emis_sstats sstats_alloc;
+	update_sstat_func sstats_emis;
+	update_emiss_func update_emis;
+	free_emis_sstats  free_emis_s;
+	void** ss;
+	
+	// To update, or not to update? That is the question ...
+	int *updateTrans;
+	int *updateEmis;
+ } em_t;
+ 
 typedef struct {
   double *log_iProb;	/* (1 x n_states) Log of initial probabilities. */
   double **log_tProb;	/* (n_states x n_states) table of transition probabilities. */
