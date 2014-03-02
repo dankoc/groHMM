@@ -108,7 +108,7 @@ SEXP RBaumWelchEM(SEXP nstates, SEXP emi, SEXP nEmis, SEXP emiprobDist, SEXP emi
 
 	/* transfer info from R vars into hmm struct */
 	hmm_t *hmm = setupHMM(nstates, emiprobDist, emiprobVars, nEmis, tprob, iprob);
-	em_t *em = setupEM(hmm, emiprobDist);
+	em_t *em = setupEM(hmm, emiprobDist, updatetrans, updateemis);
     fwbk_t *fwbk;
 
 	/* number of sequences (chromosomes) and total sequence length */
