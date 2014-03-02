@@ -33,12 +33,24 @@
 #include "UsefulValues.h"
 #include <R_ext/Applic.h>
 
+//  Generalized emission function.
+typedef double (**emiss_func)(double value, double* args, int nArgs);//(double data, double arg1, double arg2, double arg3);
+
 /****************************************
  *
  * Data structures for the various HMM
  * components.
  *
  ****************************************/
+ 
+typedef struct {
+  double *log_iProb;	/* (1 x n_states) Log of initial probabilities. */
+  double **log_tProb;	/* (n_states x n_states) table of transition probabilities. */
+  emiss_func log_eProb;	/* log emission probability; CHARLES: Changed to an array of unique functions for each state. */
+  double **em_args;	/* CHARLES: Add an appropriate container (i.e. **double) to store vars. for emission prob. */
+  int n_states; 	/* number of states (excluding initial state). */
+  int n_emis; /* number of columns in emissions matrix **data */
+} hmm_t;
 
 typedef struct {
   double **forward;
@@ -89,9 +101,6 @@ typedef struct {
  * Generalized sufficient statis prototypes.
  *********************************************/
 
-//  Generalized emission function.
-typedef double (**emiss_func)(double value, double* args, int nArgs);//(double data, double arg1, double arg2, double arg3);
-
 // To be as memory-friendly as possible, updating sufficient stats is done in four pieces.  
 // First, an appropriate sufficient_stats struct is allocated.  Ideally, a separate struct
 //  will be used for each prob. distribution.
@@ -115,7 +124,7 @@ typedef void  (**free_trans_sstats)(void* ss);
 
 /****************************************
  *
- * Struct containers for EM and HMM vars.
+ * Struct containers for EM vars.
  *
  ****************************************/
 
@@ -138,15 +147,6 @@ typedef void  (**free_trans_sstats)(void* ss);
 	int *updateTrans;
 	int *updateEmis;
  } em_t;
- 
-typedef struct {
-  double *log_iProb;	/* (1 x n_states) Log of initial probabilities. */
-  double **log_tProb;	/* (n_states x n_states) table of transition probabilities. */
-  emiss_func log_eProb;	/* log emission probability; CHARLES: Changed to an array of unique functions for each state. */
-  double **em_args;	/* CHARLES: Add an appropriate container (i.e. **double) to store vars. for emission prob. */
-  int n_states; 	/* number of states (excluding initial state). */
-  int n_emis; /* number of columns in emissions matrix **data */
-} hmm_t;
 
 /***************************************
  * 
