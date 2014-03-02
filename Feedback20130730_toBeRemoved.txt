@@ -1,4 +1,3 @@
-
 herve <hpages@fhcrc.org> added the comment:
 
 Hi Minho,
@@ -247,12 +246,18 @@ C++ code:
   (default is 2 on Linux) which is generally not a good idea (unless you have
   a really good reason for doing this).
 
+Done!
+
 5.b - Your R_init_* function is not named correctly: R_init_GROseq.
   Needs to be R_init_groHMM otherwise it's not being called at load time.
+
+Done!  Thanks for pointing this out.
 
 5.c - I suggest you use PROTECT/UNPOTECT consistently thru all your code,
   and not sometimes PROTECT, sometimes protect, sometimes UNPROTECT, and
   sometimes unprotect. This will make your code easier to read and understand.
+
+Done!
 
 5.d - You don't need to PROTECT() objects returned by getAttrib() or, more
   generally, objects that you get by extracting parts of a bigger object.
