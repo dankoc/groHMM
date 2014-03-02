@@ -80,37 +80,22 @@ em_t *setupEM(hmm_t *hmm, SEXP emiprobDist, SEXP updatetrans, SEXP updateemis) {
 	em->ss = (void**)R_alloc(hmm->n_states, sizeof(void*));
 
 	for(int i=0;i<(hmm->n_states*hmm->n_emis);i++) {
-		if(strcmp(CHAR(STRING_ELT(emiprobDist, i)), "norm") == 0)	{
+		if(strcmp(CHAR(STRING_ELT(emiprobDist, i)), "norm") == 0 ||
+		   strcmp(CHAR(STRING_ELT(emiprobDist, i)), "dnorm") == 0 )	{
 			em->sstats_alloc[i] = SSallocNormal;
 			em->sstats_emis[i]  = SStatsNormal;
 			em->update_emis[i]  = UpdateNormal;
 			em->free_emis_s[i]  = SSfreeNormal;
 		}
-		else if(strcmp(CHAR(STRING_ELT(emiprobDist, i)), "dnorm") == 0)	{
-			em->sstats_alloc[i] = SSallocNormal;
-			em->sstats_emis[i]  = SStatsNormal;
-			em->update_emis[i]  = UpdateNormal;
-			em->free_emis_s[i]  = SSfreeNormal;
-		}
-		else if(strcmp(CHAR(STRING_ELT(emiprobDist, i)), "gamma") == 0)	{
+		else if(strcmp(CHAR(STRING_ELT(emiprobDist, i)), "gamma") == 0 ||
+		        strcmp(CHAR(STRING_ELT(emiprobDist, i)), "dgamma") == 0 )	{
 			em->sstats_alloc[i] = SSallocGamma;
 			em->sstats_emis[i]  = SStatsGamma;
 			em->update_emis[i]  = UpdateGamma;
 			em->free_emis_s[i]  = SSfreeGamma;
 		}
-		else if(strcmp(CHAR(STRING_ELT(emiprobDist, i)), "dgamma") == 0)	{
-			em->sstats_alloc[i] = SSallocGamma;
-			em->sstats_emis[i]  = SStatsGamma;
-			em->update_emis[i]  = UpdateGamma;
-			em->free_emis_s[i]  = SSfreeGamma;
-		}
-		else if(strcmp(CHAR(STRING_ELT(emiprobDist, i)), "normexp") == 0)	{
-			em->sstats_alloc[i] = SSallocNormExp;
-			em->sstats_emis[i]  = SStatsNormExp;
-			em->update_emis[i]  = UpdateNormExp;
-			em->free_emis_s[i]  = SSfreeNormExp;
-		}
-		else if(strcmp(CHAR(STRING_ELT(emiprobDist, i)), "normexpminus") == 0)	{
+		else if(strcmp(CHAR(STRING_ELT(emiprobDist, i)), "normexp") == 0 || 
+		        strcmp(CHAR(STRING_ELT(emiprobDist, i)), "normexpminus") == 0)	{
 			em->sstats_alloc[i] = SSallocNormExp;
 			em->sstats_emis[i]  = SStatsNormExp;
 			em->update_emis[i]  = UpdateNormExp;
