@@ -33,69 +33,12 @@
 #include "UsefulValues.h"
 #include <R_ext/Applic.h>
 
-
-/*********************************************
- * Generalized sufficient statis prototypes.
- *********************************************/
-
-//  Generalized emission function.
-typedef double (**emiss_func)(double value, double* args, int nArgs);//(double data, double arg1, double arg2, double arg3);
-
-// To be as memory-friendly as possible, updating sufficient stats is done in four pieces.  
-// First, an appropriate sufficient_stats struct is allocated.  Ideally, a separate struct
-//  will be used for each prob. distribution.
-typedef void* (**alloc_emis_sstats)(int num); // num --> the number of data points.
-
-// Second, update_suffstats_func keeps a running tally of the sufficient stats for a distribution.
-typedef void (**update_sstat_func)(int state, int emis_indx, void* ss, fwbk_t fwbk);
-
-// After all sufficient stats are added from all chromosomes, new variables are calculated and 
-// applied to the hmm.
-typedef void (**update_emiss_func)(int state, void* ss, hmm_t *hmm);
-
-// Free ss_t variables.
-typedef void  (**free_emis_sstats)(void* ss);
-
-// Similar paradigm for transition prob.
-typedef void* (**alloc_trans_sstats)(int num, int sequences); // num --> the number of data points.
-typedef void  (**update_trans_SS)(int state, int sequence, void* ss, emiss_func EMI, fwbk_t fwbk);
-typedef void  (**update_trans_Prob)(int state, int nSequences, void* ss, hmm_t *hmm);
-typedef void  (**free_trans_sstats)(void* ss);
-
 /****************************************
  *
  * Data structures for the various HMM
  * components.
  *
  ****************************************/
- typedef struct {
-    // Store function pointers for Transition sufficient stats.
-    alloc_trans_sstats  AllocTssFunc;
-	update_trans_SS    UpdateTssFunc;
-	update_trans_Prob   UpdateTPFunc;
-	free_trans_sstats    FreeTssFunc;
-	void** TransSS;
-	
-    // Store function pointers for Emission sufficient stats.
-	alloc_emis_sstats sstats_alloc;
-	update_sstat_func sstats_emis;
-	update_emiss_func update_emis;
-	free_emis_sstats  free_emis_s;
-	void** ss;
-	
-	// To update, or not to update? That is the question ...
-	int *updateTrans;
-	int *updateEmis;
- } em_t;
- 
-typedef struct {
-  double *log_iProb;	/* (1 x n_states) Log of initial probabilities. */
-  double **log_tProb;	/* (n_states x n_states) table of transition probabilities. */
-  emiss_func log_eProb;	/* log emission probability; CHARLES: Changed to an array of unique functions for each state. */
-  double **em_args;	/* CHARLES: Add an appropriate container (i.e. **double) to store vars. for emission prob. */
-  int n_states; 	/* number of states (excluding initial state). */
-  int n_emis; /* number of columns in emissions matrix **data */
-} hmm_t;
 
 typedef struct {
   double **forward;
@@ -141,6 +84,69 @@ typedef struct {
 typedef struct {
   double **totalTransK; // Matrix, indexed: var[states in HMM][training seqeunces]
 } ssTransition;
+
+/*********************************************
+ * Generalized sufficient statis prototypes.
+ *********************************************/
+
+//  Generalized emission function.
+typedef double (**emiss_func)(double value, double* args, int nArgs);//(double data, double arg1, double arg2, double arg3);
+
+// To be as memory-friendly as possible, updating sufficient stats is done in four pieces.  
+// First, an appropriate sufficient_stats struct is allocated.  Ideally, a separate struct
+//  will be used for each prob. distribution.
+typedef void* (**alloc_emis_sstats)(int num); // num --> the number of data points.
+
+// Second, update_suffstats_func keeps a running tally of the sufficient stats for a distribution.
+typedef void (**update_sstat_func)(int state, int emis_indx, void* ss, fwbk_t fwbk);
+
+// After all sufficient stats are added from all chromosomes, new variables are calculated and 
+// applied to the hmm.
+typedef void (**update_emiss_func)(int state, void* ss, hmm_t *hmm);
+
+// Free ss_t variables.
+typedef void  (**free_emis_sstats)(void* ss);
+
+// Similar paradigm for transition prob.
+typedef void* (**alloc_trans_sstats)(int num, int sequences); // num --> the number of data points.
+typedef void  (**update_trans_SS)(int state, int sequence, void* ss, emiss_func EMI, fwbk_t fwbk);
+typedef void  (**update_trans_Prob)(int state, int nSequences, void* ss, hmm_t *hmm);
+typedef void  (**free_trans_sstats)(void* ss);
+
+/****************************************
+ *
+ * Struct containers for EM and HMM vars.
+ *
+ ****************************************/
+
+ typedef struct {
+    // Store function pointers for Transition sufficient stats.
+    alloc_trans_sstats  AllocTssFunc;
+	update_trans_SS    UpdateTssFunc;
+	update_trans_Prob   UpdateTPFunc;
+	free_trans_sstats    FreeTssFunc;
+	void** TransSS;
+	
+    // Store function pointers for Emission sufficient stats.
+	alloc_emis_sstats sstats_alloc;
+	update_sstat_func sstats_emis;
+	update_emiss_func update_emis;
+	free_emis_sstats  free_emis_s;
+	void** ss;
+	
+	// To update, or not to update? That is the question ...
+	int *updateTrans;
+	int *updateEmis;
+ } em_t;
+ 
+typedef struct {
+  double *log_iProb;	/* (1 x n_states) Log of initial probabilities. */
+  double **log_tProb;	/* (n_states x n_states) table of transition probabilities. */
+  emiss_func log_eProb;	/* log emission probability; CHARLES: Changed to an array of unique functions for each state. */
+  double **em_args;	/* CHARLES: Add an appropriate container (i.e. **double) to store vars. for emission prob. */
+  int n_states; 	/* number of states (excluding initial state). */
+  int n_emis; /* number of columns in emissions matrix **data */
+} hmm_t;
 
 /***************************************
  * 
