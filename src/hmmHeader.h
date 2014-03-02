@@ -162,6 +162,7 @@ extern void imatrix_free(int ** matrix, int reverse, int rows);
 extern fwbk_t * fwbk_alloc(double **data, int N, hmm_t *hmm); // This may be converted into the R entry function?!
 extern void fwbk_free(fwbk_t * data);
 extern hmm_t *setupHMM(SEXP nstates, SEXP emiprobDist, SEXP emiprobVars, SEXP nEmis, SEXP tprob, SEXP iprob);
+extern em_t *setupEM(hmm_t *hmm, SEXP emiprobDist, SEXP updatetrans, SEXP updateemis);
 
 /***************************************
  * 
