@@ -143,8 +143,8 @@ SEXP RgammaMLE(SEXP n, SEXP sumxi, SEXP sumlogxi) {
 
 	// Create return value.
 	SEXP returnList, returnNames, shape, scale;
-	protect(returnList  = allocVector(VECSXP, 2));
-	protect(returnNames = NEW_CHARACTER(2));
+	PROTECT(returnList  = allocVector(VECSXP, 2));
+	PROTECT(returnNames = NEW_CHARACTER(2));
 	SET_VECTOR_ELT(returnList, 0, shape=allocVector(REALSXP, 1));
 	SET_VECTOR_ELT(returnList, 1, scale=allocVector(REALSXP, 1));
 	SET_STRING_ELT(returnNames, 0, mkChar("shape"));
@@ -153,7 +153,7 @@ SEXP RgammaMLE(SEXP n, SEXP sumxi, SEXP sumlogxi) {
 
 	MLEGamma(N, SumXi, SumLogXi, REAL(shape), REAL(scale));
 
-	unprotect(2);
+	UNPROTECT(2);
 	return(returnList);
 }
 
@@ -341,8 +341,8 @@ SEXP RNormExpMLE(SEXP xi, SEXP wi, SEXP init_guess, SEXP TOL, SEXP maxit) {
 
 	// Create return value.
 	SEXP returnList, returnNames, PAR, FMIN, FAIL, FNCOUNT, GRCOUNT;
-	protect(returnList  = allocVector(VECSXP, 5));
-	protect(returnNames = NEW_CHARACTER(5));
+	PROTECT(returnList  = allocVector(VECSXP, 5));
+	PROTECT(returnNames = NEW_CHARACTER(5));
 	SET_VECTOR_ELT(returnList, 0, PAR=allocVector(REALSXP, 4));
 	SET_VECTOR_ELT(returnList, 1, FMIN=allocVector(REALSXP, 1));
 	SET_VECTOR_ELT(returnList, 2, FNCOUNT=allocVector(INTSXP, 1));
@@ -365,7 +365,7 @@ SEXP RNormExpMLE(SEXP xi, SEXP wi, SEXP init_guess, SEXP TOL, SEXP maxit) {
 	// Do the minimization...
 	cgmin(4, guess, par, fmin, normal_exp_optimfn, normal_exp_optimgr, fail, tol, tol, ex, 1, 0, fncount, grcount, MAXIT);
 
-	unprotect(2);
+	UNPROTECT(2);
 	return(returnList);
 }
 

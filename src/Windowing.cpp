@@ -150,7 +150,7 @@ SEXP WindowAnalysis(SEXP ProbeStart, SEXP ProbeEnd, SEXP ProbeStrand, SEXP Check
 	SlidingWindow(	Probe_Start, Probe_End, ProbeStrand, NProbes, CHAR(STRING_ELT(CheckStrand, 0)), 
 			WindowSize[0], StepSize[0], StartPosition[0], EndPosition[0], II, counts);
 
-	unprotect(2);
+	UNPROTECT(2);
 	return(COUNTS);
 }
 
@@ -359,7 +359,7 @@ SEXP HistogramOfReadsByFeature(SEXP FeatureStart, SEXP FeatureStrand,
 		InitIndex = ADD[sz];
 	}
 
-	unprotect(3);
+	UNPROTECT(3);
 	return(counts);
 }
 
@@ -418,7 +418,7 @@ SEXP MatrixOfReadsByFeature(SEXP FeatureStart, SEXP FeatureStrand,
 		InitIndex = ADD[sz];
 	}
 
-	unprotect(3);
+	UNPROTECT(3);
 	return(counts);
 }
 
@@ -478,7 +478,7 @@ SEXP NumberOfReadsInMaximalSlidingWindow(SEXP FeatureStart, SEXP FeatureStrand,
 		InitIndex = ADD[sz];
 	}
 
-	unprotect(3);
+	UNPROTECT(3);
 	return(counts);
 }
 }

@@ -197,7 +197,7 @@ SEXP getEMReturnRTypes(hmm_t *hmm, int n_seq, SEXP emiprobVars, SEXP tprob, SEXP
 	}
 	
 	// Return list object.
-	unprotect(1);
+	UNPROTECT(1);
 	return(ListObject);
 }
 

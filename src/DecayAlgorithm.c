@@ -74,7 +74,7 @@ SEXP DecayAlgorithm(SEXP COUNTS, SEXP DECAY) {
 						}*/
 	}
 
-	unprotect(2);
+	UNPROTECT(2);
 	return(ModCounts);
 }
 
@@ -156,7 +156,7 @@ SEXP getTranscriptPositions(SEXP Transform, SEXP Threshold, SEXP WindowSize) {
 		}
 	}
 
-	unprotect(2);
+	UNPROTECT(2);
 	return(Regions);
 }
 
@@ -229,7 +229,7 @@ SEXP vect2bed(SEXP Transform, SEXP WindowSize) {
 		}
 	}
 
-	unprotect(2);
+	UNPROTECT(2);
 	return(Regions);
 }
 
