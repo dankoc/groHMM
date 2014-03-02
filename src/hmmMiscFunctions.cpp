@@ -175,7 +175,7 @@ extern hmm_t *setupHMM(SEXP nstates, SEXP emiprobDist, SEXP emiprobVars, SEXP nE
 	return(hmm);
 }
 
-extern em_t *setupEM(hmm_t hmm, SEXP emiprobDist) {
+extern em_t *setupEM(hmm_t *hmm, SEXP emiprobDist) {
 	em_t *em = (em_t*)R_alloc(1, sizeof(em_t));
 
 	/***************************************************
