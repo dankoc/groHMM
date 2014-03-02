@@ -141,7 +141,10 @@ em_t *setupEM(hmm_t *hmm, SEXP emiprobDist, SEXP updatetrans, SEXP updateemis) {
 	return(em);
 }
 /* Parses C data types back into a format that can be easily imported back into the R session */
-SEXP getEMReturnRTypes(hmm_t *hmm, int n_seq, SEXP emiprobVars, SEXP tprob, SEXP emi) {
+SEXP getEMReturnRTypes(hmm_t *hmm, int n_seq, SEXP emiprobVars, SEXP tprob, SEXP emi, SEXP output) {
+	int outopt = INTEGER(output)[0];
+    fwbk_t *fwbk;
+	double Q;
 
 	// Add final model paremeters to the list.
 	int RETURN_SIZE = 3, RETURN_INDX = 0;
@@ -261,7 +264,6 @@ SEXP RBaumWelchEM(SEXP nstates, SEXP emi, SEXP nEmis, SEXP emiprobDist, SEXP emi
 
 	/* Init logical variables. */
 	bool verb = INTEGER(verbose)[0];
-	int outopt = INTEGER(output)[0];
 	
 	if(verb) Rprintf("Initializing Baum-Welch EM.\n");
 
@@ -367,7 +369,7 @@ SEXP RBaumWelchEM(SEXP nstates, SEXP emi, SEXP nEmis, SEXP emiprobDist, SEXP emi
  *  Return data in a list variable to the R enviroment.
  *************************************************************/
 	if(verb) Rprintf("Returning to R Enivorment :)\n");
-	SEXP ListObject = getEMReturnRTypes(hmm, n_seq, emiprobVars, tprob, emi);
+	SEXP ListObject = getEMReturnRTypes(hmm, n_seq, emiprobVars, tprob, emi, output);
 	
 	return(ListObject);
 }
