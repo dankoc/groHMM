@@ -34,9 +34,33 @@
 #include <R_ext/Applic.h>
 
 
+/*********************************************
+ * Generalized sufficient statis prototypes.
+ *********************************************/
+
 //  Generalized emission function.
 typedef double (**emiss_func)(double value, double* args, int nArgs);//(double data, double arg1, double arg2, double arg3);
 
+// To be as memory-friendly as possible, updating sufficient stats is done in four pieces.  
+// First, an appropriate sufficient_stats struct is allocated.  Ideally, a separate struct
+//  will be used for each prob. distribution.
+typedef void* (**alloc_emis_sstats)(int num); // num --> the number of data points.
+
+// Second, update_suffstats_func keeps a running tally of the sufficient stats for a distribution.
+typedef void (**update_sstat_func)(int state, int emis_indx, void* ss, fwbk_t fwbk);
+
+// After all sufficient stats are added from all chromosomes, new variables are calculated and 
+// applied to the hmm.
+typedef void (**update_emiss_func)(int state, void* ss, hmm_t *hmm);
+
+// Free ss_t variables.
+typedef void  (**free_emis_sstats)(void* ss);
+
+// Similar paradigm for transition prob.
+typedef void* (**alloc_trans_sstats)(int num, int sequences); // num --> the number of data points.
+typedef void  (**update_trans_SS)(int state, int sequence, void* ss, emiss_func EMI, fwbk_t fwbk);
+typedef void  (**update_trans_Prob)(int state, int nSequences, void* ss, hmm_t *hmm);
+typedef void  (**free_trans_sstats)(void* ss);
 
 /****************************************
  *
@@ -117,30 +141,6 @@ typedef struct {
 typedef struct {
   double **totalTransK; // Matrix, indexed: var[states in HMM][training seqeunces]
 } ssTransition;
-
-/*********************************************
- * Generalized sufficient statis prototypes.
- *********************************************/
-// To be as memory-friendly as possible, updating sufficient stats is done in four pieces.  
-// First, an appropriate sufficient_stats struct is allocated.  Ideally, a separate struct
-//  will be used for each prob. distribution.
-typedef void* (**alloc_emis_sstats)(int num); // num --> the number of data points.
-
-// Second, update_suffstats_func keeps a running tally of the sufficient stats for a distribution.
-typedef void (**update_sstat_func)(int state, int emis_indx, void* ss, fwbk_t fwbk);
-
-// After all sufficient stats are added from all chromosomes, new variables are calculated and 
-// applied to the hmm.
-typedef void (**update_emiss_func)(int state, void* ss, hmm_t *hmm);
-
-// Free ss_t variables.
-typedef void  (**free_emis_sstats)(void* ss);
-
-// Similar paradigm for transition prob.
-typedef void* (**alloc_trans_sstats)(int num, int sequences); // num --> the number of data points.
-typedef void  (**update_trans_SS)(int state, int sequence, void* ss, emiss_func EMI, fwbk_t fwbk);
-typedef void  (**update_trans_Prob)(int state, int nSequences, void* ss, hmm_t *hmm);
-typedef void  (**free_trans_sstats)(void* ss);
 
 /***************************************
  * 
