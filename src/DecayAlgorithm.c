@@ -29,10 +29,6 @@
  *
  ********************************************************************************/
 
-using namespace std;
-
-extern "C" {
-
 #include <R.h> 
 #include <S.h>
 #include <Rdefines.h>
@@ -93,6 +89,9 @@ SEXP DecayAlgorithm(SEXP COUNTS, SEXP DECAY) {
  *****************************************************************************************/
 SEXP getTranscriptPositions(SEXP Transform, SEXP Threshold, SEXP WindowSize) {
 
+	const int false= 0;
+	const int true= 1;
+
 	double *transform = REAL(Transform);
 	double threshold = REAL(Threshold)[0];
 	int windowsize = INTEGER(WindowSize)[0];
@@ -101,7 +100,7 @@ SEXP getTranscriptPositions(SEXP Transform, SEXP Threshold, SEXP WindowSize) {
 	int size = Rf_nrows(Transform);
 
 	// Run through once counting the size ...
-	bool currentlyInRegion=FALSE;
+	int currentlyInRegion=false;
 	int NumberOfRegions=0;
 	for(int i=0;i<size;i++) {
 		if( (transform[i] >= threshold) && !currentlyInRegion ) {
@@ -234,4 +233,3 @@ SEXP vect2bed(SEXP Transform, SEXP WindowSize) {
 	return(Regions);
 }
 
-}

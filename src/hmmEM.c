@@ -34,9 +34,6 @@
  *
  ********************************************************************************/
 
-using namespace std;
-
-extern "C" {
 
 #include <R.h> 
 #include <S.h>
@@ -263,7 +260,7 @@ SEXP RBaumWelchEM(SEXP nstates, SEXP emi, SEXP nEmis, SEXP emiprobDist, SEXP emi
  *************************************************************/
 
 	/* Init logical variables. */
-	bool verb = INTEGER(verbose)[0];
+	int verb = INTEGER(verbose)[0];
 	
 	if(verb) Rprintf("Initializing Baum-Welch EM.\n");
 
@@ -374,4 +371,3 @@ SEXP RBaumWelchEM(SEXP nstates, SEXP emi, SEXP nEmis, SEXP emiprobDist, SEXP emi
 	return(ListObject);
 }
 
-}

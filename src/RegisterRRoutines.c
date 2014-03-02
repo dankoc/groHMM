@@ -27,10 +27,6 @@
  *
  ********************************************************************************/
 
-using namespace std;
-
-extern "C" {
-
 /**************************************************************
  *
  *	Associates a vector of genomic featuers (e.g. genes, CpG islands, etc.) with a table of sequence reads.
@@ -93,4 +89,3 @@ void R_init_GROseq(DllInfo *info) {
 	R_registerRoutines(info, NULL, callMethods, NULL, NULL);
 }
 
-}

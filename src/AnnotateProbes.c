@@ -28,10 +28,6 @@
  *
  ********************************************************************************/
 
-using namespace std;
-
-extern "C" {
-
 /**************************************************************
  *
  *	Associates a vector of genomic featuers (e.g. genes, CpG islands, etc.) with a table of sequence reads.
@@ -183,4 +179,3 @@ SEXP AssociateRegionWithFeatures(SEXP Feature_Start, SEXP Feature_End, SEXP Prob
 	return(fID);
 }
 
-}

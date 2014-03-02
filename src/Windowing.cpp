@@ -29,6 +29,7 @@
  *
  ********************************************************************************/
 
+
 using namespace std;
 
 extern "C" {
@@ -216,7 +217,7 @@ int *MetaSlidingWindow(int Anchor_Start, const char *Anchor_Strand,
 
 // One loop starting at INDX.  Does not record unless its in the window.
 	int indx;
-	bool InWindow=FALSE;
+	int InWindow=0; // FALSE
 	for(int i=INDX;i<NProbes;i++) {
 		// If ANYWHERE in the region of interest AND on the same strand as feature (alternatively, don't count the strand if 'N'); record.
 		if((First <= (Probe_End[i])) && (Last >= Probe_Start[i]) &&
@@ -224,7 +225,7 @@ int *MetaSlidingWindow(int Anchor_Start, const char *Anchor_Strand,
 			// Put the start of the first INDX.
 			if(!InWindow) {
 				ans[size] = i;
-				InWindow=TRUE;
+				InWindow=1; // TRUE
 			}
 
 			// Foreach bin that contains a read, Increment!
@@ -480,5 +481,4 @@ SEXP NumberOfReadsInMaximalSlidingWindow(SEXP FeatureStart, SEXP FeatureStrand,
 	unprotect(3);
 	return(counts);
 }
-
 }

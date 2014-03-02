@@ -34,10 +34,6 @@
  *
  ********************************************************************************/
 
-using namespace std;
-
-extern "C" {
-
 #include <R.h> 
 #include <S.h>
 #include <Rdefines.h>
@@ -208,4 +204,3 @@ SEXP Rviterbi(SEXP emi, SEXP nEmis, SEXP nstates, SEXP emiprobDist, SEXP emiprob
 	return(hiddenStatesR);
 }
 
-}

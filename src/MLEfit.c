@@ -29,10 +29,6 @@
  *
  ********************************************************************************/
 
-using namespace std;
-
-extern "C" {
-
 #include <R.h>
 #include <S.h>
 #include <Rdefines.h>
@@ -81,48 +77,49 @@ static inline double trigamma(double k) {
  *	paremeters of the gamma distribution, shape (or k), and scale (or theta).
  *
  ******************************************************************************************/
-extern int MLEGamma(double N, double SumXi, double SumLogXi, double &shape, double &scale, 
-						int maxIterations, double shapeBound) {
+extern int MLEGamma(double N, double SumXi, double SumLogXi, double *shape, double *scale) {
+	double shapeBound= VERY_LARGE_DOUBLE_VALUE;
+	int maxIterations= 10000;	
 
 	int retVal=0;
 	Rprintf("[MLEGamma] SumXi=%f; SumLogXi=%f; N=%f\n", SumXi, SumLogXi, N);
 
 	// Get initial value of shape (k).
 	double s = log(SumXi/N)-SumLogXi/N;
-	shape = (3-s+sqrt((s-3)*(s-3)+24*s))/(12*s);
+	shape[0] = (3-s+sqrt((s-3)*(s-3)+24*s))/(12*s);
 
-	Rprintf("[MLEGamma] s=%f; shape=%f\n", s, shape);
+	Rprintf("[MLEGamma] s=%f; shape=%f\n", s, shape[0]);
 
 	// Refine shape (k) using Newton's method.
 	int counter = 0;
 	double kPrime;
 	for( int counter=0; counter < maxIterations; counter++) {
-		kPrime=shape-(log(shape)-digamma(shape)-s)/((1/shape)-trigamma(shape));
-		if((kPrime - shape) < 0.00000001 && (shape - kPrime) < 0.00000001) {
-			shape = kPrime;
+		kPrime=shape[0]-(log(shape[0])-digamma(shape[0])-s)/((1/shape[0])-trigamma(shape[0]));
+		if((kPrime - shape[0]) < 0.00000001 && (shape[0] - kPrime) < 0.00000001) {
+			shape[0] = kPrime;
 			break;
 		}
 
-		shape=kPrime;
+		shape[0]=kPrime;
 	}
 
 	// If overflow, use an approximation, and spit out a warning.
-    if(isnan(shape)) {
+    if(isnan(shape[0])) {
 		retVal = -1;
-		shape = (3-s+sqrt((s-3)*(s-3)+24*s))/(12*s);
+		shape[0] = (3-s+sqrt((s-3)*(s-3)+24*s))/(12*s);
 		Rprintf("WARNING!! [MLEGamma] NaN returned from Newton's method.  Approximate value returned.\n");
 	}
 
 	// (shape > shapeBound) Here, we are bounding shape for numerical stability.
 	// (s < 0 && shape < 0) has been observed to happen due to machine rounding error, if log(SumXi/N)~=SumLogXi/N.
-	if(isinf(shape) || (shape > shapeBound) || (s < 0 && shape < 0)) { 
+	if(isinf(shape[0]) || (shape[0] > shapeBound) || (s < 0 && shape[0] < 0)) { 
 		retVal = -1;
-		shape = shapeBound;
+		shape[0] = shapeBound;
 		Rprintf("WARNING!! [MLEGamma] Numerical instabillity detected, or shape outside of bounds.\n");
 	}
 
 	// Get scale in terms of k.
-	scale = (SumXi/(shape*N));
+	scale[0] = (SumXi/(shape[0]*N));
 
         
 	// This was observed to happen in a case where the first state captured the entire sequence, and
@@ -131,11 +128,11 @@ extern int MLEGamma(double N, double SumXi, double SumLogXi, double &shape, doub
 	// BE CAREFUL!  THIS works ONLY in cases where all windows are set to >=1.
     if( (N==0) ) {
 		retVal = -2;
-		shape=0; scale=1;
+		shape[0]=0; scale[0]=1;
 		Rprintf("SERIOUS WARNING!! [MLEGamma] N found to equal 0.  Shape set to 0, scale set to 1.\n");
 	}
 
-	Rprintf("[MLEGamma] shape=%f; scale=%f\n", shape, scale);
+	Rprintf("[MLEGamma] shape=%f; scale=%f\n", shape[0], scale[0]);
 	return(retVal);
 }
 
@@ -154,7 +151,7 @@ SEXP RgammaMLE(SEXP n, SEXP sumxi, SEXP sumlogxi) {
 	SET_STRING_ELT(returnNames, 1, mkChar("scale"));
         setAttrib(returnList, R_NamesSymbol, returnNames);
 
-	MLEGamma(N, SumXi, SumLogXi, REAL(shape)[0], REAL(scale)[0]);
+	MLEGamma(N, SumXi, SumLogXi, REAL(shape), REAL(scale));
 
 	unprotect(2);
 	return(returnList);
@@ -169,25 +166,27 @@ SEXP RgammaMLE(SEXP n, SEXP sumxi, SEXP sumlogxi) {
  *	Scale is set to 1.
  *
  ******************************************************************************************/
-extern int MLEGamma_SCALE1(double N, double SumXi, double SumLogXi, double &shape, double &scale, int maxIterations) {
+extern int MLEGamma_SCALE1(double N, double SumXi, double SumLogXi, double *shape, double *scale) {
+        int maxIterations= 10000;
+
 	// Get initial value of shape (k).
 	double s = SumLogXi/N;
-	shape = SumXi/N;
+	shape[0] = SumXi/N;
 
 	// Refine shape (k) using Newton's method.
 	int counter = 0;
 	double kPrime;
 	for( int counter=0; counter < maxIterations; counter++) {
-		kPrime=shape-((digamma(shape)-s)/trigamma(shape));
-		if((kPrime - shape) < 0.00000001 && (shape - kPrime) < 0.00000001) {
-			shape = kPrime;
+		kPrime=shape[0]-((digamma(shape[0])-s)/trigamma(shape[0]));
+		if((kPrime - shape[0]) < 0.00000001 && (shape[0] - kPrime) < 0.00000001) {
+			shape[0] = kPrime;
 			break;
 		}
 
-		shape=kPrime;
+		shape[0]=kPrime;
 	}
 
-	scale=1;
+	scale[0]=1;
 	return(0);
 }
 
@@ -198,27 +197,29 @@ extern int MLEGamma_SCALE1(double N, double SumXi, double SumLogXi, double &shap
  *
  ******************************************************************************************/
 extern int MLEGamma_SHAPEeq1overSCALE(double N, double SumXi, double SumLogXi, double SumXiSq, 
-						double &shape, double &scale, int maxIterations) {
+						double *shape, double *scale) {
+        int maxIterations= 10000;
+
 	// Get initial value of shape (k).
 	double s = (SumXi/N)-(SumLogXi/N);
-	shape = ((SumXi/N)*(SumXi/N))/( (SumXiSq/N)-((SumXi/N)*(SumXi/N)) );
+	shape[0] = ((SumXi/N)*(SumXi/N))/( (SumXiSq/N)-((SumXi/N)*(SumXi/N)) );
 	Rprintf("[MLEGamma_SHAPEeq1overSCALE] SumXi=%f; SumLogXi=%f; SumXiSq=%f; N=%f\n", SumXi, SumLogXi, SumXiSq, N);
 
 	// Refine shape (k) using Newton's method.
 	int counter = 0;
 	double kPrime;
 	for( int counter=0; counter < maxIterations; counter++) {
-		Rprintf("[MLEGamma_SHAPEeq1overSCALE] shape: %f\n", shape);
-		kPrime=shape-((digamma(shape)+log(1/shape)+(shape*shape)+s)/(trigamma(shape)+3*shape));
-		if((kPrime - shape) < 0.00000001 && (shape - kPrime) < 0.00000001) {
-			shape = kPrime;
+		Rprintf("[MLEGamma_SHAPEeq1overSCALE] shape: %f\n", shape[0]);
+		kPrime=shape[0]-((digamma(shape[0])+log(1/shape[0])+(shape[0]*shape[0])+s)/(trigamma(shape[0])+3*shape[0]));
+		if((kPrime - shape[0]) < 0.00000001 && (shape[0] - kPrime) < 0.00000001) {
+			shape[0] = kPrime;
 			break;
 		}
 
-		shape=kPrime;
+		shape[0]=kPrime;
 	}
 
-	scale=1/shape;
+	scale[0]=1/shape[0];
 	return(0);
 }
 
@@ -369,4 +370,3 @@ SEXP RNormExpMLE(SEXP xi, SEXP wi, SEXP init_guess, SEXP TOL, SEXP maxit) {
 }
 
 
-}
