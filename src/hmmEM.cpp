@@ -52,6 +52,170 @@ extern "C" {
 
 #include "hmmHeader.h"
 
+
+/* Sets up the sufficient stats void* data types for use during EM. */
+em_t *setupEM(hmm_t *hmm, SEXP emiprobDist, SEXP updatetrans, SEXP updateemis) {
+	em_t *em = (em_t*)R_alloc(1, sizeof(em_t));
+
+	/***************************************************
+	* Set up the transition probability distributions.   
+	****************************************************/
+	em->AllocTssFunc = (alloc_trans_sstats) R_alloc(hmm->n_states, sizeof( alloc_trans_sstats ));
+	em->UpdateTssFunc = (update_trans_SS)    R_alloc(hmm->n_states, sizeof( update_trans_SS ));
+	em->UpdateTPFunc = (update_trans_Prob)  R_alloc(hmm->n_states, sizeof( update_trans_Prob ));
+	em->FreeTssFunc = (free_trans_sstats)  R_alloc(hmm->n_states, sizeof( free_trans_sstats ));
+	em->TransSS = (void**)R_alloc(hmm->n_states, sizeof(void*));
+
+	for(int i=0;i<(hmm->n_states);i++) {
+	  em->AllocTssFunc[i]   = TransAlloc;
+	  em->UpdateTssFunc[i]  = TransUpdate;
+	  em->UpdateTPFunc[i]   = TransUpdateP;
+	  em->FreeTssFunc[i]    = TransFree;
+	}
+
+	/***************************************************
+	* Set up the emission probability distributions.   
+	****************************************************/
+	em->sstats_alloc = (alloc_emis_sstats) R_alloc(hmm->n_states*hmm->n_emis, sizeof( alloc_emis_sstats ));
+	em->sstats_emis  = (update_sstat_func) R_alloc(hmm->n_states*hmm->n_emis, sizeof( update_sstat_func ));
+	em->update_emis  = (update_emiss_func) R_alloc(hmm->n_states*hmm->n_emis, sizeof( update_emiss_func ));
+	em->free_emis_s  =  (free_emis_sstats) R_alloc(hmm->n_states*hmm->n_emis, sizeof( free_emis_sstats  ));
+	em->ss = (void**)R_alloc(hmm->n_states, sizeof(void*));
+
+	for(int i=0;i<(hmm->n_states*hmm->n_emis);i++) {
+		if(strcmp(CHAR(STRING_ELT(emiprobDist, i)), "norm") == 0)	{
+			em->sstats_alloc[i] = SSallocNormal;
+			em->sstats_emis[i]  = SStatsNormal;
+			em->update_emis[i]  = UpdateNormal;
+			em->free_emis_s[i]  = SSfreeNormal;
+		}
+		else if(strcmp(CHAR(STRING_ELT(emiprobDist, i)), "dnorm") == 0)	{
+			em->sstats_alloc[i] = SSallocNormal;
+			em->sstats_emis[i]  = SStatsNormal;
+			em->update_emis[i]  = UpdateNormal;
+			em->free_emis_s[i]  = SSfreeNormal;
+		}
+		else if(strcmp(CHAR(STRING_ELT(emiprobDist, i)), "gamma") == 0)	{
+			em->sstats_alloc[i] = SSallocGamma;
+			em->sstats_emis[i]  = SStatsGamma;
+			em->update_emis[i]  = UpdateGamma;
+			em->free_emis_s[i]  = SSfreeGamma;
+		}
+		else if(strcmp(CHAR(STRING_ELT(emiprobDist, i)), "dgamma") == 0)	{
+			em->sstats_alloc[i] = SSallocGamma;
+			em->sstats_emis[i]  = SStatsGamma;
+			em->update_emis[i]  = UpdateGamma;
+			em->free_emis_s[i]  = SSfreeGamma;
+		}
+		else if(strcmp(CHAR(STRING_ELT(emiprobDist, i)), "normexp") == 0)	{
+			em->sstats_alloc[i] = SSallocNormExp;
+			em->sstats_emis[i]  = SStatsNormExp;
+			em->update_emis[i]  = UpdateNormExp;
+			em->free_emis_s[i]  = SSfreeNormExp;
+		}
+		else if(strcmp(CHAR(STRING_ELT(emiprobDist, i)), "normexpminus") == 0)	{
+			em->sstats_alloc[i] = SSallocNormExp;
+			em->sstats_emis[i]  = SStatsNormExp;
+			em->update_emis[i]  = UpdateNormExp;
+			em->free_emis_s[i]  = SSfreeNormExp;
+		}
+		else if(strcmp(CHAR(STRING_ELT(emiprobDist, i)), "pois") == 0)	{
+			em->sstats_alloc[i] = SSallocPoisson;
+			em->sstats_emis[i]  = SStatsPoisson;
+			em->update_emis[i]  = UpdatePoisson;
+			em->free_emis_s[i]  = SSfreePoisson;		
+		}
+		else if(strcmp(CHAR(STRING_ELT(emiprobDist, i)), "exp") == 0)	{
+			em->sstats_alloc[i] = SSallocExp;
+			em->sstats_emis[i]  = SStatsExp;
+			em->update_emis[i]  = UpdateExp;
+			em->free_emis_s[i]  = SSfreeExp;		
+		}
+		else error("Distribution ('%s') not recognized!", CHAR(STRING_ELT(emiprobDist, i)));
+	}
+	
+	/* booleans indicating whether or not to update by EM */
+	em->updateTrans = INTEGER(updatetrans);
+	em->updateEmis  = INTEGER(updateemis);
+
+	return(em);
+}
+/* Parses C data types back into a format that can be easily imported back into the R session */
+SEXP getEMReturnRTypes(hmm_t *hmm, int n_seq, SEXP emiprobVars, SEXP tprob, SEXP emi) {
+
+	// Add final model paremeters to the list.
+	int RETURN_SIZE = 3, RETURN_INDX = 0;
+	if(outopt>1) RETURN_SIZE++;
+	if(outopt==10) RETURN_SIZE++;
+
+	SEXP ListObject, hiddenStatesR, posteriors, postTrans; // ListObject can be named more easily in the R function that calls it.
+	PROTECT(ListObject = allocVector(VECSXP, RETURN_SIZE));
+	SET_VECTOR_ELT(ListObject, RETURN_INDX++, emiprobVars);
+	SET_VECTOR_ELT(ListObject, RETURN_INDX++, tprob);
+
+	// Run Viterbi to get the most likely state paths?!
+	SET_VECTOR_ELT(ListObject, RETURN_INDX++, hiddenStatesR=allocVector(VECSXP, n_seq));
+	if(outopt > 1) {
+		SET_VECTOR_ELT(ListObject, RETURN_INDX++, posteriors=allocVector(VECSXP, n_seq));
+	}
+	if(outopt == 10) {
+		SET_VECTOR_ELT(ListObject, RETURN_INDX++, postTrans=allocVector(VECSXP, n_seq));
+	}
+
+	for(int seq=0;seq<n_seq;seq++) {
+
+		// Data in types.
+		int maxT = Rf_nrows(VECTOR_ELT(emi, seq));
+		double **data = (double**)R_alloc(hmm->n_emis, sizeof(double*));
+		for(int s=0;s<hmm->n_emis;s++) {
+			data[s]   = REAL(VECTOR_ELT(emi, seq+s*n_seq)); //Correctly indexed?!
+			assert(Rf_nrows(VECTOR_ELT(emi, seq+s*n_seq))==maxT); // Make sure!
+		}
+		
+		// Return types.
+		SET_VECTOR_ELT(hiddenStatesR, seq, allocVector(INTSXP,maxT));
+		int *hiddenstates = INTEGER(VECTOR_ELT(hiddenStatesR, seq));
+
+		viterbi_path(hmm[0], data, maxT, NULL, NULL, hiddenstates);
+
+		// CGD --> 6-6-2011 --> Optionally also returns posteriors (only one sequence currently supported).
+		if(outopt > 1) {
+			// Set up R data types.  
+			// How to set up a matrix?!
+			SET_VECTOR_ELT(posteriors, seq, allocMatrix(REALSXP, hmm->n_states, maxT)); // REALSXP an actual type?!
+			double *Rpost = REAL(VECTOR_ELT(posteriors, seq));
+			
+			// Run forward/ backward.
+			fwbk= fwbk_alloc(data /* Emission data */, maxT /*(size of *data)*/, hmm);
+			forward(fwbk);  // (2a)
+			backward(fwbk); // (2a)
+			Q= fwbk[0].log_px;
+
+			// Foreach state, calculate posteriors.  Construction similar to: http://stat.ethz.ch/R-manual/R-devel/doc/manual/R-exts.html#Attributes
+			for(int state=0;state<hmm->n_states;state++)
+			  for(int position=0;position<maxT;position++)
+				Rpost[state + hmm->n_states*position] = fwbk[0].forward[position][state]+fwbk[0].backward[position][state]-Q; // Durbin book, eq. 3.14.
+				
+			if(outopt == 10) { // Return post. prob. of transition between states 2 and 3.
+				SET_VECTOR_ELT(postTrans, seq, allocVector(REALSXP, (maxT-1)));
+				double *post_trans = REAL(VECTOR_ELT(postTrans, seq));
+				for(int position=0;position<(maxT-1);position++) {
+				  post_trans[position] = fwbk[0].forward[position][1]+fwbk[0].backward[position+1][2]+hmm->log_tProb[1][2] -Q; // +emission // Durbin book, eq. 3.19.
+  		 		  for(int emis_count=0;emis_count<hmm->n_emis;emis_count++) 
+ 				    post_trans[position] += (hmm->log_eProb[2+hmm->n_emis*emis_count])(data[emis_count][position+1], hmm->em_args[2+hmm->n_emis*emis_count], 4);
+				}
+			}
+			
+			// Cleanup...
+			fwbk_free(fwbk);
+	   }
+	}
+	
+	// Return list object.
+	unprotect(1);
+	return(ListObject);
+}
+
 /**********************************************************************************************
  *
  * rBaumWelchEM -- Implementation of the Baum Welch Expectation Maximazation algorithm used to 
@@ -203,76 +367,8 @@ SEXP RBaumWelchEM(SEXP nstates, SEXP emi, SEXP nEmis, SEXP emiprobDist, SEXP emi
  *  Return data in a list variable to the R enviroment.
  *************************************************************/
 	if(verb) Rprintf("Returning to R Enivorment :)\n");
-	// Add final model paremeters to the list.
-	int RETURN_SIZE = 3, RETURN_INDX = 0;
-	if(outopt>1) RETURN_SIZE++;
-	if(outopt==10) RETURN_SIZE++;
-
-	SEXP ListObject, hiddenStatesR, posteriors, postTrans; // ListObject can be named more easily in the R function that calls it.
-	PROTECT(ListObject = allocVector(VECSXP, RETURN_SIZE));
-	SET_VECTOR_ELT(ListObject, RETURN_INDX++, emiprobVars);
-	SET_VECTOR_ELT(ListObject, RETURN_INDX++, tprob);
-
-	// Run Viterbi to get the most likely state paths?!
-	SET_VECTOR_ELT(ListObject, RETURN_INDX++, hiddenStatesR=allocVector(VECSXP, n_seq));
-	if(outopt > 1) {
-		SET_VECTOR_ELT(ListObject, RETURN_INDX++, posteriors=allocVector(VECSXP, n_seq));
-	}
-	if(outopt == 10) {
-		SET_VECTOR_ELT(ListObject, RETURN_INDX++, postTrans=allocVector(VECSXP, n_seq));
-	}
-
-	for(int seq=0;seq<n_seq;seq++) {
-
-		// Data in types.
-		int maxT = Rf_nrows(VECTOR_ELT(emi, seq));
-		double **data = (double**)R_alloc(hmm->n_emis, sizeof(double*));
-		for(int s=0;s<hmm->n_emis;s++) {
-			data[s]   = REAL(VECTOR_ELT(emi, seq+s*n_seq)); //Correctly indexed?!
-			assert(Rf_nrows(VECTOR_ELT(emi, seq+s*n_seq))==maxT); // Make sure!
-		}
-		
-		// Return types.
-		SET_VECTOR_ELT(hiddenStatesR, seq, allocVector(INTSXP,maxT));
-		int *hiddenstates = INTEGER(VECTOR_ELT(hiddenStatesR, seq));
-
-		viterbi_path(hmm[0], data, maxT, NULL, NULL, hiddenstates);
-
-		// CGD --> 6-6-2011 --> Optionally also returns posteriors (only one sequence currently supported).
-		if(outopt > 1) {
-			// Set up R data types.  
-			// How to set up a matrix?!
-			SET_VECTOR_ELT(posteriors, seq, allocMatrix(REALSXP, hmm->n_states, maxT)); // REALSXP an actual type?!
-			double *Rpost = REAL(VECTOR_ELT(posteriors, seq));
-			
-			// Run forward/ backward.
-			fwbk= fwbk_alloc(data /* Emission data */, maxT /*(size of *data)*/, hmm);
-			forward(fwbk);  // (2a)
-			backward(fwbk); // (2a)
-			Q= fwbk[0].log_px;
-
-			// Foreach state, calculate posteriors.  Construction similar to: http://stat.ethz.ch/R-manual/R-devel/doc/manual/R-exts.html#Attributes
-			for(int state=0;state<hmm->n_states;state++)
-			  for(int position=0;position<maxT;position++)
-				Rpost[state + hmm->n_states*position] = fwbk[0].forward[position][state]+fwbk[0].backward[position][state]-Q; // Durbin book, eq. 3.14.
-				
-			if(outopt == 10) { // Return post. prob. of transition between states 2 and 3.
-				SET_VECTOR_ELT(postTrans, seq, allocVector(REALSXP, (maxT-1)));
-				double *post_trans = REAL(VECTOR_ELT(postTrans, seq));
-				for(int position=0;position<(maxT-1);position++) {
-				  post_trans[position] = fwbk[0].forward[position][1]+fwbk[0].backward[position+1][2]+hmm->log_tProb[1][2] -Q; // +emission // Durbin book, eq. 3.19.
-  		 		  for(int emis_count=0;emis_count<hmm->n_emis;emis_count++) 
- 				    post_trans[position] += (hmm->log_eProb[2+hmm->n_emis*emis_count])(data[emis_count][position+1], hmm->em_args[2+hmm->n_emis*emis_count], 4);
-				}
-			}
-			
-			// Cleanup...
-			fwbk_free(fwbk);
-	   }
-	}
+	SEXP ListObject = getEMReturnRTypes(hmm, n_seq, emiprobVars, tprob, emi);
 	
-	// Return list object.
-	unprotect(1);
 	return(ListObject);
 }
 
