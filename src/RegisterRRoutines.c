@@ -70,7 +70,7 @@ SEXP RgammaMLE(SEXP n, SEXP sumxi, SEXP sumlogxi);
  *	Register entry points...
  *
  **************************************************************/
-void R_init_GROseq(DllInfo *info) {
+void R_init_groHMM(DllInfo *info) {
      R_CallMethodDef callMethods[]  = {
        {"AssociateRegionWithFeatures", (DL_FUNC)&AssociateRegionWithFeatures, 4},
        {"CountReadsInFeatures", (DL_FUNC)&CountReadsInFeatures, 6},
