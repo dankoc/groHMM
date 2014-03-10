@@ -19,112 +19,169 @@
 ##
 ##########################################################################
 
-########################################################################
-##
-##	metaGene
-##	Date: 2009-05-27
-##
-##	Returns a histogram of the number of reads in each section of a
-##	moving window centered on a certain feature.
-##
-##	2009-07-08 -- Name changed to MetaGene.  Formerly, MovingWindow.  
-##			Name changed to avoid confusion with new WindowAnalysis function, which is much more general.
-##
-##	Arguments:
-##	features	-> GRanges whose length is 1 
-##	(deprecated: f	-> data.frame of: CHR, START, STRAND.)
-##	reads	-> GRanges 
-##	(deprecated: p	-> data.frame of: CHR, START, END, STRAND.)
-##	size	-> The size of the moving window.
-##	up	-> Distance upstream of each f to align and histogram.
-##	down	-> Distance downstream of each f to align and histogram (NULL).
-##
-##	Addumptions:
-##	(1) 
-##
-##	TODO: 
-##	(1) Add feature accomidating a hemaphrodyte strand (i.e. any ChIP-seq MNase Seq, etc.). 
-##	(2) ...
-##
-########################################################################
 
-metaGene_foreachChrom <- function(i, C, features, reads, size, up, down, debug) {
-	# Which KG?  prb?
-	indxF   <- which(as.character(seqnames(features)) == C[i])
-	indxPrb <- which(as.character(seqnames(reads)) == C[i])
 
-	if((NROW(indxF) >0) & (NROW(indxPrb) >0)) {
-		# Order -- Make sure, b/c this is one of our main assumptions.  Otherwise violated for DBTSS.
-		ord <- order(start(features[indxF,])) 
-
-		# Type coersions.
-		FeatureStart 	<- start(features[indxF,][ord])
-		FeatureStr	<- as.character(strand(features[indxF,][ord]))
-		PROBEStart 	<- start(reads[indxPrb,])
-		PROBEEnd 	<- end(reads[indxPrb,])
-		PROBEStr	<- as.character(strand(reads[indxPrb,]))
-		size		<- as.integer(size)
-		up			<- as.integer(up)
-		down		<- as.integer(down)
-
-		# Set dimensions.
-		dim(FeatureStart)	<- c(NROW(FeatureStart), NCOL(FeatureStart))
-		dim(FeatureStr)		<- c(NROW(FeatureStr), 	 NCOL(FeatureStr))
-		dim(PROBEStart) 	<- c(NROW(PROBEStart), 	 NCOL(PROBEStart))
-		dim(PROBEEnd) 		<- c(NROW(PROBEEnd), 	 NCOL(PROBEEnd))
-		dim(PROBEStr)		<- c(NROW(PROBEStr), 	 NCOL(PROBEStr))
-
-		if(debug) {
-			print(paste(C[i],": Counting reads in specified region.",sep=""))
-		}
-		Hprime <- .Call("HistogramOfReadsByFeature", FeatureStart, FeatureStr, 
-						PROBEStart, PROBEEnd, PROBEStr, 
-						size, up, down, PACKAGE = "groHMM")
-
-		#H <- H + as.integer(Hprime)
-		return(as.integer(Hprime))
-	}
-	return(integer(0))
-}
-
+##########################################################################
+##
+##      metaGene 
+##      Date: 2014-2-19
+##
 #' Returns a histogram of the number of reads in each section of a moving window centered on a certain feature.
 #'
 #' Supports parallel processing using mclapply in the 'parallel' package.  To change the number of processors
-#' use the argument 'mc.cores'.
+#' set the option 'mc.cores'.
 #'
-#' @param features A GRanges object representing a set of genomic coordinates.  The meta-plot will be centered on the start position.
-#' @param reads A GRanges object representing a set of mapped reads.
+#' @param features A GRanges object representing a set of genomic coordinates.  The meta-plot will be centered on the transcription start site (TSS)
+#' @param reads A GRanges object representing a set of mapped reads.  Instead of 'reads', 'plusCVG' and 'minusCVG' can be used  Default: NULL
+#' @param plusCVG A RangesList object for reads with '+' strand. 
+#' @param minusCVG A RangesList object for reads with '-' strand. 
 #' @param size The size of the moving window.
-#' @param up Distance upstream of each features to align and histogram Default: 1 kb.
-#' @param down Distance downstream of each features to align and histogram Default: same as up.
-#' @param debug If set to TRUE, provides additional print options. Default: FALSE
+#' @param up Distance upstream of each features to align and histogram. Default: 1 kb.
+#' @param down Distance downstream of each features to align and histogram. If NULL, same as up. Default: NULL.
 #' @param ... Extra argument passed to mclapply
-#' @return A vector representing the 'typical' signal centered on a point of interest.
+#' @return A integer-Rle representing the 'typical' signal centered on a point of interest.
 #' @author Charles G. Danko and Minho Chae
-metaGene <- function(features, reads, size, up=1000, down=up, debug=FALSE, ...) {
-	if(is.null(down)) {
-		down <- up
+#' @examples
+#' features <- GRanges("chr7", IRanges(1000, 1000), strand="+")
+#' reads <- GRanges("chr7", IRanges(start=c(1000:1004, 1100), width=rep(1, 6)), strand="+")
+#' mg <- metaGene(features, reads, size=4, up=10)
+##
+##########################################################################
+metaGene <- function(features, reads=NULL, plusCVG=NULL, minusCVG=NULL, size=100L, up=1000L, down=NULL, ...) {
+	seqlevels(features) <- seqlevelsInUse(features)
+	# Check 'reads'
+	if (is.null(reads)) {
+		if (is.null(plusCVG) || is.null(minusCVG))
+			stop("Either 'reads' or 'plusCVG' and 'minusCVG' must be used")
+	} else {
+		seqlevels(reads) <- seqlevelsInUse(reads)
+		plusCVG <- coverage(reads[strand(reads)=="+",])
+		minusCVG <- coverage(reads[strand(reads)=="-",])
 	}
+	if (is.null(down)) down <- up
 
-	C <- sort(unique(as.character(seqnames(features))))
-	
-	## Run parallel version.
-	mcp <- mclapply(c(1:NROW(C)), metaGene_foreachChrom, C=C, features=features, reads=reads,
-			size=size, up=up, down=down, debug=debug, ...)
-	
-	## Add together all chromosomes.
-	H <- rep(0,(up + down + 1))
-	for(i in 1:NROW(C)) {
-		indxF   <- which(as.character(seqnames(features)) == C[i])
-		indxPrb <- which(as.character(seqnames(reads)) == C[i])
+	featureList <- split(features, seqnames(features))
 
-		if((NROW(indxF) >0) & (NROW(indxPrb) >0)) {
-			H <- H + mcp[[i]]
-		}
-	}
+	H <- mclapply(seqlevels(features), metaGene_foreachChrom, featureList=featureList,
+		plusCVG=plusCVG, minusCVG=minusCVG, size=size, up=up, down=down, mc.cores=getOption("mc.cores"), ...)
+	M <- sapply(1:length(H), function(x) as.integer(H[[x]]))
 
-	return(H)
+	return(Rle(apply(M, 1, sum)))
 }
+
+
+metaGene_foreachChrom <- function(chrom, featureList, plusCVG, minusCVG, size, up, down) {
+        f <- featureList[[chrom]]
+
+        pCVG <- plusCVG[[chrom]]
+        mCVG <- minusCVG[[chrom]]
+        offset <- floor(size/2)
+
+        pro <- promoters(f, upstream=up+offset, downstream=(down+offset-1L))
+
+        M <- sapply(1:length(pro), function(x) {
+                if (as.character(strand(pro)[x]) == "+")
+                    as.integer(runsum(pCVG[start(pro)[x]:end(pro)[x]], k=size))
+                else
+                    as.integer(rev(runsum(mCVG[start(pro)[x]:end(pro)[x]], k=size)))
+            })
+        return(Rle(apply(M, 1, sum)))
+}
+
+
+##########################################################################
+##
+##      runMetaGene
+##      Date: 2014-2-19
+##
+#' Runs metagene analysis for sense and antisense direction.
+#'
+#' Supports parallel processing using mclapply in the 'parallel' package.  To change the number of processors
+#' set the option 'mc.cores'.
+#'
+#' @param features GRanges A GRanges object representing a set of genomic coordinates, i.e., set of genes.
+#' @param reads GRanges of reads.
+#' @param anchorType Either 'TSS' or 'TTS'.  Metagene will be centered on the transcription start site(TSS) or transcription termination site(TTS).  Default: TSS.
+#' @param size Numeric.  The size of the moving window. Default: 100L
+#' @param up Numeric. Distance upstream of each feature to align and histogram. Default: 1 kb
+#' @param down Numeric. Distance downstream of each feature to align and histogram.  If NULL, down is same as up. Default: NULL
+#' @param sampling Logical.  If TRUE, subsampling of Metagene is used.  Default: FALSE
+#' @param nSampling Numeric. Number of subsampling.  Default: 1000L
+#' @param samplingRatio Numeric. Ratio of sampling for features.  Default: 0.1
+#' @param ... Extra argument passed to mclapply.
+#' @return A integer-Rle representing the 'typical' signal centered on a point of interest.
+#' @author Minho Chae
+#' features <- GRanges("chr7", IRanges(start=1000:1001, width=rep(1,2)), strand=c("+", "-"))
+#' reads <- GRanges("chr7", IRanges(start=c(1000:1003, 1100:1101), width=rep(1, 6)), strand=rep(c("+","-"), 3))
+#' mg <- runMetaGene(features, reads, size=4, up=10)
+##
+##########################################################################
+runMetaGene <- function(features, reads, anchorType="TSS", size=100L, up=1000L, down=NULL, sampling=FALSE, nSampling=1000L,
+            samplingRatio=0.1, ...) {
+	# Check 'anchorType'
+	if (!anchorType %in% c("TSS", "TTS")) {
+		stop("'anchorType' must be either 'TSS' or 'TTS'")
+	}
+
+	if (anchorType == "TSS") {
+		f <- resize(features, width=1L, fix="start")
+	} else if (anchorType == "TTS") {
+		f <- resize(features, width=1L, fix="end")
+	}
+
+	if (is.null(down)) down <- up
+
+	fRev <- f
+	strand(fRev) <- rev(strand(f))
+
+	plusCVG <- coverage(reads[strand(reads)=="+",])
+	minusCVG <- coverage(reads[strand(reads)=="-",])
+
+	message("sense ... ", appendLF=FALSE)
+	if (sampling) {
+		sense <- samplingMetaGene(features=f, plusCVG=plusCVG, minusCVG=minusCVG, size=size, up=up, down=down,
+			nSampling=nSampling, samplingRatio=samplingRatio, ...)
+	} else {
+		sense <- metaGene(features=f, plusCVG=plusCVG, minusCVG=minusCVG, size=size, up=up, down=down, ...)
+		#sense <- metaGene(features=f, plusCVG=plusCVG, minusCVG=minusCVG, size=size, up=up, down=down)
+	}
+	message("OK")
+
+	message("antisense ... ", appendLF=FALSE)
+	if (sampling) {
+		antisense <- samplingMetaGene(features=fRev, plusCVG=plusCVG, minusCVG=minusCVG, size=size, up=up, down=down,
+			nSampling=nSampling, samplingRatio=samplingRatio, ...)
+	} else {
+		antisense <- metaGene(features=fRev, plusCVG=plusCVG, minusCVG=minusCVG, size=size, up=up, down=down, ...)
+	}
+	message("OK")
+
+	return(list(sense=sense, antisense=antisense))
+}
+
+
+samplingMetaGene <- function(features, plusCVG, minusCVG, size=100L, up=10000L, down=NULL, nSampling=1000L, samplingRatio=0.1, ...) {
+	samplingSize <- round(length(features)*samplingRatio)
+
+	metaList <- mclapply(1:length(features), function(x) {
+		metaGene(features=features[x,], plusCVG=plusCVG, minusCVG=minusCVG, size=size, up=up, down=down)
+	}, mc.cores=getOption("mc.cores"), ...)
+
+	allSamples <- mclapply(1:nSampling, function(x) {
+		inx <- sample(1:length(features), size=samplingSize, replace=TRUE)
+		onesample <- metaList[inx]
+		mat <- sapply(onesample, function(x) as.integer(x))
+		Rle(apply(mat, 1, sum))
+	}, mc.cores=getOption("mc.cores"), ...)
+
+	M <- sapply(allSamples, function(x) as.integer(x))
+	return(Rle(apply(M, 1, median)))
+}
+
+
+
+
+
  
 ########################################################################
 ##
@@ -388,80 +445,4 @@ averagePlot <- function(ProbeData, Peaks, size=50, bins= seq(-1000,1000,size)) {
 	## Make bins.  Take averages and all that...
 	means <- unlist(lapply(c(1:NROW(bins)), function(i){mean(ProbeData[(ProbeData$minDist >= (bins[i]-size) & ProbeData$minDist < bins[i]),3])}))
 	return(data.frame(windowCenter= bins+(size/2), means))
-}
-
-
-#' runMetaGene Runs Metagene analysis. 
-#'
-#' Returns a histogram of the number of reads in each section of a moving window centered on a certain feature for both sense and anntisense directions.  It has option for subsampling.
-#'
-#' Supports parallel processing using mclapply in the 'parallel' package.  To change the number of processors
-#' use the argument 'mc.cores'.
-#'
-#' @param features GRanges whose length is 1, i.e., Transcription Start Site (TSS) 
-#' @param reads GRanges of reads. 
-#' @param size Numeric.  The size of the moving window. Default: 100
-#' @param up Numeric. Distance upstream of each fgr to align and histogram. Default: 10000
-#' @param down Numeric. Distance downstream of each fgr to align and histogram.  If NULL, down is same as up. Default: NULL
-#' @param normCounts Numeric.   Reads are multiplied by normCounts.Thhe size of the moving window. Default: 1
-#' @param sampling Logical.  If TRUE, subsampling of Metagene is used.  Default: FALSE
-#' @param nSampling Numeric. Number of subsampling.  Default: 1000
-#' @param debug Logical. If set to TRUE, provides additional print options. Default: FALSE 
-#' @param ... Extra argument passed to mclapply
-#' @return List of vectors representing the 'typical' signal centered on the genomic features of interest.
-#' @author Minho Chae
-runMetaGene <- function(features, reads, size=100, up=10000, down=NULL, normCounts=1, sampling=FALSE, nSampling=1000, debug=FALSE, ...) {
-	if (sampling) {
-		plus <- samplingMetaGene(features=features, reads=reads, size=size, up=up, down=down, normCounts=normCounts, 
-			nSampling=nSampling, debug=debug)
-    	} else {
-		plus <- metaGene(features=features, reads=reads, size=size, up=up, down=down, debug=debug, ...)
-		plus <- plus / NROW(features)
-		plus <- plus*normCounts / NROW(reads)
-    	}
-
-	fgrRev <- features
-	strand(fgrRev) <- rev(strand(features))
-	f <- data.frame(as.character(seqnames(fgrRev)), start(fgrRev), as.character(strand(fgrRev)))
-	if (sampling) {
-		minus <- samplingMetaGene(features=features, reads=reads, size=size, up=up, down=down, normCounts=normCounts, 
-			nSampling=nSampling, debug=debug)
-	} else {
-		minus <- metaGene(features=features, reads=reads, size=size, up=up, down=down, debug=debug, ...)
-		minus <- minus / NROW(features)
-		minus <- minus*normCounts / NROW(reads)
-	}
-	return(list(sense=plus, antisense=minus))
-}
-
-
-samplingMetaGene <- function(features, reads, size=100, up=10000, down=NULL, normCounts=1, nSampling=1000, debug=FALSE, ...) {
-	if (is.null(down))
-		down <- up
-
-	read_vector <- NULL
-	tss_vector <- NULL
-	samplingSize <- round(NROW(features)*.1)
-
-	print("Preparing...")
-	pb <- txtProgressBar(min=0, max=NROW(features), style=3)
-	for(i in 1:NROW(features)) {
-		tss_vector <- rbind(tss_vector, metaGene(features=features[i,], reads=reads, size=size, up=up, down=down, ...))
-		setTxtProgressBar(pb, i)
-	}
-	cat("\n")
-
-	print("Sampling...")
-	pb <- txtProgressBar(min=0, max=nSampling, style=3)
-	M <- matrix(0, nrow=nSampling, ncol=(up+down+1))
-	for(i in 1:nSampling) {
-		setTxtProgressBar(pb, i)
-		sampInx <- sample(1:NROW(features), size=samplingSize, replace=TRUE)
-		M[i,] <- apply(tss_vector[sampInx,], 2, sum)
-	}
-	cat("\n")
-
-	result <- apply(M, 2, median)*normCounts / NROW(reads)
-	result <- result/samplingSize
-	return(result)
 }
