@@ -60,6 +60,7 @@
 #' @author Charles G. Danko and Minho Chae
 
 ## CGD: TODO: Test switch over to gamma, rather than dGamma?!
+
 detectTranscripts <- function(reads=NULL, Fp=NULL, Fm=NULL, LtProbA=-5, LtProbB=-5, UTS=5, size=50, threshold=0.1, debug=TRUE, ...) {
 
 	stopifnot(!is.null(reads)|(!is.null(Fp) & !is.null(Fm)))
@@ -68,8 +69,8 @@ detectTranscripts <- function(reads=NULL, Fp=NULL, Fm=NULL, LtProbA=-5, LtProbB=
 	epsilon <- 0.001
 	
 	if(is.null(Fp) & is.null(Fm)) { ## Allow equilavent form of Fp and Fm to be spcified in the function automatically.
-	 Fp <- windowAnalysis(reads=reads, strand="+", step_size=size, debug=FALSE, ...)
-	 Fm <- windowAnalysis(reads=reads, strand="-", step_size=size, debug=FALSE, ...)
+	 Fp <- windowAnalysis(reads=reads, strand="+", windowSize=size)
+	 Fm <- windowAnalysis(reads=reads, strand="-", windowSize=size)
 	}
 	
 	nFp <- NROW(Fp)
@@ -137,3 +138,4 @@ detectTranscripts <- function(reads=NULL, Fp=NULL, Fm=NULL, LtProbA=-5, LtProbB=
 
 	return(BWem)
 }
+
