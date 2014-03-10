@@ -69,40 +69,46 @@ breakInterval <- function(gr, brPos, gap=5, strand="+") {
 	return(result)
 }
 
-# Break Transcrips on Genes
-#----------------------------------------------------------------------------------------------
+
+##########################################################################
+##
+##      breakTranscriptsOnGenes 
+##      Date: 2014-2-19
+##
 #' breakTranscriptsOnGenes Breaks transcripts on genes 
 #'
-#' Breaks transcripts when they are fully overlap multiple well annotated genes.
+#' Breaks transcripts when they are overlapped with multiple well annotated genes.
 #'
 #' @param tx GRanges of transcripts.
-#' @param annotations GRanges of non-overlapping annotations for reference.
+#' @param annox GRanges of non-overlapping annotations for reference.
 #' @param strand Takes "+" or "-" Default: "+"
-#' @param geneSize Numeric. Minimum gene size in gr to be used as reference. Default: 5000
-#' @param threshold Numeric. Threshold for calling the gene part of the transcript.  Default: 0.8
+#' @param geneSize Numeric. Minimum gene size in annox to be used as reference. Default: 5000
+#' @param threshold Numeric. Ratio of overlapped region relative to a gene width. Transcripts only greater than this threshold are subjected to be broken. Default: 0.8
 #' @param gap Numeric.  Gap (bp) between broken transcripts.  Default: 5
-#' @param debug Logical.  If set to TRUE, show easch step in a plot. Default: FALSE
+#' @param plot Logical.  If set to TRUE, show each step in a plot. Default: FALSE
 #' @author Minho Chae and Charles G. Danko
-breakTranscriptsOnGenes <- function(tx, annotations, strand="+", geneSize=5000, threshold=0.8, gap=5, debug=FALSE) {
-	tr <- tx
-	gr <- annotations
-	tr <- tr[as.character(strand(tr)) == strand,]
-	gr <- gr[as.character(strand(gr)) == strand,]
-	elementMetadata(tr)$fixError <- "NA"
+#' @examples
+#' tx <- GRanges("chr7", IRanges(1000, 30000), strand="+")
+#' annox <- GRanges("chr7", IRanges(start=c(1000, 20000), width=c(10000,10000)), strand="+")
+#' bPlus <- breakTranscriptsOnGenes(tx, annox, strand="+")
+##
+##########################################################################
+breakTranscriptsOnGenes <- function(tx, annox, strand="+", geneSize=5000, threshold=0.8, gap=5, plot=FALSE) {
+	tx <- tx[strand(tx) == strand,]
+	annox <- annox[strand(annox) == strand,]
+	mcols(tx)$status <- "NA"
 
-	print(paste("Initial transcripts:", length(tr)))
-
-	gr <- gr[width(gr) > geneSize,]
-	ol <- findOverlaps(tr, gr)
+	annox <- annox[width(annox) > geneSize,]
+	ol <- findOverlaps(tx, annox)
 
 	ol.df <- data.frame(trans=queryHits(ol), gene=subjectHits(ol), 
-	    geneWidthRate = width(pintersect(tr[queryHits(ol),], gr[subjectHits(ol),]))
-		/width(gr[subjectHits(ol),]))
+	    ratio=width(pintersect(tx[queryHits(ol),], annox[subjectHits(ol),]))
+		/width(annox[subjectHits(ol),]))
 
-	# remove by threshold
-	ol.df <- ol.df[ol.df$geneWidthRate > threshold,]
+	# Keep only major overlappings
+	ol.df <- ol.df[ol.df$ratio > threshold,]
 
-	# keep only multiple genes on a transcript cases
+	# Keep only multiple genes on a transcript cases
 	dupTrans <- unique(ol.df$trans[duplicated(ol.df$trans)])
 	ol.df <- ol.df[ol.df$trans %in% dupTrans,]
 
@@ -113,43 +119,43 @@ breakTranscriptsOnGenes <- function(tx, annotations, strand="+", geneSize=5000, 
 
 	for (i in 1:NROW(ol.tab)) {
 		txNo <- as.integer(names(ol.tab[i]))
-		gNo <- ol.df$gene[(ol.tabCS[i]-ol.tab[i]+1):ol.tabCS[i]]
+		aNo <- ol.df$gene[(ol.tabCS[i]-ol.tab[i]+1):ol.tabCS[i]]
 
 		if (strand == "+") {
-			brPos <- start(gr[gNo[-1],])        # No need of break position for the first annotation
+			brPos <- start(annox[aNo[-1],])        # No need of break position for the first annotation
 		} else {
-			brPos <- end(gr[gNo[-NROW(gNo)],])  # No need of break position for the last annotation
+			brPos <- end(annox[aNo[-length(aNo)],])  # No need of break position for the last annotation
 		}
 
-		frags <- breakInterval(tr[txNo,], brPos=brPos, gap=gap, strand=strand)
+		frags <- breakInterval(tx[txNo,], brPos=brPos, gap=gap, strand=strand)
 
 		if(is.null(bT)) {
 			bT <- frags 
 		} else {
 			bT <- c(bT, frags) 
 		}
-		if (debug) {
+		if (plot) {
 			par(mfrow=c(2,1))
-			plot2Ranges(tr[txNo,], gr[gNo,], main="Before")
-			plot2Ranges(frags, gr[gNo,], main="After")
+			plot2Ranges(tx[txNo,], annox[aNo,], main="Before")
+			plot2Ranges(frags, annox[aNo,], main="After")
 			browser()
 		}
 	}
 
-	elementMetadata(bT)$fixError <- "broken"
-	elementMetadata(bT)$ID <- paste(seqnames(bT), "_", start(bT), strand(bT), sep="")
-	okTrans <- setdiff(1:NROW(tr), dupTrans)
-	all <- c(tr[okTrans,], bT)
-	print(paste(NROW(unique(ol.df$trans)), "transcripts are broken into", length(bT)))
-	print(paste("Final transcripts:", length(all)))
+	mcols(bT)$status <- "broken"
+	mcols(bT)$ID <- paste(seqnames(bT), "_", start(bT), strand(bT), sep="")
+	okTrans <- setdiff(1:length(tx), dupTrans)
+	all <- c(tx[okTrans,], bT)
+	message(length(unique(ol.df$trans)), " transcripts are broken into ", length(bT))
 
 	return(all[order(as.character(seqnames(all)), start(all)),])
 }
 
-#-----------------------------------------------------------------------------------------------
-# Combine Transcrips on Genes
-# To do: fix the name of the combined transcripts
-#-----------------------------------------------------------------------------------------------
+##########################################################################
+##
+##      combineTranscripts 
+##      Date: 2014-2-19
+##
 #' combineTranscripts Combines transnscipts. 
 #'
 #' Combines transcripts  that are within the same gene annotation, combining smaller transcripts for genes
@@ -158,59 +164,58 @@ breakTranscriptsOnGenes <- function(tx, annotations, strand="+", geneSize=5000, 
 #' @param tx GRanges of transcripts.
 #' @param annotations GRanges of non-overlapping annotations for reference.
 #' @param geneSize Numeric. Minimum gene size in annotations to be used as reference. Default: 1000
-#' @param threshold Numeric. Threshold for calling the gene part of the transcript.  Default: 0.8
-#' @param debug Logical.  If set to TRUE, show easch step in a plot. Default: FALSE
+#' @param threshold Numeric. Ratio of overlapped region relative to transcript width. Transcripts only greater than this threshold are subjected to be combined. Default: 0.8
+#' @param plot Logical.  If set to TRUE, show easch step in a plot. Default: FALSE
 #' @author Minho Chae and Charles G. Danko
-combineTranscripts <- function(tx, annotations, geneSize=1000, threshold=0.8, debug=FALSE) {
-	tr <- tx
-	gr <- annotations
-	print(paste("Initial transcripts:", length(tr)))
-	gr <- gr[width(gr) > geneSize,]
-	ol <- findOverlaps(tr, gr)
+#' @examples
+#' tx <- GRanges("chr7", IRanges(start=c(1000, 20000), width=c(10000,10000)), strand="+")
+#' annox <- GRanges("chr7", IRanges(1000, 30000), strand="+")
+#' combined <- combineTranscripts(tx, annox)
+##
+##########################################################################
+combineTranscripts <- function(tx, annox, geneSize=1000, threshold=0.8, plot=FALSE) {
+	annox <- annox[width(annox) > geneSize,]
+	ol <- findOverlaps(tx, annox)
 	ol.df <- data.frame(trans=queryHits(ol), gene=subjectHits(ol),
-	    trWidthRate = width(pintersect(tr[queryHits(ol),], gr[subjectHits(ol),]))
-			    /width(tr[queryHits(ol),]))
-	# remove by threshold
-	ol.df <- ol.df[ol.df$trWidthRate > threshold,]
+	    ratio=width(pintersect(tx[queryHits(ol),], annox[subjectHits(ol),]))
+			    /width(tx[queryHits(ol),]))
 
-	# keep only multiple transcripts on a gene cases
+	# Keep only major overlappings
+	ol.df <- ol.df[ol.df$ratio > threshold,]
+
+	# Keep only multiple transcripts on a gene cases
 	dupGenes <- ol.df$gene[which(duplicated(ol.df$gene))]
 	ol.df <- ol.df[ol.df$gene %in% dupGenes,]
 
 	uniqGene <- unique(ol.df$gene)
-	#cT <- gr[uniqGene,-(1:2)]  # template
-	#cT <- gr[uniqGene,-1]  # template
-	#cT <- # template
-	N <- NROW(uniqGene)
+	N <- length(uniqGene)
 	cT <- GRanges(seqnames=Rle(rep("chr1", N)),
-	    ranges = IRanges(rep(1, N), rep(max(end(tr)), N)),
+	    ranges = IRanges(rep(1, N), rep(max(end(tx)), N)),
 	    strand = rep("+", N),
 	    type = Rle(rep("tx", N)))
-	seqlevels(cT) <- seqlevels(tr)
+	seqlevels(cT) <- seqlevels(tx)
 
 	for (i in 1:NROW(uniqGene)) {
 		block <- ol.df[uniqGene[i]==ol.df$gene,]
-		strand(cT[i,]) <- strand(tr[block[1,"trans"],])
-		seqnames(cT[i,]) <- seqnames(tr[block[1,"trans"],])
-		start(cT[i,]) <- start(tr[block[1,"trans"],])
-		end(cT[i,]) <- end(tr[block[NROW(block),"trans"],])
-		if (debug) { # plot before and after the comine
+		strand(cT[i,]) <- strand(tx[block[1,"trans"],])
+		seqnames(cT[i,]) <- seqnames(tx[block[1,"trans"],])
+		start(cT[i,]) <- start(tx[block[1,"trans"],])
+		end(cT[i,]) <- end(tx[block[NROW(block),"trans"],])
+		if (plot) { # plot before and after the comine
 			#b4combine <- c(gr[uniqGene[i],], tr[ol.df[ol.df$gene == uniqGene[i], "trans"],-2])
 			#af.combine <- c(gr[uniqGene[i],], cT[i,])
 			par(mfrow=c(2,1))
-			plot2Ranges(tr[ol.df[ol.df$gene == uniqGene[i], "trans"],], gr[uniqGene[i],], main="Before")
-			plot2Ranges(cT[i,], gr[uniqGene[i],], main="After")
+			plot2Ranges(tx[ol.df[ol.df$gene == uniqGene[i], "trans"],], annox[uniqGene[i],], main="Before")
+			plot2Ranges(cT[i,], annox[uniqGene[i],], main="After")
 			browser()
 		}
 	}
 
-	print(paste(NROW(ol.df), "transcripts are combined to", NROW(cT)))
-	elementMetadata(cT)$ID <- paste(seqnames(cT), "_", start(cT), strand(cT), sep="")
-	elementMetadata(cT)$fixError <- "combined"
+	message(NROW(ol.df), " transcripts are combined to ", NROW(cT))
+	mcols(cT)$ID <- paste(seqnames(cT), "_", start(cT), strand(cT), sep="")
+	mcols(cT)$status <- "combined"
 
-	okTrans <- setdiff(1:NROW(tr), ol.df$trans)
-	all <- c(tr[okTrans,], cT)
-	print(paste("Final transcripts:", length(all)))
+	okTrans <- setdiff(1:NROW(tx), ol.df$trans)
+	all <- c(tx[okTrans,], cT)
 	return(all[order(as.character(seqnames(all)), start(all)),])
 }
-
