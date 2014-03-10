@@ -1,57 +1,56 @@
 \name{runMetaGene}
 \alias{runMetaGene}
-\title{runMetaGene Runs Metagene analysis.}
+\title{Runs metagene analysis for sense and antisense direction.}
 \usage{
-  runMetaGene(features, reads, size = 100, up = 10000,
-    down = NULL, normCounts = 1, sampling = FALSE,
-    nSampling = 1000, debug = FALSE, ...)
+runMetaGene(features, reads, anchorType = "TSS", size = 100L, up = 1000L,
+  down = NULL, sampling = FALSE, nSampling = 1000L, samplingRatio = 0.1,
+  ...)
 }
 \arguments{
-  \item{features}{GRanges whose length is 1, i.e.,
-  Transcription Start Site (TSS)}
+  \item{features}{GRanges A GRanges object representing a
+  set of genomic coordinates, i.e., set of genes.}
 
   \item{reads}{GRanges of reads.}
 
+  \item{anchorType}{Either 'TSS' or 'TTS'.  Metagene will
+  be centered on the transcription start site(TSS) or
+  transcription termination site(TTS).  Default: TSS.}
+
   \item{size}{Numeric.  The size of the moving window.
-  Default: 100}
+  Default: 100L}
 
-  \item{up}{Numeric. Distance upstream of each fgr to align
-  and histogram. Default: 10000}
+  \item{up}{Numeric. Distance upstream of each feature to
+  align and histogram. Default: 1 kb}
 
-  \item{down}{Numeric. Distance downstream of each fgr to
-  align and histogram.  If NULL, down is same as up.
+  \item{down}{Numeric. Distance downstream of each feature
+  to align and histogram.  If NULL, down is same as up.
   Default: NULL}
-
-  \item{normCounts}{Numeric.  Reads are multiplied by
-  normCounts.Thhe size of the moving window. Default: 1}
 
   \item{sampling}{Logical.  If TRUE, subsampling of
   Metagene is used.  Default: FALSE}
 
   \item{nSampling}{Numeric. Number of subsampling.
-  Default: 1000}
+  Default: 1000L}
 
-  \item{debug}{Logical. If set to TRUE, provides additional
-  print options. Default: FALSE}
+  \item{samplingRatio}{Numeric. Ratio of sampling for
+  features.  Default: 0.1}
 
-  \item{...}{Extra argument passed to mclapply}
+  \item{...}{Extra argument passed to mclapply.}
 }
 \value{
-  List of vectors representing the 'typical' signal
-  centered on the genomic features of interest.
+A integer-Rle representing the 'typical' signal centered on
+a point of interest.
 }
 \description{
-  Returns a histogram of the number of reads in each
-  section of a moving window centered on a certain feature
-  for both sense and anntisense directions.  It has option
-  for subsampling.
-}
-\details{
-  Supports parallel processing using mclapply in the
-  'parallel' package.  To change the number of processors
-  use the argument 'mc.cores'.
+Supports parallel processing using mclapply in the
+'parallel' package.  To change the number of processors set
+the option 'mc.cores'.
 }
 \author{
-  Minho Chae
+Minho Chae features <- GRanges("chr7",
+IRanges(start=1000:1001, width=rep(1,2)), strand=c("+",
+"-")) reads <- GRanges("chr7", IRanges(start=c(1000:1003,
+1100:1101), width=rep(1, 6)), strand=rep(c("+","-"), 3)) mg
+<- runMetaGene(features, reads, size=4, up=10)
 }
 

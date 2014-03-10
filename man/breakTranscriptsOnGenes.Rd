@@ -2,35 +2,40 @@
 \alias{breakTranscriptsOnGenes}
 \title{breakTranscriptsOnGenes Breaks transcripts on genes}
 \usage{
-  breakTranscriptsOnGenes(tx, annotations, strand = "+",
-    geneSize = 5000, threshold = 0.8, gap = 5,
-    debug = FALSE)
+breakTranscriptsOnGenes(tx, annox, strand = "+", geneSize = 5000,
+  threshold = 0.8, gap = 5, plot = FALSE)
 }
 \arguments{
   \item{tx}{GRanges of transcripts.}
 
-  \item{annotations}{GRanges of non-overlapping annotations
-  for reference.}
+  \item{annox}{GRanges of non-overlapping annotations for
+  reference.}
 
   \item{strand}{Takes "+" or "-" Default: "+"}
 
-  \item{geneSize}{Numeric. Minimum gene size in gr to be
+  \item{geneSize}{Numeric. Minimum gene size in annox to be
   used as reference. Default: 5000}
 
-  \item{threshold}{Numeric. Threshold for calling the gene
-  part of the transcript.  Default: 0.8}
+  \item{threshold}{Numeric. Ratio of overlapped region
+  relative to a gene width. Transcripts only greater than
+  this threshold are subjected to be broken. Default: 0.8}
 
   \item{gap}{Numeric.  Gap (bp) between broken transcripts.
   Default: 5}
 
-  \item{debug}{Logical.  If set to TRUE, show easch step in
-  a plot. Default: FALSE}
+  \item{plot}{Logical.  If set to TRUE, show each step in a
+  plot. Default: FALSE}
 }
 \description{
-  Breaks transcripts when they are fully overlap multiple
-  well annotated genes.
+Breaks transcripts when they are overlapped with multiple
+well annotated genes.
+}
+\examples{
+tx <- GRanges("chr7", IRanges(1000, 30000), strand="+")
+annox <- GRanges("chr7", IRanges(start=c(1000, 20000), width=c(10000,10000)), strand="+")
+bPlus <- breakTranscriptsOnGenes(tx, annox, strand="+")
 }
 \author{
-  Minho Chae and Charles G. Danko
+Minho Chae and Charles G. Danko
 }
 

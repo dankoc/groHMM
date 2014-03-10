@@ -2,8 +2,7 @@
 \alias{averagePlot}
 \title{Returns the average profile of tiling array probe intensity values or wiggle-like count data centered on a set of genomic positions (specified by 'Peaks').}
 \usage{
-  averagePlot(ProbeData, Peaks, size = 50,
-    bins = seq(-1000, 1000, size))
+averagePlot(ProbeData, Peaks, size = 50, bins = seq(-1000, 1000, size))
 }
 \arguments{
   \item{ProbeData}{Data.frame representing chromosome,
@@ -20,15 +19,15 @@
   center.}
 }
 \value{
-  A vector representing the 'typical' signal centered on
-  the peaks of interest.
+A vector representing the 'typical' signal centered on the
+peaks of interest.
 }
 \description{
-  Supports parallel processing using mclapply in the
-  'parallel' package.  To change the number of processors
-  use the argument 'mc.cores'.
+Supports parallel processing using mclapply in the
+'parallel' package.  To change the number of processors use
+the argument 'mc.cores'.
 }
 \author{
-  Charles G. Danko and Minho Chae
+Charles G. Danko and Minho Chae
 }
 

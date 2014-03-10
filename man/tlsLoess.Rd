@@ -2,7 +2,7 @@
 \alias{tlsLoess}
 \title{A 'total least squares'-like hack for LOESS.  Works by rotating points 45 degrees, fitting LOESS, and rotating back.}
 \usage{
-  tlsLoess(x, y, theta = -pi/4, span = 1)
+tlsLoess(x, y, theta = -pi/4, span = 1)
 }
 \arguments{
   \item{x}{X values.}
@@ -16,14 +16,14 @@
   \item{span}{The LOESS span parameter.  Default: 1}
 }
 \value{
-  List of input values and LOESS predictions.
+List of input values and LOESS predictions.
 }
 \description{
-  A 'total least squares'-like hack for LOESS.  Works by
-  rotating points 45 degrees, fitting LOESS, and rotating
-  back.
+A 'total least squares'-like hack for LOESS.  Works by
+rotating points 45 degrees, fitting LOESS, and rotating
+back.
 }
 \author{
-  Charles G. Danko
+Charles G. Danko
 }
 

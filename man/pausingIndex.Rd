@@ -2,8 +2,8 @@
 \alias{pausingIndex}
 \title{Returns the pausing index for different genes.  TODO: DESCRIBE THE PAUSING INDEX.}
 \usage{
-  pausingIndex(features, reads, size = 50, up = 1000,
-    down = 1000, UnMAQ = NULL, debug = FALSE, ...)
+pausingIndex(features, reads, size = 50, up = 1000, down = 1000,
+  UnMAQ = NULL, debug = FALSE, ...)
 }
 \arguments{
   \item{features}{A GRanges object representing a set of
@@ -29,14 +29,14 @@
   \item{...}{Extra argument passed to mclapply}
 }
 \value{
-  Data.frame of the pausing indices for the input genes.
+Data.frame of the pausing indices for the input genes.
 }
 \description{
-  Supports parallel processing using mclapply in the
-  'parallel' package.  To change the number of processors
-  use the argument 'mc.cores'.
+Supports parallel processing using mclapply in the
+'parallel' package.  To change the number of processors use
+the argument 'mc.cores'.
 }
 \author{
-  Charles G. Danko and Minho Chae.
+Charles G. Danko and Minho Chae.
 }
 

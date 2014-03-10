@@ -2,8 +2,8 @@
 \alias{expressedGenes}
 \title{Function identifies expressed features using the methods introduced in Core, Waterfall, Lis; Science, Dec. 2008.}
 \usage{
-  expressedGenes(features, reads, Lambda = NULL,
-    UnMap = NULL, debug = FALSE, ...)
+expressedGenes(features, reads, Lambda = NULL, UnMap = NULL,
+  debug = FALSE, ...)
 }
 \arguments{
   \item{features}{A GRanges object representing a set of
@@ -28,15 +28,15 @@
   \item{...}{Extra argument passed to mclapply}
 }
 \value{
-  A data.frame representing the expression p.values for
-  features of interest.
+A data.frame representing the expression p.values for
+features of interest.
 }
 \description{
-  Supports parallel processing using mclapply in the
-  'parallel' package.  To change the number of processors
-  use the argument 'mc.cores'.
+Supports parallel processing using mclapply in the
+'parallel' package.  To change the number of processors use
+the argument 'mc.cores'.
 }
 \author{
-  Charles G. Danko and Minho Chae
+Charles G. Danko and Minho Chae
 }
 

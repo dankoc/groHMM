@@ -2,31 +2,22 @@
 \alias{windowAnalysis}
 \title{windowAnalysis Returns a vector of integers representing the counts of reads in a moving window.}
 \usage{
-  windowAnalysis(reads, strand = "N",
-    window_size = (step_size - 1),
-    step_size = (window_size + 1), chrom = NULL, start = 0,
-    end = NULL, limitPCRDups = FALSE, debug = FALSE, ...)
+windowAnalysis(reads, strand = "*", windowSize = stepSize,
+  stepSize = windowSize, chrom = NULL, limitPCRDups = FALSE, ...)
 }
 \arguments{
   \item{reads}{GenomicRanges object representing the
   position of reads mapping in the genome.}
 
-  \item{strand}{Takes values of "+", "-", or "N".  Computes
-  Writes a wiggle on the speicified strand.  "N" denotes
-  collapsing reads on both strands.  Default: "N".}
+  \item{strand}{Takes values of "+", "-", or "*".  "*"
+  denotes collapsing reads on both strands.  Default: "*".}
 
-  \item{window_size}{Size of the moving window. Either
-  window_size or step_size must be specified.}
+  \item{windowSize}{Size of the moving window. Either
+  windowSize or stepSize must be specified.}
 
-  \item{step_size}{The number of bp moved with each step.}
+  \item{stepSize}{The number of bp moved with each step.}
 
   \item{chrom}{Chromosome for which to return data.
-  Default: returns all avaliable data.}
-
-  \item{start}{The start position in genomic coordinates.
-  Default: returns all avaliable data.}
-
-  \item{end}{The end position in genomic coordinates.
   Default: returns all avaliable data.}
 
   \item{limitPCRDups}{Counts only one read mapping to each
@@ -34,21 +25,17 @@
   are the same length (don't use for paired-end data).
   Default: FALSE.}
 
-  \item{debug}{If set to TRUE, provides additional print
-  options. Default: FALSE}
-
   \item{...}{Extra argument passed to mclapply}
 }
 \value{
-  List object, each element of which represents a
-  chromosome.
+List object, each element of which represents a chromosome.
 }
 \description{
-  Supports parallel processing using mclapply in the
-  'parallel' package.  To change the number of processors
-  use the argument 'mc.cores'.
+Supports parallel processing using mclapply in the
+'parallel' package.  To change the number of processors set
+the option 'mc.cores'.
 }
 \author{
-  Charles G. Danko and Minho Chae
+Charles G. Danko and Minho Chae
 }
 

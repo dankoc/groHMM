@@ -2,8 +2,7 @@
 \alias{countMappableReadsInInterval}
 \title{countMappableReadsInInterval counts the number of mappable reads in a set of genomic features.}
 \usage{
-  countMappableReadsInInterval(features, UnMap,
-    debug = FALSE, ...)
+countMappableReadsInInterval(features, UnMap, debug = FALSE, ...)
 }
 \arguments{
   \item{features}{A GRanges object representing a set of
@@ -19,15 +18,15 @@
   \item{...}{Extra argument passed to mclapply}
 }
 \value{
-  Returns a vector of counts, each representing the number
-  of reads inside each genomic interval.
+Returns a vector of counts, each representing the number of
+reads inside each genomic interval.
 }
 \description{
-  Supports parallel processing using mclapply in the
-  'parallel' package.  To change the number of processors
-  use the argument 'mc.cores'.
+Supports parallel processing using mclapply in the
+'parallel' package.  To change the number of processors use
+the argument 'mc.cores'.
 }
 \author{
-  Charles G. Danko and Minho Chae
+Charles G. Danko and Minho Chae
 }
 

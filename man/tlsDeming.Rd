@@ -2,7 +2,7 @@
 \alias{tlsDeming}
 \title{A 'total least squares' implementation using demming regression.}
 \usage{
-  tlsDeming(x, y, d = 1)
+tlsDeming(x, y, d = 1)
 }
 \arguments{
   \item{x}{X values.}
@@ -13,13 +13,13 @@
   regression.}
 }
 \value{
-  Parameters for the linear model.
+Parameters for the linear model.
 }
 \description{
-  A 'total least squares' implementation using demming
-  regression.
+A 'total least squares' implementation using demming
+regression.
 }
 \author{
-  Charles G. Danko
+Charles G. Danko
 }
 

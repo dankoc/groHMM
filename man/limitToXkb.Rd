@@ -2,7 +2,7 @@
 \alias{limitToXkb}
 \title{limitToXkb truncates a set of genomic itnervals at a constant, maximum size.}
 \usage{
-  limitToXkb(features, offset = 1000, size = 13000)
+limitToXkb(features, offset = 1000, size = 13000)
 }
 \arguments{
   \item{features}{A GRanges object representing a set of
@@ -15,14 +15,14 @@
   \item{size}{Specifies the size of the window.}
 }
 \value{
-  Returns a new 'GRanges' object representing the size new
-  size.
+Returns a new 'GRanges' object representing the size new
+size.
 }
 \description{
-  limitToXkb truncates a set of genomic itnervals at a
-  constant, maximum size.
+limitToXkb truncates a set of genomic itnervals at a
+constant, maximum size.
 }
 \author{
-  Minho Chae and Charles G. Danko
+Minho Chae and Charles G. Danko
 }
 

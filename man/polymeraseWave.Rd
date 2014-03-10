@@ -3,12 +3,10 @@
 \title{Given GRO-seq data, identifies the location of the polymerase 'wave' in up- or down-
 	regulated genes.}
 \usage{
-  polymeraseWave(reads1, reads2, genes, approxDist,
-    size = 50, upstreamDist = 10000, TSmooth = NA,
-    NonMap = NULL, prefix = NULL,
-    emissionDistAssumption = "gamma",
-    finterWindowSize = 10000, limitPCRDups = FALSE,
-    returnVal = "simple", debug = TRUE)
+polymeraseWave(reads1, reads2, genes, approxDist, size = 50,
+  upstreamDist = 10000, TSmooth = NA, NonMap = NULL, prefix = NULL,
+  emissionDistAssumption = "gamma", finterWindowSize = 10000,
+  limitPCRDups = FALSE, returnVal = "simple", debug = TRUE)
 }
 \arguments{
   \item{reads1}{Mapped reads in time point 1.}
@@ -75,44 +73,41 @@
   \item{debug}{If TRUE, prints error messages.}
 }
 \value{
-  Either a data.frame with Pol II wave end positions, or a
-  List() structure with additional data, as specified by
-  returnVal.
+Either a data.frame with Pol II wave end positions, or a
+List() structure with additional data, as specified by
+returnVal.
 }
 \description{
-  The model is a three state hidden Markov model (HMM).
-  States represent: (1) the 5' end of genes upstream of the
-  transcription start site, (2) upregulated sequence, and
-  (3) the 3' end of the gene through the polyadenylation
-  site.
+The model is a three state hidden Markov model (HMM).
+States represent: (1) the 5' end of genes upstream of the
+transcription start site, (2) upregulated sequence, and (3)
+the 3' end of the gene through the polyadenylation site.
 }
 \details{
-  The model computes differences in read counts between the
-  two conditions.  Differences are assumed fit a functional
-  form which can be specified by the user (using the
-  emissionDistAssumption argument).  Currently supported
-  functional forms include a normal distribution (good for
-  GRO-seq data prepared using the circular ligation
-  protocol), a gamma distribution (good for 'spikey'
-  ligation based GRO-seq data), and a long-tailed
-  normal+exponential distribution was implemented, but
-  never deployed.
+The model computes differences in read counts between the
+two conditions.  Differences are assumed fit a functional
+form which can be specified by the user (using the
+emissionDistAssumption argument).  Currently supported
+functional forms include a normal distribution (good for
+GRO-seq data prepared using the circular ligation
+protocol), a gamma distribution (good for 'spikey' ligation
+based GRO-seq data), and a long-tailed normal+exponential
+distribution was implemented, but never deployed.
 
-  Initial parameter estimates are based on initial
-  assumptions of transcription rates taken from the
-  literature.  Subsequently all parameters are fit using
-  Baum-Welch expetation maximization.
+Initial parameter estimates are based on initial
+assumptions of transcription rates taken from the
+literature.  Subsequently all parameters are fit using
+Baum-Welch expetation maximization.
 
-  Reference: Danko CG, Hah N, Luo X, Martins AL, Core L,
-  Lis JT, Siepel A, Kraus WL. Signaling Pathways
-  Differentially Affect RNA Polymerase II Initiation,
-  Pausing, and Elongation Rate in Cells. Mol Cell. 2013 Mar
-  19. doi:pii: S1097-2765(13)00171-8.
-  10.1016/j.molcel.2013.02.015.
+Reference: Danko CG, Hah N, Luo X, Martins AL, Core L, Lis
+JT, Siepel A, Kraus WL. Signaling Pathways Differentially
+Affect RNA Polymerase II Initiation, Pausing, and
+Elongation Rate in Cells. Mol Cell. 2013 Mar 19. doi:pii:
+S1097-2765(13)00171-8. 10.1016/j.molcel.2013.02.015.
 
-  Arguments:
+Arguments:
 }
 \author{
-  Charles G. Danko and Minho Chae.
+Charles G. Danko and Minho Chae.
 }
 

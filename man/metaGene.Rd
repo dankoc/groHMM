@@ -2,40 +2,49 @@
 \alias{metaGene}
 \title{Returns a histogram of the number of reads in each section of a moving window centered on a certain feature.}
 \usage{
-  metaGene(features, reads, size, up = 1000, down = up,
-    debug = FALSE, ...)
+metaGene(features, reads = NULL, plusCVG = NULL, minusCVG = NULL,
+  size = 100L, up = 1000L, down = NULL, ...)
 }
 \arguments{
   \item{features}{A GRanges object representing a set of
   genomic coordinates.  The meta-plot will be centered on
-  the start position.}
+  the transcription start site (TSS)}
 
   \item{reads}{A GRanges object representing a set of
-  mapped reads.}
+  mapped reads.  Instead of 'reads', 'plusCVG' and
+  'minusCVG' can be used Default: NULL}
+
+  \item{plusCVG}{A RangesList object for reads with '+'
+  strand.}
+
+  \item{minusCVG}{A RangesList object for reads with '-'
+  strand.}
 
   \item{size}{The size of the moving window.}
 
   \item{up}{Distance upstream of each features to align and
-  histogram Default: 1 kb.}
+  histogram. Default: 1 kb.}
 
   \item{down}{Distance downstream of each features to align
-  and histogram Default: same as up.}
-
-  \item{debug}{If set to TRUE, provides additional print
-  options. Default: FALSE}
+  and histogram. If NULL, same as up. Default: NULL.}
 
   \item{...}{Extra argument passed to mclapply}
 }
 \value{
-  A vector representing the 'typical' signal centered on a
-  point of interest.
+A integer-Rle representing the 'typical' signal centered on
+a point of interest.
 }
 \description{
-  Supports parallel processing using mclapply in the
-  'parallel' package.  To change the number of processors
-  use the argument 'mc.cores'.
+Supports parallel processing using mclapply in the
+'parallel' package.  To change the number of processors set
+the option 'mc.cores'.
+}
+\examples{
+features <- GRanges("chr7", IRanges(1000, 1000), strand="+")
+reads <- GRanges("chr7", IRanges(start=c(1000:1004, 1100), width=rep(1, 6)), strand="+")
+mg <- metaGene(features, reads, size=4, up=10)
 }
 \author{
-  Charles G. Danko and Minho Chae
+Charles G. Danko and Minho Chae
 }
 

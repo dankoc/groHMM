@@ -2,9 +2,9 @@
 \alias{detectTranscripts}
 \title{detectTranscripts detects transcripts de novo using a two-state hidden Markov model (HMM).}
 \usage{
-  detectTranscripts(reads = NULL, Fp = NULL, Fm = NULL,
-    LtProbA = -5, LtProbB = -5, UTS = 5, size = 50,
-    threshold = 0.1, debug = TRUE, ...)
+detectTranscripts(reads = NULL, Fp = NULL, Fm = NULL, LtProbA = -5,
+  LtProbB = -5, UTS = 5, size = 50, threshold = 0.1, debug = TRUE,
+  ...)
 }
 \arguments{
   \item{reads}{A GRanges object representing a set of
@@ -37,24 +37,23 @@
   \item{...}{Extra argument passed to mclapply}
 }
 \value{
-  Returns a GRanges object representing the predicted
-  genomic coordinates of transcripts on both the + and -
-  strand.
+Returns a GRanges object representing the predicted genomic
+coordinates of transcripts on both the + and - strand.
 }
 \description{
-  Read counts can be specified as either a GRanges object
-  (reads), or using a fixed-step wiggle-format passed in a
-  list (Fp and Fm).  Either reads or BOTH Fp and Fm must be
-  specified.
+Read counts can be specified as either a GRanges object
+(reads), or using a fixed-step wiggle-format passed in a
+list (Fp and Fm).  Either reads or BOTH Fp and Fm must be
+specified.
 }
 \details{
-  Reference: Hah N, Danko CG, Core L, Waterfall JJ, Siepel
-  A, Lis JT, Kraus WL. A rapid, extensive, and transient
-  transcriptional response to estrogen signaling in breast
-  cancer cells. Cell. 2011 May 13;145(4):622-34. doi:
-  10.1016/j.cell.2011.03.042.
+Reference: Hah N, Danko CG, Core L, Waterfall JJ, Siepel A,
+Lis JT, Kraus WL. A rapid, extensive, and transient
+transcriptional response to estrogen signaling in breast
+cancer cells. Cell. 2011 May 13;145(4):622-34. doi:
+10.1016/j.cell.2011.03.042.
 }
 \author{
-  Charles G. Danko and Minho Chae
+Charles G. Danko and Minho Chae
 }
 

@@ -2,7 +2,7 @@
 \alias{readBed}
 \title{readBed Returns a GenomicRanges object constrcuted from the specified bed file.}
 \usage{
-  readBed(file, ...)
+readBed(file, ...)
 }
 \arguments{
   \item{file}{Path to the input file.}
@@ -10,20 +10,20 @@
   \item{...}{Extra argument passed to read.table}
 }
 \value{
-  GenomicRanges object, representing mapped reads.
+GenomicRanges object, representing mapped reads.
 }
 \description{
-  Bed file format is assumed to be either four column:
-  seqnames, start, end, strand columns; or six column:
-  seqnames, start, end, name, score, and strand. Three
-  column format is also possible when there is no strand
-  information.
+Bed file format is assumed to be either four column:
+seqnames, start, end, strand columns; or six column:
+seqnames, start, end, name, score, and strand. Three column
+format is also possible when there is no strand
+information.
 }
 \details{
-  Any additional arguments availiable to read.table can be
-  specified.
+Any additional arguments availiable to read.table can be
+specified.
 }
 \author{
-  Minho Chae and Charles G. Danko.
+Minho Chae and Charles G. Danko.
 }
 

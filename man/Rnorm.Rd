@@ -2,21 +2,21 @@
 \alias{Rnorm}
 \title{Rnorm fits a normal distribution to a specified data vector using maximum likelihood.}
 \usage{
-  Rnorm(X)
+Rnorm(X)
 }
 \arguments{
   \item{X}{A vector of observations, assumed to be real
   numbers in the inveraval (-Inf,+Inf).}
 }
 \value{
-  List of parameters for the best-fit normal distribution
-  (mean and varience).
+List of parameters for the best-fit normal distribution
+(mean and varience).
 }
 \description{
-  Rnorm fits a normal distribution to a specified data
-  vector using maximum likelihood.
+Rnorm fits a normal distribution to a specified data vector
+using maximum likelihood.
 }
 \author{
-  Charles G. Danko
+Charles G. Danko
 }
 

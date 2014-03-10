@@ -2,8 +2,8 @@
 \alias{combineTranscripts}
 \title{combineTranscripts Combines transnscipts.}
 \usage{
-  combineTranscripts(tx, annotations, geneSize = 1000,
-    threshold = 0.8, debug = FALSE)
+combineTranscripts(tx, annox, geneSize = 1000, threshold = 0.8,
+  plot = FALSE)
 }
 \arguments{
   \item{tx}{GRanges of transcripts.}
@@ -14,19 +14,26 @@
   \item{geneSize}{Numeric. Minimum gene size in annotations
   to be used as reference. Default: 1000}
 
-  \item{threshold}{Numeric. Threshold for calling the gene
-  part of the transcript.  Default: 0.8}
+  \item{threshold}{Numeric. Ratio of overlapped region
+  relative to transcript width. Transcripts only greater
+  than this threshold are subjected to be combined.
+  Default: 0.8}
 
-  \item{debug}{Logical.  If set to TRUE, show easch step in
+  \item{plot}{Logical.  If set to TRUE, show easch step in
   a plot. Default: FALSE}
 }
 \description{
-  Combines transcripts that are within the same gene
-  annotation, combining smaller transcripts for genes with
-  low regulation into a single transcript representing the
-  gene.
+Combines transcripts that are within the same gene
+annotation, combining smaller transcripts for genes with
+low regulation into a single transcript representing the
+gene.
+}
+\examples{
+tx <- GRanges("chr7", IRanges(start=c(1000, 20000), width=c(10000,10000)), strand="+")
+annox <- GRanges("chr7", IRanges(1000, 30000), strand="+")
+combined <- combineTranscripts(tx, annox)
 }
 \author{
-  Minho Chae and Charles G. Danko
+Minho Chae and Charles G. Danko
 }
 
