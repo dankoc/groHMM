@@ -75,7 +75,7 @@ windowAnalysis <- function(reads, strand="*", windowSize=stepSize, stepSize=wind
 			starts <- seq(1, to, stepSize)
 			vi <- Views(cov, start=starts, width=windowSize)
 			Rle(viewSums(vi))
-		}, mc.cores=getOption("mc.cores"), ...) 
+		}, ...) 
 	
 	
 	return(H)

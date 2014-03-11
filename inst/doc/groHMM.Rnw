@@ -94,6 +94,7 @@ data from chromosome 7 only.
 
 <<use groHMM, eval=TRUE>>=
 library(groHMM)
+options(mc.cores=9)
 @
 
 \Rpackage{groHMM} uses the \Rpackage{GRanges} class from the \Rpackage{GenomicRanges} packages to represent a
@@ -107,7 +108,17 @@ The example data included in this package can be loaded into \software{R} using 
 following commands.
 
 <<load data, eval=TRUE>>=
-load(system.file("extdata", "hah.chr7.RData", package="groHMM"))
+S0mR1 <- as(readGAlignments(system.file("extdata", "S0mR1.bam", package="groHMM")), "GRanges")
+S0mR2 <- as(readGAlignments(system.file("extdata", "S0mR2.bam", package="groHMM")), "GRanges")
+
+S10mR1 <- as(readGAlignments(system.file("extdata", "S10mR1.bam", package="groHMM")), "GRanges")
+S10mR2 <- as(readGAlignments(system.file("extdata", "S10mR2.bam", package="groHMM")), "GRanges")
+
+S40mR1 <- as(readGAlignments(system.file("extdata", "S40mR1.bam", package="groHMM")), "GRanges")
+S40mR2 <- as(readGAlignments(system.file("extdata", "S40mR2.bam", package="groHMM")), "GRanges")
+
+S160mR1 <- as(readGAlignments(system.file("extdata", "S160mR1.bam", package="groHMM")), "GRanges")
+S160mR2 <- as(readGAlignments(system.file("extdata", "S160mR2.bam", package="groHMM")), "GRanges")
 @
 
 \subsection{Create a Wiggle File}
@@ -116,20 +127,20 @@ in the UCSC genome browser.    Wiggle files can also be normalized by the sequen
 average number of reads in the dataset.
 
 <<combine replicates, eval=TRUE>>=
-S0m <- sort(c(S0mR1, S0mR2), decreasing=FALSE)
-S10m <- sort(c(S10mR1, S10mR2), decreasing=FALSE)
-S40m <- sort(c(S40mR1, S40mR2), decreasing=FALSE)
-S160m <- sort(c(S160mR1, S160mR2), decreasing=FALSE)
+S0m <- sort(c(S0mR1, S0mR2))
+S10m <- sort(c(S10mR1, S10mR2))
+S40m <- sort(c(S40mR1, S40mR2))
+S160m <- sort(c(S160mR1, S160mR2))
 @
 
 <<write wiggle files, eval=FALSE>>=
-writeWiggle(reads=S0m, file="S0m_Plus", strand="+", size=25, 
-	    reverse=FALSE)
-writeWiggle(reads=S0m, file="S0m_Minus", strand="-", size=25, 
-	    reverse=TRUE)
+writeWiggle(reads=S0m, file="S0m_Plus.wig", fileType="wig", strand="+",  reverse=FALSE)
+writeWiggle(reads=S0m, file="S0m_Minus.wig", fileType="wig", strand="-",  reverse=TRUE)
+writeWiggle(reads=S0m, file="S0m_Plus.bw", fileType="BigWig", strand="+", ,reverse=FALSE)
+
 # Normalized wiggle files
 expCounts <- mean(c(NROW(S0m), NROW(S10m), NROW(S40m), NROW(S160m)))
-writeWiggle(reads=S0m, file="S0m_Plus_Norm", strand="+", size=25,
+writeWiggle(reads=S0m, file="S0m_Plus_Norm.wig", fileType="wig", strand="+", 
            normCounts=expCounts/NROW(S0m), reverse=FALSE)
 @
 
@@ -159,13 +170,10 @@ separately dividing the genome into non-overlapping 50 bp windows classified as 
 
   
 <<transcript calling, eval=TRUE, keep.source=TRUE, results=hide>>=
-Sall <- sort(c(S0m, S10m, S40m, S160m), decreasing=FALSE)
+Sall <- sort(c(S0m, S10m, S40m, S160m))
 hmmResult <- detectTranscripts(Sall, LtProbB=-200, UTS=5, 
 			       threshold=1)
 txHMM <- hmmResult$transcripts
-@
-
-<<eval=TRUE>>=
 head(txHMM)
 @
 
@@ -187,15 +195,19 @@ from the UCSC database.    The user is not expected to execute this every
 time; instead, we suggest that you save annotations once and read them whenever
 needed.
 
-<<download refSeq genes, eval=TRUE>>=
+<<use ucsc genes, eval=TRUE>>=
+library(TxDb.Hsapiens.UCSC.hg19.knownGene)
+kgdb <- TxDb.Hsapiens.UCSC.hg19.knownGene
+
 library(GenomicFeatures)
-rgdb <- makeTranscriptDbFromUCSC(genome="hg19", tablename="refGene")
+# For refseq annotation:
+# rgdb <- makeTranscriptDbFromUCSC(genome="hg19", tablename="refGene")
 # Save it for furture use
 # saveDb(hg19RGdb, file="hg19RefGene.sqlite")
 # rgdb <- loadDb("hg19RefGene.sqlite")
-rgChr7 <- transcripts(rgdb, vals <- list(tx_chrom = "chr7"), 
+kgChr7 <- transcripts(kgdb, vals=list(tx_chrom = "chr7"), 
                       columns=c("gene_id", "tx_id", "tx_name"))
-seqlevels(rgChr7) <- "chr7"
+seqlevels(kgChr7) <- seqlevelsInUse(kgChr7) 
 @
 
 Because annotations do not provide precise cell type-specific expression
@@ -206,13 +218,14 @@ consensus annotations are used for the evaluation of HMM calling.
 
 <<make consensus annotations, eval=TRUE, keep.source=TRUE, results=hide>>=
 # merge overlapping annotations
-rgConsensus <- makeConsensusAnnotations(rgChr7, keytype="gene_id")
+kgConsensus <- makeConsensusAnnotations(kgChr7, keytype="gene_id", 
+		mc.cores=getOption("mc.cores"))
 library(org.Hs.eg.db)
 map <- select(org.Hs.eg.db, 
-	keys=as.integer(unlist(elementMetadata(rgConsensus)$gene_id)),
+	keys=unlist(mcols(kgConsensus)$gene_id),
         cols=c("SYMBOL"), keytype=c("ENTREZID"))
-elementMetadata(rgConsensus)$symbol <- map$SYMBOL
-elementMetadata(rgConsensus)$type <- "gene"
+mcols(kgConsensus)$symbol <- map$SYMBOL
+mcols(kgConsensus)$type <- "gene"
 @
 
 There are two types of error that can be evaluated when comparing predicted
@@ -225,7 +238,8 @@ by minimizing the sum of the two errors.  This approach allows identification of
 that best fits the existing annotations and should more precisely predict transcripts
 in non-annotated parts of the genome.
 <<evaluation of transcript calling, eval=TRUE>>=
-e <- evaluateHMM(txHMM, rgConsensus)
+e <- evaluateHMMInAnnotations(txHMM, kgConsensus)
+e$eval
 @
 
 \subsection{HMM Tuning}
@@ -237,28 +251,20 @@ rate per called transcript.  The variation of errors should be greater if whole 
 are used.  Also, a larger set of the parameters might be used in practice.  This tunning step
 takes long time, so you may skip it for quick review of the package. 
 
-<<tuning HMM, eval=FALSE, keep.source=TRUE, results=hide>>=
+<<tuning HMM, eval=TRUE, keep.source=TRUE, results=hide>>=
 tune <- data.frame(LtProbB=c(rep(-100,3), rep(-200,3), rep(-300,3)),
-           UTS=rep(c(5,10,15), 3),  runGenes=rep(0,9),
-           brokenUp=rep(0,9), totalError=rep(0,9), txSize=rep(0,9),
-	   errorRate=rep(0,9))
-for (i in 1:9) {
-    hmm <- detectTranscripts(Sall, LtProbB=tune[i,"LtProbB"],
-                            UTS=tune[i,"UTS"], thresh=1)
-    tx <- hmm$transcripts
-    eh <- evaluateHMM(tx, rgConsensus)
-    tune[i,"runGenes"] <- eh$runGeneError
-    tune[i,"brokenUp"] <- eh$brokenError
-    tune[i,"totalError"] <- eh$runGeneError + eh$brokenError
-    tune[i,"txSize"] <- NROW(tx)
-    tune[i,"errorRate"] <- tune[i,"totalError"] / tune[i,"txSize"]
-}
+           UTS=rep(c(5,10,15), 3))
 
-<<load Vignette data, eval=TRUE, echo=FALSE, results=hide>>=
-load(system.file("extdata", "Vignette.RData", package="groHMM"))
-@
+Fp <- windowAnalysis(Sall, strand="+", windowSize=50)
+Fm <- windowAnalysis(Sall, strand="-", windowSize=50)
 
-<<HMM output, eval=TRUE, keep.source=TRUE>>=
+evals <- mclapply(seq_len(9), function(x) {
+        hmm <- detectTranscripts(Fp=Fp, Fm=Fm, LtProbB=tune$LtProbB[x], UTS=tune$UTS[x])
+        e <- evaluateHMMInAnnotations(hmm$transcripts, kgConsensus)
+        e$eval
+        }, mc.cores=getOption("mc.cores"),  mc.silent=TRUE)
+tune <- cbind(tune, do.call(rbind, evals))
+
 tune
 which.min(tune$totalError)
 which.min(tune$errorRate)
@@ -295,23 +301,23 @@ scaled to median size of genes, \emph{i.e.}, 30K.  Here best overlapped annotati
 annotation are used.  Final quality metrics are represented as an AUC number.
 
 <<expressed genes, eval=TRUE>>=
-getExpressedAnnotation <- function(features, reads) {
+getExpressedAnnotations <- function(features, reads) {
      fLimit <- limitToXkb(features)
-     count <- countReadsInInterval(features=fLimit, reads=reads)
+     count <- countOverlaps(fLimit, reads)
      features <- features[count!=0,]
-     return(features[(quantile(width(features), .05)< width(features)) 
+     return(features[(quantile(width(features), .05) < width(features)) 
 	& (width(features) < quantile(width(features), .95)),])}
-rgExpressed <- getExpressedAnnotation(features=rgConsensus,reads=Sall)
+conExpressed <- getExpressedAnnotations(features=kgConsensus,reads=Sall)
 @
 
 <<fig2plot, eval=TRUE, keep.source=TRUE>>=
-plotTxDensity(txHMM, rgExpressed, scale=TRUE, runGenes="best", 
-	      brokenAnnotation="best", pBar=FALSE)
+density <- getTxDensity(txHMM, conExpressed, mc.cores=getOption("mc.cores"))
+density
 u <- par("usr")
-lines(c(u[1], 0, 0, 30000, 30000, u[2]), c(0,0,u[4]-10,u[4]-10,0,0), 
+lines(c(u[1], 0, 0, 1000, 1000, u[2]), c(0,0,u[4]-.04,u[4]-.04,0,0),
       col="red")
 legend("topright",lty=c(1,1), col=c(2,1), c("ideal", "groHMM"))
-text(c(-15000,15000), c(15,210), c("FTD", "TTD"))
+text(c(-500,500), c(.05,.5), c("FTD", "TTD"))
 @
 
 \begin{figure}
@@ -333,15 +339,14 @@ will occur even after the parameters are optimally tuned.  Transcript calls can 
 a final set of transcripts for further analysis.
 
 <<repairing called transcripts, eval=TRUE>>=
-bPlus <- breakTranscriptsOnGenes(txHMM, rgConsensus, strand="+")
-bMinus <- breakTranscriptsOnGenes(txHMM, rgConsensus, strand="-")
+bPlus <- breakTranscriptsOnGenes(txHMM, kgConsensus, strand="+")
+bMinus <- breakTranscriptsOnGenes(txHMM, kgConsensus, strand="-")
 txBroken <- c(bPlus, bMinus)
-txFinal <- combineTranscripts(txBroken, rgConsensus, debug=FALSE)
+txFinal <- combineTranscripts(txBroken, kgConsensus)
 @
 
 <<plotTxDensity_final, eval=TRUE, keep.source=TRUE>>=
-plotTxDensity(txFinal, rgExpressed, scale=TRUE, runGenes="best", 
-	      brokenAnnotation="best", pBar=FALSE)
+densityFinal <- getTxDensity(txFinal, conExpressed, mc.cores=getOption("mc.cores"))
 @
 
 \subsection{Differential Analysis with \Rpackage{edgeR}}
@@ -363,10 +368,10 @@ can be used, including the entire length of the called or annotated transcripts.
 # for transcripts
 library(edgeR)
 txLimit <- limitToXkb(txFinal)
-ctS0mR1 <- countReadsInInterval(features=txLimit, reads=S0mR1)
-ctS0mR2 <- countReadsInInterval(features=txLimit, reads=S0mR2)
-ctS40mR1 <- countReadsInInterval(features=txLimit, reads=S40mR1)
-ctS40mR2 <- countReadsInInterval(features=txLimit, reads=S40mR2)
+ctS0mR1 <- countOverlaps(txLimit, S0mR1)
+ctS0mR2 <- countOverlaps(txLimit, S0mR2)
+ctS40mR1 <- countOverlaps(txLimit, S40mR1)
+ctS40mR2 <- countOverlaps(txLimit, S40mR2)
 
 pcounts <- as.matrix(data.frame(ctS0mR1, ctS0mR2, ctS40mR1, ctS40mR2))
 group <- factor(c("S0m", "S0m", "S40m", "S40m"))
@@ -375,7 +380,7 @@ d <- DGEList(counts=pcounts, lib.size=lib.size, group=group)
 d <- estimateCommonDisp(d)
 et <- exactTest(d)
 de <- decideTestsDGE(et, p=0.001, adjust="fdr")
-detags <- (1:NROW(d))[as.logical(de)]
+detags <- seq_len(NROW(d))[as.logical(de)]
 # Number of Transcripts regulated at 40m
 print(paste("up:",sum(de==1)))
 print(paste("down:",sum(de==-1)))
@@ -399,20 +404,23 @@ abline(h = c(-1,1), col="blue")
 
 
 <<DE for annotated genes, eval=TRUE, echo=TRUE, include=FALSE>>=
-# for refSeq genes
-rgChr7 <- transcripts(rgdb, vals <- list(tx_chrom = "chr7"), 
+# for ucsc genes
+kgChr7 <- transcripts(kgdb, vals <- list(tx_chrom = "chr7"), 
                       columns=c("gene_id", "tx_id", "tx_name"))
 map <- select(org.Hs.eg.db,
-        keys=as.integer(unique(unlist(elementMetadata(rgChr7)$gene_id))), 
+        keys=unique(unlist(mcols(kgChr7)$gene_id)), 
         cols=c("SYMBOL"), keytype=c("ENTREZID")) 
-inx <- match(unlist(elementMetadata(rgChr7)$gene_id), map$ENTREZID)
-elementMetadata(rgChr7)$symbol <- map[inx,"SYMBOL"]
+missing <- elementLengths(mcols(kgChr7)[,"gene_id"]) == 0
+kgChr7 <- kgChr7[!missing,]
 
-rgLimit <- limitToXkb(rgChr7)
-ctS0mR1 <- countReadsInInterval(features=rgLimit, reads=S0mR1)
-ctS0mR2 <- countReadsInInterval(features=rgLimit, reads=S0mR2)
-ctS40mR1 <- countReadsInInterval(features=rgLimit, reads=S40mR1)
-ctS40mR2 <- countReadsInInterval(features=rgLimit, reads=S40mR2)
+inx <- match(unlist(mcols(kgChr7)$gene_id), map$ENTREZID)
+mcols(kgChr7)$symbol <- map[inx,"SYMBOL"]
+
+kgLimit <- limitToXkb(kgChr7)
+ctS0mR1 <- countOverlaps(kgLimit, S0mR1)
+ctS0mR2 <- countOverlaps(kgLimit, S0mR2)
+ctS40mR1 <- countOverlaps(kgLimit, S40mR1)
+ctS40mR2 <- countOverlaps(kgLimit, S40mR2)
 
 counts <- as.matrix(data.frame(ctS0mR1, ctS0mR2, ctS40mR1, ctS40mR2))
 group <- factor(c("S0m", "S0m", "S40m", "S40m"))
@@ -422,11 +430,11 @@ d <- DGEList(counts=counts, lib.size=lib.size, group=group)
 d <- estimateCommonDisp(d)
 et <- exactTest(d)
 de <- decideTestsDGE(et, p=0.001, adjust="fdr")
-detags <- (1:NROW(d))[as.logical(de)]
-symbols <- elementMetadata(rgChr7)$symbol
+detags <- seq_len(NROW(d))[as.logical(de)]
+symbols <- mcols(kgChr7)$symbol
 # Number of Unique Genes at 40m
-print(paste("up:", NROW(unique(unique(symbols[de==1])))))
-print(paste("down:", NROW(unique(unique(symbols[de==-1])))))
+print(paste("up:", NROW(unique(symbols[de==1]))))
+print(paste("down:", NROW(unique(symbols[de==-1]))))
 plotSmear(et, de.tags=detags)
 abline(h = c(-1,1), col="blue")
 @
@@ -441,42 +449,53 @@ at each position in the transcription unit over the samples is used for final
 metagene result.  Using subsampling results in an image that is more robust to
 outliers, especially when the size of sample is relatively small.
 
-<<metagene analysis, eval=FALSE, keep.source=TRUE, results=hide>>=
-upGenes <- rgChr7[de==1,]
-TSS <- resize(upGenes, width=1)
+<<metagene analysis, eval=TRUE, keep.source=TRUE, results=hide>>=
+upGenes <- kgChr7[de==1,]
 expReads <- mean(c(NROW(S0m), NROW(S10m), NROW(S40m), NROW(S160m)))
-count0m <- runMetaGene(features=TSS, reads=S0m, size=100, 
-                       normCounts=expReads, sampling=TRUE)
-count40m <- runMetaGene(features=TSS, reads=S40m, size=100, 
-                        normCounts=expReads, sampling=TRUE)
+mg0m <- runMetaGene(features=upGenes, reads=S0m, size=100, 
+                       normCounts=expReads/NROW(S0m), sampling=TRUE,
+		       mc.cores=getOption("mc.cores"))
+mg40m <- runMetaGene(features=upGenes, reads=S40m, size=100, 
+                        normCounts=expReads/NROW(S40m), sampling=TRUE,
+		       	mc.cores=getOption("mc.cores"))
+
+mg0m <- runMetaGene(features=upGenes, reads=S0m, size=100, 
+                       normCounts=expReads/NROW(S0m), sampling=FALSE,
+		       mc.cores=getOption("mc.cores"))
+mg40m <- runMetaGene(features=upGenes, reads=S40m, size=100, 
+                        normCounts=expReads/NROW(S40m), sampling=FALSE,
+		       	mc.cores=getOption("mc.cores"))
+@
+
+
 @
 
 <<plot metagene, eval=TRUE, keep.source=TRUE, results=hide>>=
-plotMetaGene <- function(POS=c(-10000:+10000), counts, MIN, MAX){
-    plot(POS, counts$sense, col="red", type="h", xlim=c(-5000, 5000),
+plotMetaGene <- function(POS=c(-10000:+9999), mg, MIN, MAX){
+    plot(POS, mg$sense, col="red", type="h", xlim=c(-5000, 5000),
         ylim=c(floor(MIN),ceiling(MAX)), ylab="Read Density",
         xlab="Position (relative to TSS)")
-     points(POS, (-1*rev(counts$antisense)), col="blue", type="h")
-     abline(mean(counts$sense[5000:8000]), 0, lty="dotted")
+     points(POS, (-1*rev(mg$antisense)), col="blue", type="h")
+     abline(mean(mg$sense[5000:8000]), 0, lty="dotted")
 }
 
-MAX <- max(c(count0m$sense, count40m$sense))
-MIN <- -1*max(c(count0m$antisense, count40m$antisense))
-plotMetaGene(counts=count0m, MIN=MIN, MAX=MAX)
-plotMetaGene(counts=count40m, MIN=MIN, MAX=MAX)
+MAX <- max(c(mg0m$sense, mg40m$sense))
+MIN <- -1*max(c(mg0m$antisense, mg40m$antisense))
+plotMetaGene(mg=mg0m, MIN=MIN, MAX=MAX)
+plotMetaGene(mg=mg40m, MIN=MIN, MAX=MAX)
 @
 
 <<metagene figures, eval=TRUE, echo=FALSE, results=hide>>=
 png(filename="metagen0m.png")
-plotMetaGene(counts=count0m, MIN=MIN, MAX=MAX)
+plotMetaGene(mg=mg0m, MIN=MIN, MAX=MAX)
 dev.off()
 png(filename="metagen40m.png", width=480, height=480)
-plotMetaGene(counts=count40m, MIN=MIN, MAX=MAX)
+plotMetaGene(mg=mg40m, MIN=MIN, MAX=MAX)
 dev.off()
 @
 
 <<save data for vignette, eval=FALSE, echo=FALSE, results=hide>>=
-save(tune, count0m, count40m, file="Vignette.RData")
+save(tune, mg0m, mg40m, file="Vignette.RData")
 @
 
 \begin{figure}

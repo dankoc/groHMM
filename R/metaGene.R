@@ -63,7 +63,7 @@ metaGene <- function(features, reads=NULL, plusCVG=NULL, minusCVG=NULL, size=100
 	featureList <- split(features, seqnames(features))
 
 	H <- mclapply(seqlevels(features), metaGene_foreachChrom, featureList=featureList,
-		plusCVG=plusCVG, minusCVG=minusCVG, size=size, up=up, down=down, mc.cores=getOption("mc.cores"), ...)
+		plusCVG=plusCVG, minusCVG=minusCVG, size=size, up=up, down=down, ...)
 	M <- sapply(1:length(H), function(x) as.integer(H[[x]]))
 
 	return(Rle(apply(M, 1, sum)))
@@ -116,7 +116,7 @@ metaGene_foreachChrom <- function(chrom, featureList, plusCVG, minusCVG, size, u
 #' mg <- runMetaGene(features, reads, size=4, up=10)
 ##
 ##########################################################################
-runMetaGene <- function(features, reads, anchorType="TSS", size=100L, up=1000L, down=NULL, sampling=FALSE, nSampling=1000L,
+runMetaGene <- function(features, reads, anchorType="TSS", size=100L, normCounts=1L, up=10000L, down=NULL, sampling=FALSE, nSampling=1000L,
             samplingRatio=0.1, ...) {
 	# Check 'anchorType'
 	if (!anchorType %in% c("TSS", "TTS")) {
@@ -143,7 +143,6 @@ runMetaGene <- function(features, reads, anchorType="TSS", size=100L, up=1000L, 
 			nSampling=nSampling, samplingRatio=samplingRatio, ...)
 	} else {
 		sense <- metaGene(features=f, plusCVG=plusCVG, minusCVG=minusCVG, size=size, up=up, down=down, ...)
-		#sense <- metaGene(features=f, plusCVG=plusCVG, minusCVG=minusCVG, size=size, up=up, down=down)
 	}
 	message("OK")
 
@@ -155,7 +154,9 @@ runMetaGene <- function(features, reads, anchorType="TSS", size=100L, up=1000L, 
 		antisense <- metaGene(features=fRev, plusCVG=plusCVG, minusCVG=minusCVG, size=size, up=up, down=down, ...)
 	}
 	message("OK")
-
+	
+	sense <- sense*normCounts
+	antisense <- antisense*normCounts
 	return(list(sense=sense, antisense=antisense))
 }
 
@@ -165,17 +166,17 @@ samplingMetaGene <- function(features, plusCVG, minusCVG, size=100L, up=10000L, 
 
 	metaList <- mclapply(1:length(features), function(x) {
 		metaGene(features=features[x,], plusCVG=plusCVG, minusCVG=minusCVG, size=size, up=up, down=down)
-	}, mc.cores=getOption("mc.cores"), ...)
+	}, ...)
 
 	allSamples <- mclapply(1:nSampling, function(x) {
 		inx <- sample(1:length(features), size=samplingSize, replace=TRUE)
 		onesample <- metaList[inx]
 		mat <- sapply(onesample, function(x) as.integer(x))
 		Rle(apply(mat, 1, sum))
-	}, mc.cores=getOption("mc.cores"), ...)
+	}, ...)
 
 	M <- sapply(allSamples, function(x) as.integer(x))
-	return(Rle(apply(M, 1, median)))
+	return(Rle(apply(M, 1, median)) / samplingSize)
 }
 
 

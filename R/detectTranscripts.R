@@ -44,6 +44,9 @@
 #'
 #' Read counts can be specified as either a GRanges object (reads), or using a fixed-step wiggle-format passed in a list (Fp and Fm).  Either reads or BOTH Fp and Fm must be specified.
 #'
+#' Supports parallel processing using mclapply in the 'parallel' package.  To change the number of processors
+#' set the option 'mc.cores'.
+#'
 #'  Reference: Hah N, Danko CG, Core L, Waterfall JJ, Siepel A, Lis JT, Kraus WL. A rapid, extensive, and transient transcriptional response to estrogen signaling in breast cancer cells. Cell. 2011 May 13;145(4):622-34. doi: 10.1016/j.cell.2011.03.042. 
 #'
 #' @param reads A GRanges object representing a set of mapped reads.
@@ -69,8 +72,8 @@ detectTranscripts <- function(reads=NULL, Fp=NULL, Fm=NULL, LtProbA=-5, LtProbB=
 	epsilon <- 0.001
 	
 	if(is.null(Fp) & is.null(Fm)) { ## Allow equilavent form of Fp and Fm to be spcified in the function automatically.
-	 Fp <- windowAnalysis(reads=reads, strand="+", windowSize=size)
-	 Fm <- windowAnalysis(reads=reads, strand="-", windowSize=size)
+	 Fp <- windowAnalysis(reads=reads, strand="+", windowSize=size, ...)
+	 Fm <- windowAnalysis(reads=reads, strand="-", windowSize=size, ...)
 	}
 	
 	nFp <- NROW(Fp)

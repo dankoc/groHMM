@@ -28,6 +28,9 @@
 #' Calculates transcript density for transcripts which overlapps with annotations.  
 #' For 'run genes together' or 'broken up a single annotation' errors, best overlapped transcripts or annotations are used.
 #'
+#' Supports parallel processing using mclapply in the 'parallel' package.  To change the number of processors
+#' set the option 'mc.cores'.
+#'
 #' @param tx GRanges of transcripts. 
 #' @param annox GRanges of non-overlapping annotatoins.
 #' @param plot Logical.  If TRUE, plot transcript density.  Default: TRUE
@@ -54,7 +57,7 @@ getTxDensity <- function(tx, annox, plot=TRUE, scale=1000L, nSampling=0L, sampli
 	message("Overlaps between tx and annox: Total = ", length(ol), appendLF=FALSE)
 
 	# For each annox, find the best matching tx, runGenes case...
-    intx_rg <- pintersect(tx[queryHits(ol),], annox[subjectHits(ol),])
+	intx_rg <- pintersect(tx[queryHits(ol),], annox[subjectHits(ol),])
 	intx_rg_df <- data.frame(tx=queryHits(ol), annox=subjectHits(ol), 	
 			oRatio=width(intx_rg)/width(tx[queryHits(ol),]))
 
@@ -66,12 +69,12 @@ getTxDensity <- function(tx, annox, plot=TRUE, scale=1000L, nSampling=0L, sampli
 				})))
 
 	if (length(remove_rg) > 0)  
-		ol <- ol[-remove_tx,]
+		ol <- ol[-remove_rg,]
 
 	# For each transcript, find the best matching annox, brokenUp case..., 
 	brokenUp <- unique(subjectHits(ol[duplicated(subjectHits(ol)),]))
 
-    intx_bu  <- pintersect(tx[queryHits(ol),], annox[subjectHits(ol),])
+ 	intx_bu  <- pintersect(tx[queryHits(ol),], annox[subjectHits(ol),])
 	intx_bu_df <- data.frame(tx=queryHits(ol), annox=subjectHits(ol), 	
 			oRatio=width(intx_bu)/width(annox[subjectHits(ol),]))
 
@@ -79,7 +82,7 @@ getTxDensity <- function(tx, annox, plot=TRUE, scale=1000L, nSampling=0L, sampli
 	# Annox matches multiple times on a same transcript
 	remove_bu <- unique(unlist(lapply(brokenUp, function(x) {
 					inx <- which(subjectHits(ol) == x)
-					m <- which.max(intx_ax_df$oRatio[inx])
+					m <- which.max(intx_bu_df$oRatio[inx])
 					inx[-m]
 				})))
 	if (length(remove_bu) > 0)  
@@ -93,11 +96,13 @@ getTxDensity <- function(tx, annox, plot=TRUE, scale=1000L, nSampling=0L, sampli
 	olChrom <- seqnames(tx[queryHits(ol),])
 
 	# Get the extended region for annox
-	message("Calculates overlapping ... ", appendLF=FALSE)
+	up <- 1L
+	down <- 2L
+	message("Calculate overlapping ... ", appendLF=FALSE)
 	promo  <- unlist(GRangesList(mclapply(subjectHits(ol), function(x) {
 						w <- width(annox[x,])
 						promoters(annox[x,], upstream=round(w*up), downstream=round(w*down))
-					}, mc.cores=getOption("mc.cores"), ... )))
+					}, ... )))
 
 	pintx <- pintersect(promo, olTx)
 
@@ -118,17 +123,15 @@ getTxDensity <- function(tx, annox, plot=TRUE, scale=1000L, nSampling=0L, sampli
 						Rle(rTF[start(p):end(p)])
 					else
 						rev(Rle(rTF[start(p):end(p)]))
-			}, mc.cores=getOption("mc.cores"), ...)
+			}, ...)
 	message("OK")
 				
-	message("Scales overlapping ... ", appendLF=FALSE)
-	up <- 1L
-	down <- 2L
+	message("Scale overlapping ... ", appendLF=FALSE)
 	# Get the scaled coverage 
 	cvgWidth <- round(up*scale) + round(down*scale)
 	sccvg <- mclapply(olcvg, function(x) {
 						getLIValues(x, cvgWidth)
-					}, mc.cores=getOption("mc.cores"), ... )
+					}, ... )
 	message("OK")
 
 	M <- sapply(sccvg, function(x) as.integer(x))
@@ -139,7 +142,7 @@ getTxDensity <- function(tx, annox, plot=TRUE, scale=1000L, nSampling=0L, sampli
 			inx <- sample(1:length(ol), size=sSize, replace=TRUE)
 			onesample <- M[,inx]
 			Rle(apply(onesample, 1, sum))
-		}, mc.cores=getOption("mc.cores"), ...)
+		}, ...)
 		mat <- sapply(allSamples, function(x) as.integer(x))
         profile <- apply(mat, 1, mean)/sSize
 		message("OK")
