@@ -52,9 +52,10 @@ getTxDensity <- function(tx, annox, plot=TRUE, scale=1000L, nSampling=0L, sampli
 
    	runGenes <- unique(queryHits(ol[duplicated(queryHits(ol)),]))		# Count tx
 	brokenUp <- unique(subjectHits(ol[duplicated(subjectHits(ol)),]))	# Count annox
-	message("Run genes together: ", length(runGenes))
-	message("Broken up a single annotation: ", length(brokenUp))
-	message("Overlaps between tx and annox: Total = ", length(ol), appendLF=FALSE)
+	cat("Run genes together: ", length(runGenes), "\n")
+	cat("Broken up a single annotation: ", length(brokenUp), "\n")
+	cat("Overlaps between transcript and annotation:", "\n")
+	cat("Total = ", length(ol))
 
 	# For each annox, find the best matching tx, runGenes case...
 	intx_rg <- pintersect(tx[queryHits(ol),], annox[subjectHits(ol),])
@@ -88,7 +89,7 @@ getTxDensity <- function(tx, annox, plot=TRUE, scale=1000L, nSampling=0L, sampli
 	if (length(remove_bu) > 0)  
 		ol <- ol[-remove_bu,]
 
-	message(" Used for density = ", length(ol))
+	cat(" Used for density = ", length(ol))
 
 	olTx <- tx[queryHits(ol),]
 	# Now get the coverage of selected transcripts
@@ -226,10 +227,9 @@ evaluateHMMInAnnotations <- function (tx, annox) {
     runGenes <- length(unique(queryHits(o[duplicated(queryHits(o)),])))  # count tx
     brokenUp <- length(unique(subjectHits(o[duplicated(subjectHits(o)),]))) # count annox
 
-    eval <- data.frame(runGenesError=runGenes, brokenUpError=brokenUp,
-					totalError=(runGenes + brokenUp), 
-    				errorRate=(runGenes + brokenUp)/(length(tx) + length(annox)),
-					txNumber=length(tx))
+    eval <- data.frame(runGenes=runGenes, brokenUp=brokenUp,
+			total=(runGenes + brokenUp), errorRate=(runGenes + brokenUp)/(length(tx) + length(annox)),
+			txSize =length(tx))
 
     intx <- pintersect(tx[queryHits(o),], annox[subjectHits(o),])
     overlap <- data.frame(txRatio=width(intx)/width(tx[queryHits(o),]),

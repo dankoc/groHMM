@@ -36,7 +36,7 @@
 #' @param plusCVG A RangesList object for reads with '+' strand. 
 #' @param minusCVG A RangesList object for reads with '-' strand. 
 #' @param size The size of the moving window.
-#' @param up Distance upstream of each features to align and histogram. Default: 1 kb.
+#' @param up Distance upstream of each features to align and histogram. Default: 10 kb.
 #' @param down Distance downstream of each features to align and histogram. If NULL, same as up. Default: NULL.
 #' @param ... Extra argument passed to mclapply
 #' @return A integer-Rle representing the 'typical' signal centered on a point of interest.
@@ -47,7 +47,7 @@
 #' mg <- metaGene(features, reads, size=4, up=10)
 ##
 ##########################################################################
-metaGene <- function(features, reads=NULL, plusCVG=NULL, minusCVG=NULL, size=100L, up=1000L, down=NULL, ...) {
+metaGene <- function(features, reads=NULL, plusCVG=NULL, minusCVG=NULL, size=100L, up=10000L, down=NULL, ...) {
 	seqlevels(features) <- seqlevelsInUse(features)
 	# Check 'reads'
 	if (is.null(reads)) {
@@ -64,7 +64,7 @@ metaGene <- function(features, reads=NULL, plusCVG=NULL, minusCVG=NULL, size=100
 
 	H <- mclapply(seqlevels(features), metaGene_foreachChrom, featureList=featureList,
 		plusCVG=plusCVG, minusCVG=minusCVG, size=size, up=up, down=down, ...)
-	M <- sapply(1:length(H), function(x) as.integer(H[[x]]))
+	M <- sapply(seq_len(length(H)), function(x) as.integer(H[[x]]))
 
 	return(Rle(apply(M, 1, sum)))
 }
@@ -75,7 +75,7 @@ metaGene_foreachChrom <- function(chrom, featureList, plusCVG, minusCVG, size, u
 
         pCVG <- plusCVG[[chrom]]
         mCVG <- minusCVG[[chrom]]
-        offset <- floor(size/2)
+        offset <- floor(size/2L)
 
         pro <- promoters(f, upstream=up+offset, downstream=(down+offset-1L))
 
@@ -136,11 +136,11 @@ runMetaGene <- function(features, reads, anchorType="TSS", size=100L, normCounts
 
 	plusCVG <- coverage(reads[strand(reads)=="+",])
 	minusCVG <- coverage(reads[strand(reads)=="-",])
-
-	message("sense ... ", appendLF=FALSE)
-	if (sampling) {
-		sense <- samplingMetaGene(features=f, plusCVG=plusCVG, minusCVG=minusCVG, size=size, up=up, down=down,
-			nSampling=nSampling, samplingRatio=samplingRatio, ...)
+	
+	message("sense ... ", appendLF=FALSE) 
+	if (sampling) { 
+		sense <- samplingMetaGene(features=f, plusCVG=plusCVG, minusCVG=minusCVG, size=size, up=up, down=down, 
+				nSampling=nSampling, samplingRatio=samplingRatio, ...) 
 	} else {
 		sense <- metaGene(features=f, plusCVG=plusCVG, minusCVG=minusCVG, size=size, up=up, down=down, ...)
 	}
@@ -149,7 +149,7 @@ runMetaGene <- function(features, reads, anchorType="TSS", size=100L, normCounts
 	message("antisense ... ", appendLF=FALSE)
 	if (sampling) {
 		antisense <- samplingMetaGene(features=fRev, plusCVG=plusCVG, minusCVG=minusCVG, size=size, up=up, down=down,
-			nSampling=nSampling, samplingRatio=samplingRatio, ...)
+				nSampling=nSampling, samplingRatio=samplingRatio, ...)
 	} else {
 		antisense <- metaGene(features=fRev, plusCVG=plusCVG, minusCVG=minusCVG, size=size, up=up, down=down, ...)
 	}

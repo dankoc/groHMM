@@ -30,18 +30,18 @@
 
 
 \section{Introduction}
-\underline{G}lobal Nuclear \underline{R}un \underline{O}n and Sequencing (GRO-Seq) was 
+\underline{G}lobal Nuclear \underline{R}un \underline{O}n and Sequencing (GRO-seq) was 
 developed for comprehensively map transcriptional activity in cells \citep{Core2008,Hah2011}.  
 GRO-seq, which provides a genome wide `map' of the position and orientation of all
-transcriptionally active RNA plolymerases, has become increasingly widely used 
-in recent years becuase it has numerous advantageous compared to alternative methods of 
+transcriptionally active RNA polymerases, has become increasingly widely used 
+in recent years because it has numerous advantages compared to alternative methods of 
 transcriptome profiling, such as expression microarrays and RNA-seq.  
 Among these, GRO-seq provides information on instanteneous transactional responses 
 because it detects primary transcription, as opposed to mature, processed mRNA. 
 In addition, because it is independent of RNA polyadenylation, processing, and stability, 
 GRO-seq provides extensive information on the non-coding transcriptome, 
 including primary miRNAs, lincRNAs, enhancer RNAs, and potentially additional, yet 
-undiscovered classes of transcription occurring in cells \citep{Hah2011}.  
+undiscovered classes of transcription occurring in cells \citep{Hah2011,Hah2013,Luo2014}.  
 Thus, GRO-seq data provides a complete and instantaneous picture of transcription, 
 and has extensive applications in deciphering the mechanisms of transcriptional regulation.
 
@@ -56,17 +56,17 @@ We also use HMMs to identify the leading edge of Pol II at genes activated by a
 stimulus in GRO-seq time course data.  This approach allows the genome-wide 
 interrogation of transcription rates in cells \citep{Danko2013}.
 
-In addtion to these advanced features, \Rpackage{groHMM} provides basic functionality such as 
-counting raw reads, generating wiggle files for visualization, and creating metagene (averaging)
-plots.  \Rpackage{groHMM} takes over all aspects of analysis after reads have been aligned 
+In addition to these advanced features, \Rpackage{groHMM} provides wrapper functions for 
+counting raw reads \citep{PagesGRanges}, generating wiggle files for visualization \citep{Michael2009},
+and creating metagene (averaging) plots.  \Rpackage{groHMM} takes over all aspects of analysis after reads have been aligned 
 to a reference genome with short-read alignment tools.  Although \Rpackage{groHMM} is tailored 
-towards GRO-Seq data, the same functions and analytical methodologies can, in principal, 
+towards GRO-seq data, the same functions and analytical methodologies can, in principal, 
 be applied to a wide variety of other short read data sets since the package includes 
 a number of easily usable and extensible functions for general short read data analysis.  
 This guide focuses on the most common application of the package.
 
 \section{Preparation}
-The \Rpackage{groHMM} package is available in the Bioconductor \citep{Gentleman2004} and can be downloaded as follows:
+The \Rpackage{groHMM} package is available in the Bioconductor and can be downloaded as follows:
 <<install groHMM, eval=FALSE>>=
 source("http://bioconductor.org/biocLite.R")
 biocLite("groHMM")
@@ -79,10 +79,11 @@ this tutorial.
 biocLite("GenomicFeatures")
 biocLite("org.Hs.eg.db")
 biocLite("edgeR")
+biocLite("TxDb.Hsapiens.UCSC.hg19.knownGene")
 @
 
 \section{\Rpackage{groHMM} Workflow}
-\subsection{Read GRO-Seq Data Files}
+\subsection{Read GRO-seq Data Files}
 In this tutorial we will use example data from Hah et al. [2011] (GEO
 accession GSE27463).   This experiment was designed to assess transcriptional
 changes following treatment of MCF-7 cells with 17$\beta$ estradiol (E2).  The data
@@ -90,7 +91,8 @@ include a time ccurse of GRO-seq data following treatment with E2 (\emph{i.e.}, 
 and 160 min.).  Two biological replicates are available for each time point.
 Bed files were obtained from GEO and lifted over to hg19 using the UCSC
 \Rpackage{liftOver} tool.  In order to make the package size more manageable, we have included
-data from chromosome 7 only.
+data from chromosome 7 only.  \Rpackage{groHMM} supports parallel processing and the number of
+cores to use can be set using \Rcode{mc.cores} option.
 
 <<use groHMM, eval=TRUE>>=
 library(groHMM)
@@ -108,25 +110,32 @@ The example data included in this package can be loaded into \software{R} using 
 following commands.
 
 <<load data, eval=TRUE>>=
-S0mR1 <- as(readGAlignments(system.file("extdata", "S0mR1.bam", package="groHMM")), "GRanges")
-S0mR2 <- as(readGAlignments(system.file("extdata", "S0mR2.bam", package="groHMM")), "GRanges")
-
-S10mR1 <- as(readGAlignments(system.file("extdata", "S10mR1.bam", package="groHMM")), "GRanges")
-S10mR2 <- as(readGAlignments(system.file("extdata", "S10mR2.bam", package="groHMM")), "GRanges")
-
-S40mR1 <- as(readGAlignments(system.file("extdata", "S40mR1.bam", package="groHMM")), "GRanges")
-S40mR2 <- as(readGAlignments(system.file("extdata", "S40mR2.bam", package="groHMM")), "GRanges")
-
-S160mR1 <- as(readGAlignments(system.file("extdata", "S160mR1.bam", package="groHMM")), "GRanges")
-S160mR2 <- as(readGAlignments(system.file("extdata", "S160mR2.bam", package="groHMM")), "GRanges")
+S0mR1 <- as(readGAlignments(system.file("extdata", "S0mR1.bam", 
+		package="groHMM")), "GRanges")
+S0mR2 <- as(readGAlignments(system.file("extdata", "S0mR2.bam", 
+		package="groHMM")), "GRanges")
+S10mR1 <- as(readGAlignments(system.file("extdata", "S10mR1.bam", 
+		package="groHMM")), "GRanges")
+S10mR2 <- as(readGAlignments(system.file("extdata", "S10mR2.bam", 
+		package="groHMM")), "GRanges")
+S40mR1 <- as(readGAlignments(system.file("extdata", "S40mR1.bam", 
+		package="groHMM")), "GRanges")
+S40mR2 <- as(readGAlignments(system.file("extdata", "S40mR2.bam", 
+		package="groHMM")), "GRanges")
+S160mR1 <- as(readGAlignments(system.file("extdata", "S160mR1.bam", 
+		package="groHMM")), "GRanges")
+S160mR2 <- as(readGAlignments(system.file("extdata", "S160mR2.bam", 
+		package="groHMM")), "GRanges")
 @
 
 \subsection{Create a Wiggle File}
 Wiggle files are created for each strand after replicates are combined in order to visualize GRO-seq data
-in the UCSC genome browser.    Wiggle files can also be normalized by the sequencing death, \emph{i.e.},
-average number of reads in the dataset.
+in the UCSC genome browser.    Wiggle files can be also normalized by the sequencing depth, \emph{i.e.},
+average number of reads in the dataset. \Rcode{writeWiggle} function is a wrapper of \Rcode{export} 
+in \Rpackage{rtracklayer} for generation of wiggle/bigWig type of files.
 
 <<combine replicates, eval=TRUE>>=
+# Combine replicates
 S0m <- sort(c(S0mR1, S0mR2))
 S10m <- sort(c(S10mR1, S10mR2))
 S40m <- sort(c(S40mR1, S40mR2))
@@ -134,9 +143,12 @@ S160m <- sort(c(S160mR1, S160mR2))
 @
 
 <<write wiggle files, eval=FALSE>>=
-writeWiggle(reads=S0m, file="S0m_Plus.wig", fileType="wig", strand="+",  reverse=FALSE)
-writeWiggle(reads=S0m, file="S0m_Minus.wig", fileType="wig", strand="-",  reverse=TRUE)
-writeWiggle(reads=S0m, file="S0m_Plus.bw", fileType="BigWig", strand="+", ,reverse=FALSE)
+writeWiggle(reads=S0m, file="S0m_Plus.wig", fileType="wig", strand="+",  
+		reverse=FALSE)
+writeWiggle(reads=S0m, file="S0m_Minus.wig", fileType="wig", strand="-",  
+		reverse=TRUE)
+writeWiggle(reads=S0m, file="S0m_Plus.bw", fileType="BigWig", strand="+", 
+		reverse=FALSE)
 
 # Normalized wiggle files
 expCounts <- mean(c(NROW(S0m), NROW(S10m), NROW(S40m), NROW(S160m)))
@@ -174,6 +186,8 @@ Sall <- sort(c(S0m, S10m, S40m, S160m))
 hmmResult <- detectTranscripts(Sall, LtProbB=-200, UTS=5, 
 			       threshold=1)
 txHMM <- hmmResult$transcripts
+@
+<<called transcripts, eval=TRUE, keep.source=TRUE>>=
 head(txHMM)
 @
 
@@ -190,19 +204,19 @@ the assumption that GRO-seq transcripts should largely be in agreement with
 available annotations.  Two types of error may occur, as described
 below.  The HMM parameters are evaluated by the sum of the error rates.
 The procedure involves collecting a set of high-confidence reference
-transcripts.  An annotation dataset can be constructed by downloading RefSeq genes
-from the UCSC database.    The user is not expected to execute this every
-time; instead, we suggest that you save annotations once and read them whenever
-needed.
+transcripts.  An annotation dataset can be constructed by downloading
+from the UCSC database or alteratively, pre-made TranscriptDb objects can be used if 
+they are available in the Bioconductor.  We will use the UCSC knownGene track and
+retrieve transcript annotations with \Rpackage{GenomicFeatures} \citep{CarsonGFeatures} 
+package.
 
 <<use ucsc genes, eval=TRUE>>=
 library(TxDb.Hsapiens.UCSC.hg19.knownGene)
 kgdb <- TxDb.Hsapiens.UCSC.hg19.knownGene
 
 library(GenomicFeatures)
-# For refseq annotation:
+# For refseq annotations:
 # rgdb <- makeTranscriptDbFromUCSC(genome="hg19", tablename="refGene")
-# Save it for furture use
 # saveDb(hg19RGdb, file="hg19RefGene.sqlite")
 # rgdb <- loadDb("hg19RefGene.sqlite")
 kgChr7 <- transcripts(kgdb, vals=list(tx_chrom = "chr7"), 
@@ -217,13 +231,13 @@ Different isoforms of each gene are collpsed into one using the ENTREZID.  These
 consensus annotations are used for the evaluation of HMM calling.
 
 <<make consensus annotations, eval=TRUE, keep.source=TRUE, results=hide>>=
-# merge overlapping annotations
+# Collapse overlapping annotations
 kgConsensus <- makeConsensusAnnotations(kgChr7, keytype="gene_id", 
 		mc.cores=getOption("mc.cores"))
 library(org.Hs.eg.db)
 map <- select(org.Hs.eg.db, 
 	keys=unlist(mcols(kgConsensus)$gene_id),
-        cols=c("SYMBOL"), keytype=c("ENTREZID"))
+        columns=c("SYMBOL"), keytype=c("ENTREZID"))
 mcols(kgConsensus)$symbol <- map$SYMBOL
 mcols(kgConsensus)$type <- "gene"
 @
@@ -251,7 +265,7 @@ rate per called transcript.  The variation of errors should be greater if whole 
 are used.  Also, a larger set of the parameters might be used in practice.  This tunning step
 takes long time, so you may skip it for quick review of the package. 
 
-<<tuning HMM, eval=TRUE, keep.source=TRUE, results=hide>>=
+<<tuning HMM, eval=TRUE, results=hide>>=
 tune <- data.frame(LtProbB=c(rep(-100,3), rep(-200,3), rep(-300,3)),
            UTS=rep(c(5,10,15), 3))
 
@@ -259,19 +273,22 @@ Fp <- windowAnalysis(Sall, strand="+", windowSize=50)
 Fm <- windowAnalysis(Sall, strand="-", windowSize=50)
 
 evals <- mclapply(seq_len(9), function(x) {
-        hmm <- detectTranscripts(Fp=Fp, Fm=Fm, LtProbB=tune$LtProbB[x], UTS=tune$UTS[x])
+        hmm <- detectTranscripts(Fp=Fp, Fm=Fm, LtProbB=tune$LtProbB[x], 
+				  UTS=tune$UTS[x])
         e <- evaluateHMMInAnnotations(hmm$transcripts, kgConsensus)
         e$eval
         }, mc.cores=getOption("mc.cores"),  mc.silent=TRUE)
 tune <- cbind(tune, do.call(rbind, evals))
+@
 
+<<check tuning, eval=TRUE>>=
 tune
-which.min(tune$totalError)
+which.min(tune$total)
 which.min(tune$errorRate)
 @
 
 To robustly compare transcripts with known genes, densities representing the frequency 
-of transcripts are stacked together relative to mapped gene annotations.  
+of transcripts can be calculated relative to their mapped gene annotations.  
 Conceptually, the plot is divided into three distinct regions as shown in Figure 2, 
 including upstream of known gene annotations, inside genes, 
 and downstream of the annotated polyadenylation site.  
@@ -294,11 +311,11 @@ step function (\emph{i.e.}, red line in the plot).  Our quality metrics represen
 \end{enumerate}
 
 Note that these quality metrics are conceptually very similar to true positive, true negative, false positive
-and false negative, respectively.  During the comparison, annotations which have expression are used
-but genes either tool small or too large in size are excluded.  And also size of transcripts and annotations are
-scaled to median size of genes, \emph{i.e.}, 30K.  Here best overlapped annotations where a transcript
-`run genes together' are used and also best overlapped transcripts among transcripts which broke a single
-annotation are used.  Final quality metrics are represented as an AUC number.
+and false negative, respectively.  During the comparison, only expressed annotations are used
+and genes either tool small or too large in size are excluded.  And also size of transcripts and annotations are
+scaled to a smaller unit, \emph{i.e.}, 1K for a visual representation.  Here best overlapped annotations or transcripts 
+are used for either `run genes together' or  `break up a single annotation' type of error. 
+Final quality metrics are represented as an AUC number.
 
 <<expressed genes, eval=TRUE>>=
 getExpressedAnnotations <- function(features, reads) {
@@ -310,19 +327,21 @@ getExpressedAnnotations <- function(features, reads) {
 conExpressed <- getExpressedAnnotations(features=kgConsensus,reads=Sall)
 @
 
-<<fig2plot, eval=TRUE, keep.source=TRUE>>=
-density <- getTxDensity(txHMM, conExpressed, mc.cores=getOption("mc.cores"))
-density
+
+<<fig2plot, eval=TRUE>>=
+td <- getTxDensity(txHMM, conExpressed, mc.cores=getOption("mc.cores"))
 u <- par("usr")
 lines(c(u[1], 0, 0, 1000, 1000, u[2]), c(0,0,u[4]-.04,u[4]-.04,0,0),
       col="red")
-legend("topright",lty=c(1,1), col=c(2,1), c("ideal", "groHMM"))
+legend("topright", lty=c(1,1), col=c(2,1), c("ideal", "groHMM"))
 text(c(-500,500), c(.05,.5), c("FTD", "TTD"))
+td
 @
+
 
 \begin{figure}
 \begin{center}
-<<label=fig2,fig=TRUE,echo=FALSE>>=
+<<label=fig2,fig=TRUE,echo=FALSE, results=hide>>=
 <<fig2plot>>
 @
 \end{center}
@@ -345,8 +364,8 @@ txBroken <- c(bPlus, bMinus)
 txFinal <- combineTranscripts(txBroken, kgConsensus)
 @
 
-<<plotTxDensity_final, eval=TRUE, keep.source=TRUE>>=
-densityFinal <- getTxDensity(txFinal, conExpressed, mc.cores=getOption("mc.cores"))
+<<plotTxDensity_final, eval=FALSE, keep.source=TRUE, results=hide>>=
+tdFinal <- getTxDensity(txFinal, conExpressed, mc.cores=getOption("mc.cores"))
 @
 
 \subsection{Differential Analysis with \Rpackage{edgeR}}
@@ -365,7 +384,7 @@ can be used, including the entire length of the called or annotated transcripts.
 
 
 <<DE for trascripts, eval=TRUE, echo=TRUE>>=
-# for transcripts
+# For called transcripts
 library(edgeR)
 txLimit <- limitToXkb(txFinal)
 ctS0mR1 <- countOverlaps(txLimit, S0mR1)
@@ -381,9 +400,8 @@ d <- estimateCommonDisp(d)
 et <- exactTest(d)
 de <- decideTestsDGE(et, p=0.001, adjust="fdr")
 detags <- seq_len(NROW(d))[as.logical(de)]
-# Number of Transcripts regulated at 40m
-print(paste("up:",sum(de==1)))
-print(paste("down:",sum(de==-1)))
+# Number of transcripts regulated at 40m
+cat("up: ",sum(de==1), " down: ", sum(de==-1), "\n")
 @
 
 <<fig3plot, eval=TRUE, echo=TRUE, include=FALSE>>=
@@ -404,12 +422,12 @@ abline(h = c(-1,1), col="blue")
 
 
 <<DE for annotated genes, eval=TRUE, echo=TRUE, include=FALSE>>=
-# for ucsc genes
+# For ucsc knownGenes
 kgChr7 <- transcripts(kgdb, vals <- list(tx_chrom = "chr7"), 
                       columns=c("gene_id", "tx_id", "tx_name"))
 map <- select(org.Hs.eg.db,
         keys=unique(unlist(mcols(kgChr7)$gene_id)), 
-        cols=c("SYMBOL"), keytype=c("ENTREZID")) 
+        columns=c("SYMBOL"), keytype=c("ENTREZID")) 
 missing <- elementLengths(mcols(kgChr7)[,"gene_id"]) == 0
 kgChr7 <- kgChr7[!missing,]
 
@@ -432,9 +450,9 @@ et <- exactTest(d)
 de <- decideTestsDGE(et, p=0.001, adjust="fdr")
 detags <- seq_len(NROW(d))[as.logical(de)]
 symbols <- mcols(kgChr7)$symbol
-# Number of Unique Genes at 40m
-print(paste("up:", NROW(unique(symbols[de==1]))))
-print(paste("down:", NROW(unique(symbols[de==-1]))))
+# Number of unique genes regulated at 40m
+cat("up: ", NROW(unique(symbols[de==1])), "\n")
+cat("down: ", NROW(unique(symbols[de==-1])), "\n")
 plotSmear(et, de.tags=detags)
 abline(h = c(-1,1), col="blue")
 @
@@ -446,28 +464,19 @@ average of read density weighted by expression over the set of TSS.
 The \Rfunction{runMetaGene} function has option for sampling.  If \Rcode{TRUE}, 10\% of the
 transcription units are sampled with replacement 1,000 times and median value
 at each position in the transcription unit over the samples is used for final
-metagene result.  Using subsampling results in an image that is more robust to
+metagene result.  Using subsampling results in an image is more robust to
 outliers, especially when the size of sample is relatively small.
 
 <<metagene analysis, eval=TRUE, keep.source=TRUE, results=hide>>=
 upGenes <- kgChr7[de==1,]
 expReads <- mean(c(NROW(S0m), NROW(S10m), NROW(S40m), NROW(S160m)))
+# Metagene around TSS
 mg0m <- runMetaGene(features=upGenes, reads=S0m, size=100, 
                        normCounts=expReads/NROW(S0m), sampling=TRUE,
 		       mc.cores=getOption("mc.cores"))
 mg40m <- runMetaGene(features=upGenes, reads=S40m, size=100, 
                         normCounts=expReads/NROW(S40m), sampling=TRUE,
 		       	mc.cores=getOption("mc.cores"))
-
-mg0m <- runMetaGene(features=upGenes, reads=S0m, size=100, 
-                       normCounts=expReads/NROW(S0m), sampling=FALSE,
-		       mc.cores=getOption("mc.cores"))
-mg40m <- runMetaGene(features=upGenes, reads=S40m, size=100, 
-                        normCounts=expReads/NROW(S40m), sampling=FALSE,
-		       	mc.cores=getOption("mc.cores"))
-@
-
-
 @
 
 <<plot metagene, eval=TRUE, keep.source=TRUE, results=hide>>=
@@ -486,10 +495,10 @@ plotMetaGene(mg=mg40m, MIN=MIN, MAX=MAX)
 @
 
 <<metagene figures, eval=TRUE, echo=FALSE, results=hide>>=
-png(filename="metagen0m.png")
+png(filename="metagene0m.png")
 plotMetaGene(mg=mg0m, MIN=MIN, MAX=MAX)
 dev.off()
-png(filename="metagen40m.png", width=480, height=480)
+png(filename="metagene40m.png", width=480, height=480)
 plotMetaGene(mg=mg40m, MIN=MIN, MAX=MAX)
 dev.off()
 @
