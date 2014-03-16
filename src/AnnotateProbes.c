@@ -73,9 +73,9 @@ SEXP CountReadsInFeatures(SEXP Feature_Start, SEXP Feature_End, SEXP Feature_Chr
 
 	// Get the dimensions.
 	SEXP DIM1, DIM2;
-	PROTECT(DIM1 = getAttrib(Feature_Start,R_DimSymbol));
+	DIM1 = getAttrib(Feature_Start,R_DimSymbol);
 	int NFEATURES = INTEGER(DIM1)[0];
-	PROTECT(DIM2 = getAttrib(ProbeStart, R_DimSymbol));
+	DIM2 = getAttrib(ProbeStart, R_DimSymbol);
 	int NPROBES = INTEGER(DIM2)[0];
 
 	// Construct return values.
@@ -121,7 +121,7 @@ SEXP CountReadsInFeatures(SEXP Feature_Start, SEXP Feature_End, SEXP Feature_Chr
 	}
 
 
-	UNPROTECT(3);
+	UNPROTECT(1);
 	return(fID);
 }
 
@@ -154,9 +154,9 @@ SEXP AssociateRegionWithFeatures(SEXP Feature_Start, SEXP Feature_End, SEXP Prob
 
 	// Get the dimensions.
 	SEXP DIM1, DIM2;
-	PROTECT(DIM1 = getAttrib(Feature_Start,R_DimSymbol));
+	DIM1 = getAttrib(Feature_Start,R_DimSymbol);
 	int NCPG = INTEGER(DIM1)[0];
-	PROTECT(DIM2 = getAttrib(ProbeStart, R_DimSymbol));
+	DIM2 = getAttrib(ProbeStart, R_DimSymbol);
 	int NPROBES = INTEGER(DIM2)[0];
 
 	// Construct return values.
@@ -175,7 +175,7 @@ SEXP AssociateRegionWithFeatures(SEXP Feature_Start, SEXP Feature_End, SEXP Prob
 		}
 	}
 
-	UNPROTECT(3);
+	UNPROTECT(1);
 	return(fID);
 }
 

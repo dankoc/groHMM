@@ -56,7 +56,7 @@ SEXP DecayAlgorithm(SEXP COUNTS, SEXP DECAY) {
 
 	// Get the dimensions.
 	SEXP DIM1;
-	PROTECT(DIM1 = getAttrib(COUNTS,R_DimSymbol));
+	DIM1 = getAttrib(COUNTS,R_DimSymbol);
 	int size = INTEGER(DIM1)[0];
 
 	// Construct return values.
@@ -74,7 +74,7 @@ SEXP DecayAlgorithm(SEXP COUNTS, SEXP DECAY) {
 						}*/
 	}
 
-	UNPROTECT(2);
+	UNPROTECT(1);
 	return(ModCounts);
 }
 
