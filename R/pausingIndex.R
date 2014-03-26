@@ -84,7 +84,7 @@ approx.ratios.CI <- function(num.counts, denom.counts, alpha=0.05) {
 ########################################################################
 pausingIndex_foreachChrom <- function(i, C, f, p, gLEFT, gRIGHT, c_tss, size, up, down, UnMAQ, debug) {
 		if(debug) {
-			print(C[i])
+			message(C[i])
 		}
 
 		# Which KG?  prb?
@@ -118,7 +118,7 @@ pausingIndex_foreachChrom <- function(i, C, f, p, gLEFT, gRIGHT, c_tss, size, up
 		## Run the calculations on the gene.
 			## Calculate the maximal 50 bp window.
 			if(debug) {
-				print(paste(C[i],": Counting reads in pause peak.",sep=""))
+				message(C[i],": Counting reads in pause peak.")
 			}
 			HPause <- .Call("NumberOfReadsInMaximalSlidingWindow", FeatureTSS, FeatureStr, 
 							PROBEStart, PROBEEnd, PROBEStr, 
@@ -126,7 +126,7 @@ pausingIndex_foreachChrom <- function(i, C, f, p, gLEFT, gRIGHT, c_tss, size, up
 
 			## Run the calculate on the gene body...
 			if(debug) {
-				print(paste(C[i],": Counting reads in gene.",sep=""))
+				message(C[i],": Counting reads in gene.")
 			}
 			HGeneBody <- .Call("CountReadsInFeatures", FeatureStart, FeatureEnd, FeatureStr,
 							PROBEStart, PROBEEnd, PROBEStr, PACKAGE = "groHMM")
@@ -150,8 +150,8 @@ pausingIndex_foreachChrom <- function(i, C, f, p, gLEFT, gRIGHT, c_tss, size, up
 				}
 
 				if(debug) {
-					print(paste(C[i],": Counting unMAQable regions.",sep=""))
-					print(paste("CHRSIZE:", CHRSIZE, "CHRSTART:", CHRSTART))
+					message(C[i],": Counting unMAQable regions.")
+					message("CHRSIZE:", CHRSIZE, "CHRSTART:", CHRSTART)
 				}
 
 				## Count unMAQable regions, and size of everything ... 
@@ -169,7 +169,7 @@ pausingIndex_foreachChrom <- function(i, C, f, p, gLEFT, gRIGHT, c_tss, size, up
 
 		## Now use Fisher's Exact.
 			if(debug) {
-				print(paste(C[i],": Using Fisher's exact.",sep=""))
+				message(C[i],": Using Fisher's exact.")
 			}
 			# Make uniform reads.
 			Up <- round(HPause + HGeneBody)*(size)/(size+Difference) ## Expted in pause == ((total reads)/ (total size) [reads/ base]) * size [reads/ pause window]
@@ -250,7 +250,7 @@ pausingIndex <- function(features, reads, size=50, up=1000, down=1000, UnMAQ=NUL
 
 	###### Identify TSS -- Start for '+' strand, End for '-' strand.
 	if(debug) {
-		print("Calculating TSS and gene ends for each gene based on strand information.")
+		message("Calculating TSS and gene ends for each gene based on strand information.")
 	}
 	c_tss_indx <- rep(0,NROW(f))
 	c_tss_indx[PLUS_INDX] <- 2

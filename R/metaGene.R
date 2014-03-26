@@ -231,7 +231,7 @@ metaGeneMatrix_foreachChrom <- function(i, C, features, reads, size, up, down, d
 			dim(PROBEStr)		<- c(NROW(PROBEStr), 	 NCOL(PROBEStr))
 
 			if(debug) {
-				print(paste(C[i],": Counting reads in specified region.",sep=""))
+				message(C[i],": Counting reads in specified region.")
 			}
 			Hprime <- .Call("MatrixOfReadsByFeature", FeatureStart, FeatureStr, 
 							PROBEStart, PROBEEnd, PROBEStr, 
@@ -321,7 +321,7 @@ metaGene_nL <- function(features, reads, n_windows=1000, debug=FALSE, ...) {
 	H <- rep(0,n_windows)
 	for(i in 1:NROW(C)) {
 		if(debug) {
-			print(C[i])
+			message(C[i])
 		}
 
 		# Which KG?  prb?
@@ -351,12 +351,12 @@ metaGene_nL <- function(features, reads, n_windows=1000, debug=FALSE, ...) {
 			mcpg <- mclapply(c(1:NROW(FeatureStart)), function(iFeatures) {
 				ws <- (FeatureEnd[iFeatures]-FeatureStart[iFeatures])/n_windows ## This WILL be an interger.
 				if(debug) {
-					print(paste(C[i],": Counting reads in specified region:",
-							FeatureStart[iFeatures],"-",FeatureEnd[iFeatures],sep=""))
-					print(paste(C[i],": Window size:",
-							FeatureStart[iFeatures],"-",FeatureEnd[iFeatures],sep=""))
-					print(paste(C[i],": End-Start:",
-							FeatureEnd[iFeatures]-FeatureStart[iFeatures],sep=""))
+					message(C[i],": Counting reads in specified region:",
+							FeatureStart[iFeatures],"-",FeatureEnd[iFeatures])
+					message(C[i],": Window size:",
+							FeatureStart[iFeatures],"-",FeatureEnd[iFeatures])
+					message(C[i],": End-Start:",
+							FeatureEnd[iFeatures]-FeatureStart[iFeatures])
 				}
 				DataByOne <- .Call("WindowAnalysis", PROBEStart, PROBEEnd, PROBEStr, FeatureStr[iFeatures],
 								as.integer(1), as.integer(1), 
@@ -364,7 +364,7 @@ metaGene_nL <- function(features, reads, n_windows=1000, debug=FALSE, ...) {
 								PACKAGE = "groHMM")
 
 				if(debug) {
-					print(paste("DataByOne size:",NROW(DataByOne)))
+					message("DataByOne size:",NROW(DataByOne))
 				}
 
 				## This seems almost immeidate on my pentium M machine.
@@ -387,7 +387,7 @@ metaGene_nL <- function(features, reads, n_windows=1000, debug=FALSE, ...) {
 			}
 		}
 		if(debug) {
-			print(paste(C[i],": Done!",sep=""))
+			message(C[i],": Done!")
 		}
 	}
 

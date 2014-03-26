@@ -112,8 +112,8 @@ countMappableReadsInInterval_foreachChrom <- function(i, C, features, UnMap) {
 		}
 
 		if(debug) {
-			print(paste(C[i],": Counting unMAQable regions.",sep=""))
-			print(paste("CHRSIZE:", CHRSIZE, "CHRSTART:", CHRSTART))
+			message(C[i],": Counting unMAQable regions.")
+			message("CHRSIZE:", CHRSIZE, "CHRSTART:", CHRSTART)
 		}
 
 		## Count unMAQable regions, and size of everything ... 

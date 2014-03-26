@@ -83,7 +83,7 @@
 polymeraseWave <- function(reads1, reads2, genes, approxDist, size=50, upstreamDist= 10000, TSmooth=NA, NonMap=NULL, 
 							prefix=NULL, emissionDistAssumption= "gamma", finterWindowSize=10000, limitPCRDups=FALSE, returnVal="simple", debug=TRUE) {
 	if(debug) {
-		print("Analyzing windows")
+		message("Analyzing windows")
 	}	
 
 	Fp1 <- windowAnalysis(reads=reads1, strand="+", step_size=size, limitPCRDups=limitPCRDups, debug=FALSE)
@@ -112,7 +112,7 @@ polymeraseWave <- function(reads1, reads2, genes, approxDist, size=50, upstreamD
 		geneData <- list()
 
 		if(debug) {
-			print(paste("Starting HMM", genes[i,5],sep=" "))
+			message("Starting HMM", genes[i,5],sep=" ")
 		}
 
 	###################################################################################
@@ -138,7 +138,7 @@ polymeraseWave <- function(reads1, reads2, genes, approxDist, size=50, upstreamD
 		}
 		
 		if(is.double(TSmooth)) { ## Interperts it as a fold over the inter quantile interval to filter.
-			print(paste("TSmooth is.integer:", TSmooth))
+			message("TSmooth is.integer:", TSmooth)
 			medGene <- median(gene)
 			iqrGene <- IQR(gene)
 		   gene[(medGene-gene)>(TSmooth*(iqrGene+1))] <- medGene-(TSmooth*(iqrGene+1))
@@ -155,7 +155,7 @@ polymeraseWave <- function(reads1, reads2, genes, approxDist, size=50, upstreamD
 		iTrans<- as.integer(ceiling((upstreamDist+approxDist)/size))
 
 		## Run Baum-Welch
-		if(debug) print(paste("initial guess:", uTrans, iTrans, NROW(gene)))
+		if(debug) message("initial guess:", uTrans, iTrans, NROW(gene))
 		counter <- 0
 
 	###################################################################################
@@ -226,7 +226,7 @@ polymeraseWave <- function(reads1, reads2, genes, approxDist, size=50, upstreamD
 			ePrVars <- data.frame(c(parInt$mean, sqrt(parInt$var), -1),	c(parPsi$shape, parPsi$scale, -1), c(parBas$shape, parBas$scale, -1))
 		}
 		else {
-		  print("emissionDistAssumption should be set to: 'norm', 'normExp', or 'gamma'.")
+		  message("emissionDistAssumption should be set to: 'norm', 'normExp', or 'gamma'.")
 		  stopifnot(FALSE) ## Stop here.
 		}
 

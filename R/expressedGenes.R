@@ -38,7 +38,7 @@
 
 expressedGenes_foreachChrom <- function(i, C, features, reads, Lambda, UnMap, debug) {
 		if(debug) {
-			print(paste("Doing chromosome", C[i]))
+			message("Doing chromosome ", C[i])
 		}
 	
 		# Which KG?  prb?
@@ -85,8 +85,8 @@ expressedGenes_foreachChrom <- function(i, C, features, reads, Lambda, UnMap, de
 				}
 
 				if(debug) {
-					print(paste(C[i],": Counting unMAQable regions.",sep=""))
-					print(paste("CHRSIZE:", CHRSIZE, "CHRSTART:", CHRSTART))
+					message(C[i],": Counting unMAQable regions.")
+					message("CHRSIZE:", CHRSIZE, "CHRSTART:", CHRSTART)
 				}
 
 				## Count unMAQable regions, and size of everything ... 
