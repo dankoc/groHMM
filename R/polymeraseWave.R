@@ -108,7 +108,7 @@ polymeraseWave <- function(reads1, reads2, genes, approxDist, size=50, upstreamD
 	dataList <- list()
 
 ## Run the model separately on each gene.
-	for(i in 1:NROW(genes)) {
+	for(i in seq_along(genes)) {
 		geneData <- list()
 
 		if(debug) {

@@ -151,12 +151,12 @@ countMappableReadsInInterval <- function(features, UnMap, debug=FALSE, ...) {
 	C <- sort(unique(as.character(seqnames(features))))
 	
 	## Run parallel version.
-	mcp <- mclapply(c(1:NROW(C)), countMappableReadsInInterval_foreachChrom, 
+	mcp <- mclapply(seq_along(C), countMappableReadsInInterval_foreachChrom, 
 					C=C, features=features, UnMap=UnMap, ...)
 
 	## Convert to a vector.
 	F <- rep(0,NROW(features))
-	for(i in 1:NROW(C)) {
+	for(i in seq_along(C)) {
 		indxF   <- which(as.character(seqnames(features)) == C[i])
 
 		if(NROW(indxF) >0) {

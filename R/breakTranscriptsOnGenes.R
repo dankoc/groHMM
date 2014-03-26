@@ -54,14 +54,14 @@ plot2Ranges <- function(tr, gr, main = "NA", col = "black", sep = 0.5, ...) {
 # Break an Interval by break points with minimum gap 
 #----------------------------------------------------------------------------------------------
 breakInterval <- function(gr, brPos, gap=5, strand="+") {
-	result <- rep(gr, NROW(brPos)+1)
+	result <- rep(gr, length(brPos)+1)
 	if (strand == "+") {
-		for(i in 1:NROW(brPos)) { 
+		for(i in seq_along(brPos)) { 
 		    end(result[i,]) <- brPos[i] - gap   
 		    start(result[i+1,]) <- brPos[i]
 		}
 	} else {
-		for(i in 1:NROW(brPos)) { 
+		for(i in seq_along(brPos)) { 
 		    end(result[i,]) <- brPos[i] 
 		    start(result[i+1,]) <- brPos[i] + gap
 		}
@@ -117,7 +117,7 @@ breakTranscriptsOnGenes <- function(tx, annox, strand="+", geneSize=5000, thresh
 
 	bT <- NULL
 
-	for (i in 1:NROW(ol.tab)) {
+	for (i in seq_along(ol.tab)) {
 		txNo <- as.integer(names(ol.tab[i]))
 		aNo <- ol.df$gene[(ol.tabCS[i]-ol.tab[i]+1):ol.tabCS[i]]
 
@@ -195,7 +195,7 @@ combineTranscripts <- function(tx, annox, geneSize=1000, threshold=0.8, plot=FAL
 	    type = Rle(rep("tx", N)))
 	seqlevels(cT) <- seqlevels(tx)
 
-	for (i in 1:NROW(uniqGene)) {
+	for (i in seq_along(uniqGene)) {
 		block <- ol.df[uniqGene[i]==ol.df$gene,]
 		strand(cT[i,]) <- strand(tx[block[1,"trans"],])
 		seqnames(cT[i,]) <- seqnames(tx[block[1,"trans"],])
@@ -215,7 +215,7 @@ combineTranscripts <- function(tx, annox, geneSize=1000, threshold=0.8, plot=FAL
 	mcols(cT)$ID <- paste(seqnames(cT), "_", start(cT), strand(cT), sep="")
 	mcols(cT)$status <- "combined"
 
-	okTrans <- setdiff(1:NROW(tx), ol.df$trans)
+	okTrans <- setdiff(seq_along(tx), ol.df$trans)
 	all <- c(tx[okTrans,], cT)
 	return(all[order(as.character(seqnames(all)), start(all)),])
 }

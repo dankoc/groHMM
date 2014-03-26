@@ -261,12 +261,12 @@ metaGeneMatrix <- function(features, reads, size= 50, up=1000, down=up, debug=FA
 	C <- sort(unique(as.character(seqnames(features))))
 
 	## Run parallel version.
-	mcp <- mclapply(c(1:NROW(C)), metaGeneMatrix_foreachChrom, C=C, features=features, reads=reads, 
+	mcp <- mclapply(seq_along(C)), metaGeneMatrix_foreachChrom, C=C, features=features, reads=reads, 
 					size=size, up=up, down=down, debug=debug, ...)
 	
 	## Append data from all chromosomes.
 	H <- NULL
-	for(i in 1:NROW(C)) {
+	for(i in seq_along(C)) {
 		# Which KG?  prb?
 		indxF   <- which(as.character(seqnames(features)) == C[i])
 		indxPrb <- which(as.character(seqnames(reads)) == C[i])

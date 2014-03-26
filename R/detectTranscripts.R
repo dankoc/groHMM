@@ -111,7 +111,7 @@ detectTranscripts <- function(reads=NULL, Fp=NULL, Fm=NULL, LtProbA=-5, LtProbB=
 						# Update Transitions, Emissions.
 
 	## Translate these into transcript positions.
-	for(i in 1:NROW(CHRp)) {
+	for(i in seq_along(CHRp)) {
 		ans <- .Call("getTranscriptPositions", as.double(BWem[[3]][[i]]), as.double(0.5), size, PACKAGE="groHMM")
 		Nrep <- NROW(ans$Start)
 		# ANS <- rbind(ANS, data.frame(chrom =rep(CHRp[i], Nrep), chromStart =ans$Start, chromEnd =ans$End, 
@@ -119,7 +119,7 @@ detectTranscripts <- function(reads=NULL, Fp=NULL, Fm=NULL, LtProbA=-5, LtProbB=
         	ANS <- rbind(ANS, data.frame(chrom =rep(CHRp[i], Nrep), start=ans$Start, end =ans$End, strand =rep("+", Nrep)))
 	}
 
-	for(i in 1:NROW(CHRm)) {
+	for(i in seq_along(CHRm)) {
 		ans <- .Call("getTranscriptPositions", as.double(BWem[[3]][[i+nFp]]), as.double(0.5), size, PACKAGE="groHMM")
 		Nrep <- NROW(ans$Start)
 		# ANS <- rbind(ANS, data.frame(chrom =rep(CHRm[i], NROW(ans$Start)), chromStart =ans$Start, chromEnd =ans$End,

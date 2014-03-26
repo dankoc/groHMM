@@ -144,7 +144,7 @@ expressedGenes <- function(features, reads, Lambda= NULL, UnMap=NULL, debug=FALS
 	if(is.null(Lambda))	Lambda <- 0.04*NROW(reads)/10751533/1000 #NROW(reads)/genomeSize
 	
 	## Run parallel version.
-	mcp <- mclapply(c(1:NROW(C)), expressedGenes_foreachChrom, C=C, features=features, reads=reads,
+	mcp <- mclapply(seq_along(C), expressedGenes_foreachChrom, C=C, features=features, reads=reads,
 				Lambda=Lambda, UnMap=UnMap, debug=debug, ...)
 
 	## Unlist... 
@@ -153,7 +153,7 @@ expressedGenes <- function(features, reads, Lambda= NULL, UnMap=NULL, debug=FALS
 	ANScounts <- rep(0,NROW(features))
 	ANSunmapp <- rep(0,NROW(features))
 	ANSgsize  <- rep(0,NROW(features))
-	for(i in 1:NROW(C)) {
+	for(i in seq_along(C)) {
 		indxF   <- which(as.character(seqnames(features)) == C[i])
 		indxPrb   <- which(as.character(seqnames(reads)) == C[i])
 		if((NROW(indxF) >0) & (NROW(indxPrb) >0)) {
