@@ -19,18 +19,6 @@
 ##
 ##########################################################################
 
-########################################################################
-##
-##  limitToXkb
-##  Date: 2012-07-11
-##
-##  This function limits a genomic range to a samll region relative to the transcription site.
-##
-##
-##  TODO:
-##
-########################################################################
-
 #' limitToXkb truncates a set of genomic itnervals at a constant, maximum size.
 #'
 #' @param features A GRanges object representing a set of genomic coordinates.  The meta-plot will be centered on the start position.
@@ -38,6 +26,7 @@
 #' @param size Specifies the size of the window.
 #' @return Returns a new 'GRanges' object representing the size new size.
 #' @author Minho Chae and Charles G. Danko
+##  This function limits a genomic range to a samll region relative to the transcription site.
 limitToXkb <- function(features, offset=1000, size=13000) {
 	w <- width(features)
 
@@ -57,12 +46,17 @@ limitToXkb <- function(features, offset=1000, size=13000) {
 	return(features)
 }
 
-
-
-########################################################################
-##
-##	countMappableReadsInInterval
-##	Date: 2010-05-12
+#' countMappableReadsInInterval counts the number of mappable reads in a set of genomic features.
+#'
+#' Supports parallel processing using mclapply in the 'parallel' package.  To change the number of processors
+#' use the argument 'mc.cores'.
+#'
+#' @param features A GRanges object representing a set of genomic coordinates.  The meta-plot will be centered on the start position.
+#' @param UnMap List object representing the position of un-mappable reads.  Default: not used.
+#' @param debug If set to TRUE, provides additional print options. Default: FALSE
+#' @param ... Extra argument passed to mclapply
+#' @return Returns a vector of counts, each representing the number of reads inside each genomic interval.
+#' @author Charles G. Danko and Minho Chae
 ##
 ##	This function takes information from BED file to represent regions (as in CountReadsInInterval), and 
 ##	   a list structure representing unmappable positions.  Counts the number of mappable positions in 
@@ -75,12 +69,26 @@ limitToXkb <- function(features, offset=1000, size=13000) {
 ##	chromosome as PROBEStart!!!
 ##	(2) Take care: only returns probes on the same strand as the feature, f.
 ##	to return all probes, force all strands to be the same.
-##
-##	TODO: 
-##	(1) ...
-##	(2) ...
-##
-########################################################################
+countMappableReadsInInterval <- function(features, UnMap, debug=FALSE, ...) {
+
+	C <- sort(unique(as.character(seqnames(features))))
+	
+	## Run parallel version.
+	mcp <- mclapply(seq_along(C), countMappableReadsInInterval_foreachChrom, 
+					C=C, features=features, UnMap=UnMap, ...)
+
+	## Convert to a vector.
+	F <- rep(0,NROW(features))
+	for(i in seq_along(C)) {
+		indxF   <- which(as.character(seqnames(features)) == C[i])
+
+		if(NROW(indxF) >0) {
+			F[indxF][mcp[[i]][["ord"]]] <- as.integer(mcp[[i]][["Difference"]])
+		}
+	}
+
+	return(F)
+}
 
 
 countMappableReadsInInterval_foreachChrom <- function(i, C, features, UnMap) {
@@ -135,37 +143,7 @@ countMappableReadsInInterval_foreachChrom <- function(i, C, features, UnMap) {
 }
 
 
-#' countMappableReadsInInterval counts the number of mappable reads in a set of genomic features.
-#'
-#' Supports parallel processing using mclapply in the 'parallel' package.  To change the number of processors
-#' use the argument 'mc.cores'.
-#'
-#' @param features A GRanges object representing a set of genomic coordinates.  The meta-plot will be centered on the start position.
-#' @param UnMap List object representing the position of un-mappable reads.  Default: not used.
-#' @param debug If set to TRUE, provides additional print options. Default: FALSE
-#' @param ... Extra argument passed to mclapply
-#' @return Returns a vector of counts, each representing the number of reads inside each genomic interval.
-#' @author Charles G. Danko and Minho Chae
-countMappableReadsInInterval <- function(features, UnMap, debug=FALSE, ...) {
 
-	C <- sort(unique(as.character(seqnames(features))))
-	
-	## Run parallel version.
-	mcp <- mclapply(seq_along(C), countMappableReadsInInterval_foreachChrom, 
-					C=C, features=features, UnMap=UnMap, ...)
-
-	## Convert to a vector.
-	F <- rep(0,NROW(features))
-	for(i in seq_along(C)) {
-		indxF   <- which(as.character(seqnames(features)) == C[i])
-
-		if(NROW(indxF) >0) {
-			F[indxF][mcp[[i]][["ord"]]] <- as.integer(mcp[[i]][["Difference"]])
-		}
-	}
-
-	return(F)
-}
  
 #' readBed Returns a GenomicRanges object constrcuted from the specified bed file.
 #'
@@ -190,5 +168,5 @@ readBed <- function(file, ...) {
             strand = Rle(strand(df$strand))))
 }
 
-~
+
 

@@ -2,9 +2,9 @@
 \alias{runMetaGene}
 \title{Runs metagene analysis for sense and antisense direction.}
 \usage{
-runMetaGene(features, reads, anchorType = "TSS", size = 100L, up = 1000L,
-  down = NULL, sampling = FALSE, nSampling = 1000L, samplingRatio = 0.1,
-  ...)
+runMetaGene(features, reads, anchorType = "TSS", size = 100L,
+  normCounts = 1L, up = 10000L, down = NULL, sampling = FALSE,
+  nSampling = 1000L, samplingRatio = 0.1, ...)
 }
 \arguments{
   \item{features}{GRanges A GRanges object representing a

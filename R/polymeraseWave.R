@@ -1,20 +1,20 @@
 ###########################################################################
 ##
-##   Copyright 2009, 2010, 2011, 2012, 2013 Charles Danko.
+##   Copyright 2013, 2014 Charles Danko and Minho Chae.
 ##
-##   This program is part of the GRO-seq R package
+##   This program is part of the groHMM R package
 ##
-##   groHMM is free software: you can redistribute it and/or modify it 
-##   under the terms of the GNU General Public License as published by 
-##   the Free Software Foundation, either version 3 of the License, or  
+##   groHMM is free software: you can redistribute it and/or modify it
+##   under the terms of the GNU General Public License as published by
+##   the Free Software Foundation, either version 3 of the License, or
 ##   (at your option) any later version.
 ##
-##   This program is distributed in the hope that it will be useful, but 
-##   WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY 
+##   This program is distributed in the hope that it will be useful, but
+##   WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 ##   or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 ##   for more details.
 ##
-##   You should have received a copy of the GNU General Public License along 
+##   You should have received a copy of the GNU General Public License along
 ##   with this program.  If not, see <http://www.gnu.org/licenses/>.
 ##
 ##########################################################################
@@ -24,26 +24,6 @@
 ##
 ##
 ##
-
-########################################################################
-##
-##	polymeraseWave
-##	Date: 2009-09-16
-##
-##	Given GRO-seq data, identifies the location of the polymerase wave in up- or down-
-##	regulated genes.  This version is based on a full Baum-Welch EM implementation.
-##
-##	This is a three state HMM -- initial state representing the intergenic region 5' of a gene, 
-##	the second representing the initially upregulated region, and the third representing the 
-##	remaining sequence of a gene. 
-##
-##	We assume that upstream region is intergenic, and thus its emmission distriubtion is assumed  
-##	to be a constant, set based on a representative intergenic region.  This is accomidated in my
-##	[1,*) framework by keeping the vairence constant, and scaling the mean for each gene.
-##
-## Test with GREB1: 	chr2:11,591,693-11,700,363
-##			GREB1 <- data.frame(chr="chr2", start=11591693, end=11700363, str="+")
-########################################################################
 
 #'	Given GRO-seq data, identifies the location of the polymerase 'wave' in up- or down-
 #'	regulated genes.  
@@ -80,6 +60,19 @@
 #'	@param debug If TRUE, prints error messages.
 #'  @return Either a data.frame with Pol II wave end positions, or a List() structure with additional data, as specified by returnVal.
 #'  @author Charles G. Danko and Minho Chae.
+##	Given GRO-seq data, identifies the location of the polymerase wave in up- or down-
+##	regulated genes.  This version is based on a full Baum-Welch EM implementation.
+##
+##	This is a three state HMM -- initial state representing the intergenic region 5' of a gene, 
+##	the second representing the initially upregulated region, and the third representing the 
+##	remaining sequence of a gene. 
+##
+##	We assume that upstream region is intergenic, and thus its emmission distriubtion is assumed  
+##	to be a constant, set based on a representative intergenic region.  This is accomidated in my
+##	[1,*) framework by keeping the vairence constant, and scaling the mean for each gene.
+##
+## Test with GREB1: 	chr2:11,591,693-11,700,363
+##			GREB1 <- data.frame(chr="chr2", start=11591693, end=11700363, str="+")
 polymeraseWave <- function(reads1, reads2, genes, approxDist, size=50, upstreamDist= 10000, TSmooth=NA, NonMap=NULL, 
 							prefix=NULL, emissionDistAssumption= "gamma", finterWindowSize=10000, limitPCRDups=FALSE, returnVal="simple", debug=TRUE) {
 	if(debug) {
@@ -348,8 +341,4 @@ polymeraseWave <- function(reads1, reads2, genes, approxDist, size=50, upstreamD
 	 dataList[[NROW(genes)+1]] <- returnDF
 	 return(dataList)
 	}
-}
-
-
-
-
+} 

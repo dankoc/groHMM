@@ -3,7 +3,7 @@
 \title{Returns a histogram of the number of reads in each section of a moving window centered on a certain feature.}
 \usage{
 metaGene(features, reads = NULL, plusCVG = NULL, minusCVG = NULL,
-  size = 100L, up = 1000L, down = NULL, ...)
+  size = 100L, up = 10000L, down = NULL, ...)
 }
 \arguments{
   \item{features}{A GRanges object representing a set of
@@ -23,7 +23,7 @@ metaGene(features, reads = NULL, plusCVG = NULL, minusCVG = NULL,
   \item{size}{The size of the moving window.}
 
   \item{up}{Distance upstream of each features to align and
-  histogram. Default: 1 kb.}
+  histogram. Default: 10 kb.}
 
   \item{down}{Distance downstream of each features to align
   and histogram. If NULL, same as up. Default: NULL.}

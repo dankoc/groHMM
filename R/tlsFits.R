@@ -35,14 +35,6 @@
 #####################################################
 
 
-########################################################### 
-## Transform and fit LOESS!
-## 
-## By transforming X and Y by 45 degrees, we can fit using LOESS and it's essentially "erros in variables" LOESS.
-##
-## Returns x and y values giving information on the fit...
-##
-
 #' A 'total least squares'-like hack for LOESS.  Works by rotating points 45 degrees, fitting LOESS, and rotating back.
 #'
 #' @param x X values.
@@ -51,6 +43,11 @@
 #' @param span The LOESS span parameter.  Default: 1
 #' @return List of input values and LOESS predictions.
 #' @author Charles G. Danko
+## Transform and fit LOESS!
+## 
+## By transforming X and Y by 45 degrees, we can fit using LOESS and it's essentially "erros in variables" LOESS.
+##
+## Returns x and y values giving information on the fit...
 tlsLoess <- function(x, y, theta= -pi/4, span= 1) {
  mx <- mean(x)
  my <- mean(y)
@@ -79,16 +76,18 @@ tlsLoess <- function(x, y, theta= -pi/4, span= 1) {
  return(retVar)
 }
 
- #####################################################################3
- ## linear total least squares by SVD.
-
 #' A 'total least squares' implementation using singular value demposition.
 #'
 #' @param x X values.
 #' @param y Y values.
 #' @return Parameters for the linear model Y~a*X+e.
 #' @author Charles G. Danko
- tlsSvd <- function(x,y) {
+## linear total least squares by SVD.
+## Test: 
+## A <- as.matrix(rbind(c(1,1,1), c(2,-1,2), c(-1,4,3), c(4,2,1), c(3,-3,4)))
+## b <- c(1,2,-1,4,8)
+## 
+tlsSvd <- function(x,y) {
  n <- NCOL(x)
  Cmat <- as.matrix(data.frame(x, y))
  s <- svd(Cmat)
@@ -98,13 +97,6 @@ tlsLoess <- function(x, y, theta= -pi/4, span= 1) {
  int <- mean(y) - X * mean(x)
  return(c(int,X))
 }
-## Test: 
-## A <- as.matrix(rbind(c(1,1,1), c(2,-1,2), c(-1,4,3), c(4,2,1), c(3,-3,4)))
-## b <- c(1,2,-1,4,8)
-## 
-
- #####################################################################3
- ## linear total least squares by Deming regression.
 
 #' A 'total least squares' implementation using demming regression.
 #'
@@ -113,6 +105,7 @@ tlsLoess <- function(x, y, theta= -pi/4, span= 1) {
 #' @param d Ratio of variences. Default: 1, for orthogonal regression.
 #' @return Parameters for the linear model.
 #' @author Charles G. Danko
+## linear total least squares by Deming regression.
 tlsDeming <- function(x,y,d=1) {
  sxx <- 1/(NROW(x)-1) * sum((x-mean(x))^2)
  sxy <- 1/(NROW(x)-1) * sum((x-mean(x))*(y-mean(y)))
@@ -121,6 +114,3 @@ tlsDeming <- function(x,y,d=1) {
  int <- mean(y) - X * mean(x)
  return(c(int,X))
 }
-
-
-

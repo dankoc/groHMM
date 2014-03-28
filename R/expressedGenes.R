@@ -1,6 +1,6 @@
 ###########################################################################
 ##
-##   Copyright 2009, 2010, 2011, 2012, 2013 Charles Danko and Minho Chae.
+##   Copyright 2013, 2014 Charles Danko and Minho Chae.
 ##
 ##   This program is part of the groHMM R package
 ##
@@ -21,21 +21,57 @@
 
 
 
-########################################################################
-##
-##	expressedGenes
-##	Date: 2010-02-23
-##
+#' Function identifies expressed features using the methods introduced in Core, Waterfall, Lis; Science, Dec. 2008.
+#'
+#' Supports parallel processing using mclapply in the 'parallel' package.  To change the number of processors
+#' use the argument 'mc.cores'.
+#'
+#' @param features A GRanges object representing a set of genomic coordinates.  The meta-plot will be centered on the start position.  There can be optional "ID" column for gene ids.
+#' @param reads A GRanges object representing a set of mapped reads.
+#' @param Lambda Measurement of assay noise.  Default: 0.04 reads/ kb in a library of 10,751,533 mapped reads. (background computed in Core, Waterfall, Lis. (2008) Science.).
+#' @param UnMap List object representing the position of un-mappable reads.  Default: not used.
+#' @param debug If set to true, returns the number of positions.  Default: FALSE.
+#' @param ... Extra argument passed to mclapply
+#' @return A data.frame representing the expression p.values for features of interest.
+#' @author Charles G. Danko and Minho Chae
 ##	This identifes genes that are expressed in a given cell, based on short read data.
 ##		f  == genes/annotations; columns represent: Chr, Start, End, Strand, ID.
 ##		p  == short reads; columns represent: Chr, Start, End, Strand, ID.
 ##		UnMAQ == unmappable regions in the genome of interest.
 ##
 ##	Function defines expression as in Core, Waterfall, Lis; Science, Dec. 2008.
-##
-##
-########################################################################
+expressedGenes <- function(features, reads, Lambda= NULL, UnMap=NULL, debug=FALSE, ...) {
+	# Order -- Make sure, b/c this is one of our main assumptions.  Otherwise violated for DBTSS.
+	reads <- reads[order(as.character(seqnames(reads)), start(reads)),]	
+	C <- sort(unique(as.character(seqnames(features))))
+	if(is.null(Lambda))	Lambda <- 0.04*NROW(reads)/10751533/1000 #NROW(reads)/genomeSize
+	
+	## Run parallel version.
+	mcp <- mclapply(seq_along(C), expressedGenes_foreachChrom, C=C, features=features, reads=reads,
+				Lambda=Lambda, UnMap=UnMap, debug=debug, ...)
 
+	## Unlist... 
+	ANSgeneid <- rep("char", NROW(features))
+	ANSpvalue <- rep(0,NROW(features))
+	ANScounts <- rep(0,NROW(features))
+	ANSunmapp <- rep(0,NROW(features))
+	ANSgsize  <- rep(0,NROW(features))
+	for(i in seq_along(C)) {
+		indxF   <- which(as.character(seqnames(features)) == C[i])
+		indxPrb   <- which(as.character(seqnames(reads)) == C[i])
+		if((NROW(indxF) >0) & (NROW(indxPrb) >0)) {
+			 ANSgeneid[indxF][mcp[[i]][["ord"]]] <- mcp[[i]][["ANSgeneid"]]
+			 ANSpvalue[indxF][mcp[[i]][["ord"]]] <- mcp[[i]][["ANSpvalue"]]
+			 ANScounts[indxF][mcp[[i]][["ord"]]] <- mcp[[i]][["ANScounts"]]
+			 ANSunmapp[indxF][mcp[[i]][["ord"]]] <- mcp[[i]][["ANSunmapp"]]
+			 ANSgsize[indxF][mcp[[i]][["ord"]]] <- mcp[[i]][["ANSgsize"]]
+		}
+	}
+
+	return(data.frame(ID= ANSgeneid, pval= ANSpvalue, readCounts= ANScounts, 
+					nonMappablePositions= ANSunmapp, size= ANSgsize))
+}
+ 
 expressedGenes_foreachChrom <- function(i, C, features, reads, Lambda, UnMap, debug) {
 		if(debug) {
 			message("Doing chromosome ", C[i])
@@ -123,49 +159,3 @@ expressedGenes_foreachChrom <- function(i, C, features, reads, Lambda, UnMap, de
 		}
 	return(integer(0))
 }
-
-#' Function identifies expressed features using the methods introduced in Core, Waterfall, Lis; Science, Dec. 2008.
-#'
-#' Supports parallel processing using mclapply in the 'parallel' package.  To change the number of processors
-#' use the argument 'mc.cores'.
-#'
-#' @param features A GRanges object representing a set of genomic coordinates.  The meta-plot will be centered on the start position.  There can be optional "ID" column for gene ids.
-#' @param reads A GRanges object representing a set of mapped reads.
-#' @param Lambda Measurement of assay noise.  Default: 0.04 reads/ kb in a library of 10,751,533 mapped reads. (background computed in Core, Waterfall, Lis. (2008) Science.).
-#' @param UnMap List object representing the position of un-mappable reads.  Default: not used.
-#' @param debug If set to true, returns the number of positions.  Default: FALSE.
-#' @param ... Extra argument passed to mclapply
-#' @return A data.frame representing the expression p.values for features of interest.
-#' @author Charles G. Danko and Minho Chae
-expressedGenes <- function(features, reads, Lambda= NULL, UnMap=NULL, debug=FALSE, ...) {
-	# Order -- Make sure, b/c this is one of our main assumptions.  Otherwise violated for DBTSS.
-	reads <- reads[order(as.character(seqnames(reads)), start(reads)),]	
-	C <- sort(unique(as.character(seqnames(features))))
-	if(is.null(Lambda))	Lambda <- 0.04*NROW(reads)/10751533/1000 #NROW(reads)/genomeSize
-	
-	## Run parallel version.
-	mcp <- mclapply(seq_along(C), expressedGenes_foreachChrom, C=C, features=features, reads=reads,
-				Lambda=Lambda, UnMap=UnMap, debug=debug, ...)
-
-	## Unlist... 
-	ANSgeneid <- rep("char", NROW(features))
-	ANSpvalue <- rep(0,NROW(features))
-	ANScounts <- rep(0,NROW(features))
-	ANSunmapp <- rep(0,NROW(features))
-	ANSgsize  <- rep(0,NROW(features))
-	for(i in seq_along(C)) {
-		indxF   <- which(as.character(seqnames(features)) == C[i])
-		indxPrb   <- which(as.character(seqnames(reads)) == C[i])
-		if((NROW(indxF) >0) & (NROW(indxPrb) >0)) {
-			 ANSgeneid[indxF][mcp[[i]][["ord"]]] <- mcp[[i]][["ANSgeneid"]]
-			 ANSpvalue[indxF][mcp[[i]][["ord"]]] <- mcp[[i]][["ANSpvalue"]]
-			 ANScounts[indxF][mcp[[i]][["ord"]]] <- mcp[[i]][["ANScounts"]]
-			 ANSunmapp[indxF][mcp[[i]][["ord"]]] <- mcp[[i]][["ANSunmapp"]]
-			 ANSgsize[indxF][mcp[[i]][["ord"]]] <- mcp[[i]][["ANSgsize"]]
-		}
-	}
-
-	return(data.frame(ID= ANSgeneid, pval= ANSpvalue, readCounts= ANScounts, 
-					nonMappablePositions= ANSunmapp, size= ANSgsize))
-}
- 

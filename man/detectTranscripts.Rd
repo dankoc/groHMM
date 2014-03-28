@@ -43,10 +43,14 @@ coordinates of transcripts on both the + and - strand.
 \description{
 Read counts can be specified as either a GRanges object
 (reads), or using a fixed-step wiggle-format passed in a
-list (Fp and Fm).  Either reads or BOTH Fp and Fm must be
+list (Fp and Fm). Either reads or BOTH Fp and Fm must be
 specified.
 }
 \details{
+Supports parallel processing using mclapply in the
+'parallel' package.  To change the number of processors set
+the option 'mc.cores'.
+
 Reference: Hah N, Danko CG, Core L, Waterfall JJ, Siepel A,
 Lis JT, Kraus WL. A rapid, extensive, and transient
 transcriptional response to estrogen signaling in breast

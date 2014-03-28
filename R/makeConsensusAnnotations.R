@@ -1,20 +1,20 @@
 ###########################################################################
 ##
-##   Copyright 2012, 2013 Minho Chae.
+##   Copyright 2013, 2014 Charles Danko and Minho Chae.
 ##
 ##   This program is part of the groHMM R package
 ##
-##   groHMM is free software: you can redistribute it and/or modify it 
-##   under the terms of the GNU General Public License as published by 
-##   the Free Software Foundation, either version 3 of the License, or  
+##   groHMM is free software: you can redistribute it and/or modify it
+##   under the terms of the GNU General Public License as published by
+##   the Free Software Foundation, either version 3 of the License, or
 ##   (at your option) any later version.
 ##
-##   This program is distributed in the hope that it will be useful, but 
-##   WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY 
+##   This program is distributed in the hope that it will be useful, but
+##   WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 ##   or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 ##   for more details.
 ##
-##   You should have received a copy of the GNU General Public License along 
+##   You should have received a copy of the GNU General Public License along
 ##   with this program.  If not, see <http://www.gnu.org/licenses/>.
 ##
 ##########################################################################
@@ -22,12 +22,6 @@
 
 
 
-
-##########################################################################
-##
-##      makeConsensusAnnotations
-##      Date: 2014-2-19 
-##
 #' makeConsensusAnnotations Makes a consensus annotation 
 #'
 #' Makes a non-overlapping consensus annotation.  Gene annotations are often overalpping due to 
@@ -49,8 +43,6 @@
 #' tx <- transcripts(txdb, vals=list(tx_chrom="chr7"), columns=c("gene_id", "tx_id", "tx_name"))
 #' tx <- tx[grep("random", as.character(seqnames(tx)), invert=TRUE),]
 #' ca <- makeConsensusAnnotations(tx)
-##
-##########################################################################
 makeConsensusAnnotations <- function(ar, minGap=1L, minWidth=1000L, ...) {
 	# check missing gene_id
 	missing <- elementLengths(mcols(ar)[,"gene_id"]) == 0 

@@ -1,31 +1,25 @@
 ###########################################################################
 ##
-##   Copyright 2009, 2010, 2011, 2012, 2013 Charles Danko and Minho Chae.
+##   Copyright 2013, 2014 Charles Danko and Minho Chae.
 ##
 ##   This program is part of the groHMM R package
 ##
-##   groHMM is free software: you can redistribute it and/or modify it 
-##   under the terms of the GNU General Public License as published by 
-##   the Free Software Foundation, either version 3 of the License, or  
+##   groHMM is free software: you can redistribute it and/or modify it
+##   under the terms of the GNU General Public License as published by
+##   the Free Software Foundation, either version 3 of the License, or
 ##   (at your option) any later version.
 ##
-##   This program is distributed in the hope that it will be useful, but 
-##   WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY 
+##   This program is distributed in the hope that it will be useful, but
+##   WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 ##   or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 ##   for more details.
 ##
-##   You should have received a copy of the GNU General Public License along 
+##   You should have received a copy of the GNU General Public License along
 ##   with this program.  If not, see <http://www.gnu.org/licenses/>.
 ##
 ##########################################################################
 
 
-
-##########################################################################
-##
-##      metaGene 
-##      Date: 2014-2-19
-##
 #' Returns a histogram of the number of reads in each section of a moving window centered on a certain feature.
 #'
 #' Supports parallel processing using mclapply in the 'parallel' package.  To change the number of processors
@@ -45,8 +39,6 @@
 #' features <- GRanges("chr7", IRanges(1000, 1000), strand="+")
 #' reads <- GRanges("chr7", IRanges(start=c(1000:1004, 1100), width=rep(1, 6)), strand="+")
 #' mg <- metaGene(features, reads, size=4, up=10)
-##
-##########################################################################
 metaGene <- function(features, reads=NULL, plusCVG=NULL, minusCVG=NULL, size=100L, up=10000L, down=NULL, ...) {
 	seqlevels(features) <- seqlevelsInUse(features)
 	# Check 'reads'
@@ -89,11 +81,6 @@ metaGene_foreachChrom <- function(chrom, featureList, plusCVG, minusCVG, size, u
 }
 
 
-##########################################################################
-##
-##      runMetaGene
-##      Date: 2014-2-19
-##
 #' Runs metagene analysis for sense and antisense direction.
 #'
 #' Supports parallel processing using mclapply in the 'parallel' package.  To change the number of processors
@@ -114,8 +101,6 @@ metaGene_foreachChrom <- function(chrom, featureList, plusCVG, minusCVG, size, u
 #' features <- GRanges("chr7", IRanges(start=1000:1001, width=rep(1,2)), strand=c("+", "-"))
 #' reads <- GRanges("chr7", IRanges(start=c(1000:1003, 1100:1101), width=rep(1, 6)), strand=rep(c("+","-"), 3))
 #' mg <- runMetaGene(features, reads, size=4, up=10)
-##
-##########################################################################
 runMetaGene <- function(features, reads, anchorType="TSS", size=100L, normCounts=1L, up=10000L, down=NULL, sampling=FALSE, nSampling=1000L,
             samplingRatio=0.1, ...) {
 	# Check 'anchorType'
@@ -180,15 +165,20 @@ samplingMetaGene <- function(features, plusCVG, minusCVG, size=100L, up=10000L, 
 }
 
 
-
-
-
- 
-########################################################################
-##
-##	MetaGeneMatrix
-##	Date: 2010-08-27
-##
+#' Returns a matrix, with rows representing read counts across a specified gene, or other features of interest.
+#'
+#' Supports parallel processing using mclapply in the 'parallel' package.  To change the number of processors
+#' use the argument 'mc.cores'.
+#'
+#' @param features A GRanges object representing a set of genomic coordinates. 
+#' @param reads A GRanges object representing a set of mapped reads. 
+#' @param size The size of the moving window.
+#' @param up Distance upstream of each f to align and histogram Default: 1 kb.
+#' @param down Distance downstream of each f to align and histogram Default: same as up.
+#' @param debug If set to TRUE, provides additional print options. Default: FALSE
+#' @param ... Extra argument passed to mclapply
+#' @return A vector representing the 'typical' signal across genes of different length.
+#' @author Charles G. Danko and Minho Chae
 ##	Returns a matrix of counts.  Rows represent different streches of DNA.
 ##	Columns represent positions relative to a certain feature.  Summed together,
 ##  these should be a meta-gene.
@@ -201,8 +191,29 @@ samplingMetaGene <- function(features, plusCVG, minusCVG, size=100L, up=10000L, 
 ##	down	-> Distance downstream of each f to align and histogram (NULL).
 ##
 ##	Assumptions: Same as MetaGene
-##
-########################################################################
+metaGeneMatrix <- function(features, reads, size= 50, up=1000, down=up, debug=FALSE, ...) {
+
+	C <- sort(unique(as.character(seqnames(features))))
+
+	## Run parallel version.
+	mcp <- mclapply(seq_along(C), metaGeneMatrix_foreachChrom, C=C, features=features, reads=reads, 
+					size=size, up=up, down=down, debug=debug, ...)
+	
+	## Append data from all chromosomes.
+	H <- NULL
+	for(i in seq_along(C)) {
+		# Which KG?  prb?
+		indxF   <- which(as.character(seqnames(features)) == C[i])
+		indxPrb <- which(as.character(seqnames(reads)) == C[i])
+
+		if((NROW(indxF) >0) & (NROW(indxPrb) >0)) {
+			H <- rbind(H, mcp[[i]])
+		}
+	}
+
+	return(H)
+}
+
 
 metaGeneMatrix_foreachChrom <- function(i, C, features, reads, size, up, down, debug) {
 
@@ -242,67 +253,6 @@ metaGeneMatrix_foreachChrom <- function(i, C, features, reads, size, up, down, d
 }
 
 
-#' Returns a matrix, with rows representing read counts across a specified gene, or other features of interest.
-#'
-#' Supports parallel processing using mclapply in the 'parallel' package.  To change the number of processors
-#' use the argument 'mc.cores'.
-#'
-#' @param features A GRanges object representing a set of genomic coordinates. 
-#' @param reads A GRanges object representing a set of mapped reads. 
-#' @param size The size of the moving window.
-#' @param up Distance upstream of each f to align and histogram Default: 1 kb.
-#' @param down Distance downstream of each f to align and histogram Default: same as up.
-#' @param debug If set to TRUE, provides additional print options. Default: FALSE
-#' @param ... Extra argument passed to mclapply
-#' @return A vector representing the 'typical' signal across genes of different length.
-#' @author Charles G. Danko and Minho Chae
-metaGeneMatrix <- function(features, reads, size= 50, up=1000, down=up, debug=FALSE, ...) {
-
-	C <- sort(unique(as.character(seqnames(features))))
-
-	## Run parallel version.
-	mcp <- mclapply(seq_along(C)), metaGeneMatrix_foreachChrom, C=C, features=features, reads=reads, 
-					size=size, up=up, down=down, debug=debug, ...)
-	
-	## Append data from all chromosomes.
-	H <- NULL
-	for(i in seq_along(C)) {
-		# Which KG?  prb?
-		indxF   <- which(as.character(seqnames(features)) == C[i])
-		indxPrb <- which(as.character(seqnames(reads)) == C[i])
-
-		if((NROW(indxF) >0) & (NROW(indxPrb) >0)) {
-			H <- rbind(H, mcp[[i]])
-		}
-	}
-
-	return(H)
-}
-
-
-
-########################################################################
-##
-##	metaGene_nL
-##	Date: 2010-07-05
-##
-##	Returns a histogram of the number of reads in each section of a
-##	moving window of variable size across genes.
-##
-##	Arguments:
-##	f	-> data.frame of: CHR, START, END, STRAND.
-##	p	-> data.frame of: CHR, START, END, STRAND.
-##	n_windows	-> The resolution of the MetaGene -- i.e. the number of moving windows to break it into..
-##
-##	Assumptions:
-##	(1) Gene list should be ordered!  
-##	(2) Gene list should be pretty short, as most of the processing and looping over genes is currently done in R.
-##
-##	TODO: 
-##	(1) Write C function. 
-##	(2) ...
-##
-########################################################################
 
 #' Returns a histogram of the number of reads in each section of a moving window of variable size across genes.
 #'
@@ -316,6 +266,18 @@ metaGeneMatrix <- function(features, reads, size= 50, up=1000, down=up, debug=FA
 #' @param ... Extra argument passed to mclapply
 #' @return A vector representing the 'typical' signal across genes of different length.
 #' @author Charles G. Danko and Minho Chae
+##	Returns a histogram of the number of reads in each section of a
+##	moving window of variable size across genes.
+##
+##	Arguments:
+##	f	-> data.frame of: CHR, START, END, STRAND.
+##	p	-> data.frame of: CHR, START, END, STRAND.
+##	n_windows	-> The resolution of the MetaGene -- i.e. the number of moving windows to break it into..
+##
+##	Assumptions:
+##	(1) Gene list should be ordered!  
+##	(2) Gene list should be pretty short, as most of the processing and looping over genes is currently done in R.
+#
 metaGene_nL <- function(features, reads, n_windows=1000, debug=FALSE, ...) {
 	C <- sort(unique(as.character(seqnames(features))))
 	H <- rep(0,n_windows)
@@ -395,24 +357,6 @@ metaGene_nL <- function(features, reads, n_windows=1000, debug=FALSE, ...) {
 }
 
 
-########################################################################
-##
-##	averageGene
-##	Date: 2010-12-03
-##
-##	Returns the average profile of tiling array probe intensity values or wiggle-like count data centered on a set of genomic positions.
-##
-##	Arguments:
-##	Peaks		-> data.frame of: CHR, CENTER, STRAND. (note that STRAND is currenly not supported, and does nothing).
-##	ProbeData	-> data.frame of: CHR, CENTER, VALUE
-##	bins		-> The bins of the meta gene -- i.e. the number of moving windows to break it into.
-##
-##	TODO: 
-##	(1) Implement support for a Peaks$starnd (
-##	(2) ...
-##
-########################################################################
-
 #' Returns the average profile of tiling array probe intensity values or wiggle-like count data centered on a set of genomic positions (specified by 'Peaks').
 #'
 #' Supports parallel processing using mclapply in the 'parallel' package.  To change the number of processors
@@ -424,6 +368,16 @@ metaGene_nL <- function(features, reads, n_windows=1000, debug=FALSE, ...) {
 #' @param bins The bins of the meta gene -- i.e. the number of moving windows to break it into. Default +/- 1kb from center.
 #' @return A vector representing the 'typical' signal centered on the peaks of interest.
 #' @author Charles G. Danko and Minho Chae
+##	Returns the average profile of tiling array probe intensity values or wiggle-like count data centered on a set of genomic positions.
+##
+##	Arguments:
+##	Peaks		-> data.frame of: CHR, CENTER, STRAND. (note that STRAND is currenly not supported, and does nothing).
+##	ProbeData	-> data.frame of: CHR, CENTER, VALUE
+##	bins		-> The bins of the meta gene -- i.e. the number of moving windows to break it into.
+##
+##	TODO: 
+##	(1) Implement support for a Peaks$starnd 
+##	(2) ...
 averagePlot <- function(ProbeData, Peaks, size=50, bins= seq(-1000,1000,size)) {
 
 	## For each chromsome.  

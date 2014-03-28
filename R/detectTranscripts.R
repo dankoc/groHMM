@@ -1,48 +1,29 @@
 ###########################################################################
 ##
-##   Copyright 2009, 2010, 2011, 2012, 2013 Charles Danko and Minho Chae.
+##   Copyright 2013, 2014 Charles Danko and Minho Chae.
 ##
 ##   This program is part of the groHMM R package
 ##
-##   groHMM is free software: you can redistribute it and/or modify it 
-##   under the terms of the GNU General Public License as published by 
-##   the Free Software Foundation, either version 3 of the License, or  
+##   groHMM is free software: you can redistribute it and/or modify it
+##   under the terms of the GNU General Public License as published by
+##   the Free Software Foundation, either version 3 of the License, or
 ##   (at your option) any later version.
 ##
-##   This program is distributed in the hope that it will be useful, but 
-##   WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY 
+##   This program is distributed in the hope that it will be useful, but
+##   WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 ##   or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 ##   for more details.
 ##
-##   You should have received a copy of the GNU General Public License along 
+##   You should have received a copy of the GNU General Public License along
 ##   with this program.  If not, see <http://www.gnu.org/licenses/>.
 ##
 ##########################################################################
 
 
-#######################################################################################################
-##
-##	detectTranscripts, detectTranscriptsUTS, detectTranscriptsV.
-##	Date: 2009-07-17
-##
-##	Detects transcripts using a two-state HMM representing transcribed, and nontranscribed.
-##
-######################################################################################################
-
-
-############################################################################
-##
-##	detectTranscriptsEM -- Runs full Baum-Welch EM to detect transcript
-##	 positions and distribution paremeters in the same algorithm.
-##
-##	TODO: Make more general (for POLII ChIP-seq): 
-##		strand="B", denotes both +/-; "N", denotes no information??
-##
-############################################################################
-
 #' detectTranscripts detects transcripts de novo using a two-state hidden Markov model (HMM).
 #'
-#' Read counts can be specified as either a GRanges object (reads), or using a fixed-step wiggle-format passed in a list (Fp and Fm).  Either reads or BOTH Fp and Fm must be specified.
+#' Read counts can be specified as either a GRanges object (reads), or using a fixed-step wiggle-format passed in a list (Fp and Fm).  
+#' Either reads or BOTH Fp and Fm must be specified.
 #'
 #' Supports parallel processing using mclapply in the 'parallel' package.  To change the number of processors
 #' set the option 'mc.cores'.
@@ -61,7 +42,6 @@
 #' @param ... Extra argument passed to mclapply
 #' @return Returns a GRanges object representing the predicted genomic coordinates of transcripts on both the + and - strand.
 #' @author Charles G. Danko and Minho Chae
-
 ## CGD: TODO: Test switch over to gamma, rather than dGamma?!
 
 detectTranscripts <- function(reads=NULL, Fp=NULL, Fm=NULL, LtProbA=-5, LtProbB=-5, UTS=5, size=50, threshold=0.1, debug=TRUE, ...) {
@@ -141,4 +121,3 @@ detectTranscripts <- function(reads=NULL, Fp=NULL, Fm=NULL, LtProbA=-5, LtProbB=
 
 	return(BWem)
 }
-

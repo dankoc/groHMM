@@ -1,28 +1,24 @@
 ###########################################################################
 ##
-##   Copyright 2012, 2013 Minho Chae.
+##   Copyright 2013, 2014 Charles Danko and Minho Chae.
 ##
 ##   This program is part of the groHMM R package
 ##
-##   groHMM is free software: you can redistribute it and/or modify it 
-##   under the terms of the GNU General Public License as published by 
-##   the Free Software Foundation, either version 3 of the License, or  
+##   groHMM is free software: you can redistribute it and/or modify it
+##   under the terms of the GNU General Public License as published by
+##   the Free Software Foundation, either version 3 of the License, or
 ##   (at your option) any later version.
 ##
-##   This program is distributed in the hope that it will be useful, but 
-##   WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY 
+##   This program is distributed in the hope that it will be useful, but
+##   WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 ##   or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 ##   for more details.
 ##
-##   You should have received a copy of the GNU General Public License along 
+##   You should have received a copy of the GNU General Public License along
 ##   with this program.  If not, see <http://www.gnu.org/licenses/>.
 ##
 ##########################################################################
-##########################################################################
-##
-##      getTxDensity 
-##      Date: 2014-2-19
-##
+
 #' getTxDensity Calculates transcript density.
 #'
 #' Calculates transcript density for transcripts which overlapps with annotations.  
@@ -45,8 +41,6 @@
 #' tx <- GRanges("chr7", IRanges(start=seq(1000,4000, by=1000), width=seq(1000, 1300, by=100)), strand=rep("+", 4))
 #' annox <- GRanges("chr7", IRanges(start=seq(1100,4100, by=1000), width=seq(900, 1200, by=100)), strand=rep("+", 4))
 #' density <- plotTxDensity(tx, annox) 
-##
-##########################################################################
 getTxDensity <- function(tx, annox, plot=TRUE, scale=1000L, nSampling=0L, samplingRatio=0.1, ...) {
 	ol <- findOverlaps(tx, annox)
 
@@ -202,11 +196,6 @@ getLIValues <- function (vals, n) {
 
 
 
-##########################################################################
-##
-##      evaluateHMMInAnnotations 
-##      Date: 2014-2-19
-##
 #' evaluateHMM Evaluates HMM calling. 
 #'
 #' Evaluates HMM calling of transripts compared to known annotations. 
@@ -220,8 +209,6 @@ getLIValues <- function (vals, n) {
 #' tx <- GRanges("chr7", IRanges(start=seq(100, 1000, by=200), width=seq(100, 1000, by=100)), strand="+")
 #' annox <- GRanges("chr7", IRanges(start=seq(110, 1100, by=150), width=seq(100, 1000, by=150)), strand="+")
 #' error <- evaluateHMMAnnotations(tx, annox)
-##
-##########################################################################
 evaluateHMMInAnnotations <- function (tx, annox) {
     o <- findOverlaps(tx, annox)
     runGenes <- length(unique(queryHits(o[duplicated(queryHits(o)),])))  # count tx
@@ -239,5 +226,3 @@ evaluateHMMInAnnotations <- function (tx, annox) {
 
 	return(list(eval=eval, overlap=overlap))
 }
-
-

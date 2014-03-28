@@ -1,24 +1,23 @@
 ###########################################################################
 ##
-##   Copyright 2009, 2010, 2011, 2012, 2013 Charles Danko and Minho Chae.
+##   Copyright 2013, 2014 Charles Danko and Minho Chae.
 ##
 ##   This program is part of the groHMM R package
 ##
-##   groHMM is free software: you can redistribute it and/or modify it 
-##   under the terms of the GNU General Public License as published by 
-##   the Free Software Foundation, either version 3 of the License, or  
+##   groHMM is free software: you can redistribute it and/or modify it
+##   under the terms of the GNU General Public License as published by
+##   the Free Software Foundation, either version 3 of the License, or
 ##   (at your option) any later version.
 ##
-##   This program is distributed in the hope that it will be useful, but 
-##   WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY 
+##   This program is distributed in the hope that it will be useful, but
+##   WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 ##   or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 ##   for more details.
 ##
-##   You should have received a copy of the GNU General Public License along 
+##   You should have received a copy of the GNU General Public License along
 ##   with this program.  If not, see <http://www.gnu.org/licenses/>.
 ##
 ##########################################################################
-
 
 ######################################################################################
 ##
@@ -54,12 +53,21 @@ approx.ratios.CI <- function(num.counts, denom.counts, alpha=0.05) {
   return(result)
 }
 
-
-########################################################################
-##
-##	PausingIndex
-##	Date: 2009-05-27
-##
+#' Returns the pausing index for different genes.  TODO: DESCRIBE THE PAUSING INDEX.
+#'
+#' Supports parallel processing using mclapply in the 'parallel' package.  To change the number of processors
+#' use the argument 'mc.cores'.
+#'
+#'  @param features A GRanges object representing a set of genomic coordinates. 
+#'  @param reads A GRanges object representing a set of mapped reads.
+#'  @param size The size of the moving window.
+#'  @param up Distance upstream of each f to align and histogram.
+#'  @param down	Distance downstream of each f to align and histogram (NULL).
+#'  @param UnMAQ Data structure representing the coordinates of all un-mappable regions in the genome.
+#'  @param debug If set to TRUE, provides additional print options. Default: FALSE
+#'  @param ... Extra argument passed to mclapply
+#'  @return Data.frame of the pausing indices for the input genes.
+#'  @author Charles G. Danko and Minho Chae.
 ##	Returns the pausing index for different genes.
 ##
 ##	Arguments:
@@ -80,8 +88,89 @@ approx.ratios.CI <- function(num.counts, denom.counts, alpha=0.05) {
 ##			Uses the same format as "f", expect that features are mapped with respect to the start of f,
 ##			where 0 indicates the start of transcription, and negative numbers specify upstream sequence.
 ##			This is likely useful for rate; perhaps for identifying internal paused-peaks...
-##
-########################################################################
+pausingIndex <- function(features, reads, size=50, up=1000, down=1000, UnMAQ=NULL, debug=FALSE, ...) {
+        f <- data.frame(chrom=as.character(seqnames(features)), start=as.integer(start(features)),
+                                end=as.integer(end(features)), strand=as.character(strand(features)))
+        p <- data.frame(chrom=as.character(seqnames(reads)), start=as.integer(start(reads)),
+                                end=as.integer(end(reads)), strand=as.character(strand(reads)))
+
+	C <- sort(as.character(unique(f[[1]])))
+	Pause <- rep(0,NROW(f))
+	Body  <- rep(0,NROW(f))
+	Fish  <- rep(0,NROW(f))
+	GeneID <- rep("",NROW(f))
+	CIl  <- rep(0,NROW(f))
+	CIu  <- rep(0,NROW(f))
+
+	## Pass back information for the fisher test...
+	PauseCounts <- rep(0, NROW(f))
+	BodyCounts  <- rep(0, NROW(f))
+	UpCounts    <- rep(0, NROW(f))
+	UgCounts    <- rep(0, NROW(f))
+
+	size		<- as.integer(size)
+	up		<- as.integer(up)
+	down		<- as.integer(down)
+
+	###### Calculate PLUS and MINUS index, for DRY compliance.
+	PLUS_INDX <- which(f[[4]] == "+")
+	MINU_INDX <- which(f[[4]] == "-")
+
+	###### Identify TSS -- Start for '+' strand, End for '-' strand.
+	if(debug) {
+		message("Calculating TSS and gene ends for each gene based on strand information.")
+	}
+	c_tss_indx <- rep(0,NROW(f))
+	c_tss_indx[PLUS_INDX] <- 2
+	c_tss_indx[MINU_INDX] <- 3
+	c_tss <- unlist(lapply(c(1:NROW(f)), function(x) { f[x, c_tss_indx[x]] }))
+
+	###### Now calculate left and right position for gene body, based on '+' or '-'.
+	### Calculate gene end.  Gene start is contiguous with the coordinates for the promoter.
+	c_gene_end_indx <- rep(0,NROW(f))
+	c_gene_end_indx[PLUS_INDX] <- 3
+	c_gene_end_indx[MINU_INDX] <- 2
+	c_gene_end <- unlist(lapply(c(1:NROW(f)), function(x) { f[x,c_gene_end_indx[x]] }))
+
+	### Assign left and right.
+	gLEFT	<- rep(0,NROW(c_tss))
+	gRIGHT	<- rep(0,NROW(c_tss))
+	gLEFT[PLUS_INDX]	<- c_tss[PLUS_INDX] + down
+	gRIGHT[PLUS_INDX]	<- c_gene_end[PLUS_INDX]
+	gLEFT[MINU_INDX]	<- c_gene_end[MINU_INDX]
+	gRIGHT[MINU_INDX]	<- c_tss[MINU_INDX] - down
+
+	## Run parallel version.
+	mcp <- mclapply(c(1:NROW(C)), pausingIndex_foreachChrom, C=C, f=f, p=p, 
+					gLEFT=gLEFT, gRIGHT=gRIGHT, c_tss=c_tss, 
+					size=size, up=up, down=down, UnMAQ=UnMAQ, debug=debug, ...)
+	
+	## Unlist and re-order values for printing in a nice data.frame.
+	for(i in 1:NROW(C)) {
+		# Which KG?  prb?
+		indxF   <- which(as.character(f[[1]]) == C[i])
+                indxPrb <- which(as.character(p[[1]]) == C[i])
+
+		if((NROW(indxF) >0) & (NROW(indxPrb) >0)) {
+			Pause[indxF][mcp[[i]][["ord"]]] 	<- mcp[[i]][["Pause"]]
+			Body[indxF][mcp[[i]][["ord"]]] 	<- mcp[[i]][["Body"]]
+			Fish[indxF][mcp[[i]][["ord"]]]	<- mcp[[i]][["Fish"]]
+			GeneID[indxF][mcp[[i]][["ord"]]]	<- mcp[[i]][["GeneID"]]
+			
+			PauseCounts[indxF][mcp[[i]][["ord"]]] <- mcp[[i]][["PauseCounts"]]
+			BodyCounts[indxF][mcp[[i]][["ord"]]]  <- mcp[[i]][["BodyCounts"]]
+			UpCounts[indxF][mcp[[i]][["ord"]]]    <- mcp[[i]][["UpCounts"]]
+			UgCounts[indxF][mcp[[i]][["ord"]]]    <- mcp[[i]][["UgCounts"]]
+
+			CIl[indxF][mcp[[i]][["ord"]]] <- mcp[[i]][["CIl"]]
+			CIu[indxF][mcp[[i]][["ord"]]] <- mcp[[i]][["CIu"]]
+		}
+	}
+
+	return(data.frame(Pause= Pause, Body= Body, Fisher= Fish, GeneID= GeneID, CIlower=CIl, CIupper=CIu, 
+			PauseCounts= PauseCounts, BodyCounts= BodyCounts, uPCounts= UpCounts, uGCounts= UgCounts))
+}
+
 pausingIndex_foreachChrom <- function(i, C, f, p, gLEFT, gRIGHT, c_tss, size, up, down, UnMAQ, debug) {
 		if(debug) {
 			message(C[i])
@@ -203,102 +292,4 @@ pausingIndex_foreachChrom <- function(i, C, f, p, gLEFT, gRIGHT, c_tss, size, up
 						UpCounts= UpCounts_c, UgCounts= UgCounts_c, CIl= CIl_c, CIu= CIu_c, ord= Ford))
 		}
 	return(integer(0))
-}
-
-#' Returns the pausing index for different genes.  TODO: DESCRIBE THE PAUSING INDEX.
-#'
-#' Supports parallel processing using mclapply in the 'parallel' package.  To change the number of processors
-#' use the argument 'mc.cores'.
-#'
-#'  @param features A GRanges object representing a set of genomic coordinates. 
-#'  @param reads A GRanges object representing a set of mapped reads.
-#'  @param size The size of the moving window.
-#'  @param up Distance upstream of each f to align and histogram.
-#'  @param down	Distance downstream of each f to align and histogram (NULL).
-#'  @param UnMAQ Data structure representing the coordinates of all un-mappable regions in the genome.
-#'  @param debug If set to TRUE, provides additional print options. Default: FALSE
-#'  @param ... Extra argument passed to mclapply
-#'  @return Data.frame of the pausing indices for the input genes.
-#'  @author Charles G. Danko and Minho Chae.
-pausingIndex <- function(features, reads, size=50, up=1000, down=1000, UnMAQ=NULL, debug=FALSE, ...) {
-        f <- data.frame(chrom=as.character(seqnames(features)), start=as.integer(start(features)),
-                                end=as.integer(end(features)), strand=as.character(strand(features)))
-        p <- data.frame(chrom=as.character(seqnames(reads)), start=as.integer(start(reads)),
-                                end=as.integer(end(reads)), strand=as.character(strand(reads)))
-
-	C <- sort(as.character(unique(f[[1]])))
-	Pause <- rep(0,NROW(f))
-	Body  <- rep(0,NROW(f))
-	Fish  <- rep(0,NROW(f))
-	GeneID <- rep("",NROW(f))
-	CIl  <- rep(0,NROW(f))
-	CIu  <- rep(0,NROW(f))
-
-	## Pass back information for the fisher test...
-	PauseCounts <- rep(0, NROW(f))
-	BodyCounts  <- rep(0, NROW(f))
-	UpCounts    <- rep(0, NROW(f))
-	UgCounts    <- rep(0, NROW(f))
-
-	size		<- as.integer(size)
-	up		<- as.integer(up)
-	down		<- as.integer(down)
-
-	###### Calculate PLUS and MINUS index, for DRY compliance.
-	PLUS_INDX <- which(f[[4]] == "+")
-	MINU_INDX <- which(f[[4]] == "-")
-
-	###### Identify TSS -- Start for '+' strand, End for '-' strand.
-	if(debug) {
-		message("Calculating TSS and gene ends for each gene based on strand information.")
-	}
-	c_tss_indx <- rep(0,NROW(f))
-	c_tss_indx[PLUS_INDX] <- 2
-	c_tss_indx[MINU_INDX] <- 3
-	c_tss <- unlist(lapply(c(1:NROW(f)), function(x) { f[x, c_tss_indx[x]] }))
-
-	###### Now calculate left and right position for gene body, based on '+' or '-'.
-	### Calculate gene end.  Gene start is contiguous with the coordinates for the promoter.
-	c_gene_end_indx <- rep(0,NROW(f))
-	c_gene_end_indx[PLUS_INDX] <- 3
-	c_gene_end_indx[MINU_INDX] <- 2
-	c_gene_end <- unlist(lapply(c(1:NROW(f)), function(x) { f[x,c_gene_end_indx[x]] }))
-
-	### Assign left and right.
-	gLEFT	<- rep(0,NROW(c_tss))
-	gRIGHT	<- rep(0,NROW(c_tss))
-	gLEFT[PLUS_INDX]	<- c_tss[PLUS_INDX] + down
-	gRIGHT[PLUS_INDX]	<- c_gene_end[PLUS_INDX]
-	gLEFT[MINU_INDX]	<- c_gene_end[MINU_INDX]
-	gRIGHT[MINU_INDX]	<- c_tss[MINU_INDX] - down
-
-	## Run parallel version.
-	mcp <- mclapply(c(1:NROW(C)), pausingIndex_foreachChrom, C=C, f=f, p=p, 
-					gLEFT=gLEFT, gRIGHT=gRIGHT, c_tss=c_tss, 
-					size=size, up=up, down=down, UnMAQ=UnMAQ, debug=debug, ...)
-	
-	## Unlist and re-order values for printing in a nice data.frame.
-	for(i in 1:NROW(C)) {
-		# Which KG?  prb?
-		indxF   <- which(as.character(f[[1]]) == C[i])
-                indxPrb <- which(as.character(p[[1]]) == C[i])
-
-		if((NROW(indxF) >0) & (NROW(indxPrb) >0)) {
-			Pause[indxF][mcp[[i]][["ord"]]] 	<- mcp[[i]][["Pause"]]
-			Body[indxF][mcp[[i]][["ord"]]] 	<- mcp[[i]][["Body"]]
-			Fish[indxF][mcp[[i]][["ord"]]]	<- mcp[[i]][["Fish"]]
-			GeneID[indxF][mcp[[i]][["ord"]]]	<- mcp[[i]][["GeneID"]]
-			
-			PauseCounts[indxF][mcp[[i]][["ord"]]] <- mcp[[i]][["PauseCounts"]]
-			BodyCounts[indxF][mcp[[i]][["ord"]]]  <- mcp[[i]][["BodyCounts"]]
-			UpCounts[indxF][mcp[[i]][["ord"]]]    <- mcp[[i]][["UpCounts"]]
-			UgCounts[indxF][mcp[[i]][["ord"]]]    <- mcp[[i]][["UgCounts"]]
-
-			CIl[indxF][mcp[[i]][["ord"]]] <- mcp[[i]][["CIl"]]
-			CIu[indxF][mcp[[i]][["ord"]]] <- mcp[[i]][["CIu"]]
-		}
-	}
-
-	return(data.frame(Pause= Pause, Body= Body, Fisher= Fish, GeneID= GeneID, CIlower=CIl, CIupper=CIu, 
-			PauseCounts= PauseCounts, BodyCounts= BodyCounts, uPCounts= UpCounts, uGCounts= UgCounts))
 }

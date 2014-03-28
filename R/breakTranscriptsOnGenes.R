@@ -1,25 +1,23 @@
 ###########################################################################
 ##
-##   Copyright 2012, 2013 Minho Chae.
+##   Copyright 2013, 2014 Charles Danko and Minho Chae.
 ##
 ##   This program is part of the groHMM R package
 ##
-##   groHMM is free software: you can redistribute it and/or modify it 
-##   under the terms of the GNU General Public License as published by 
-##   the Free Software Foundation, either version 3 of the License, or  
+##   groHMM is free software: you can redistribute it and/or modify it
+##   under the terms of the GNU General Public License as published by
+##   the Free Software Foundation, either version 3 of the License, or
 ##   (at your option) any later version.
 ##
-##   This program is distributed in the hope that it will be useful, but 
-##   WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY 
+##   This program is distributed in the hope that it will be useful, but
+##   WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 ##   or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 ##   for more details.
 ##
-##   You should have received a copy of the GNU General Public License along 
+##   You should have received a copy of the GNU General Public License along
 ##   with this program.  If not, see <http://www.gnu.org/licenses/>.
 ##
 ##########################################################################
-
-
 plot2Ranges <- function(tr, gr, main = "NA", col = "black", sep = 0.5, ...) {
 	height <- 1
 	xlim <- c(min(min(start(tr), min(start(gr)))), max(max(end(tr)), max(end(gr))))
@@ -70,11 +68,6 @@ breakInterval <- function(gr, brPos, gap=5, strand="+") {
 }
 
 
-##########################################################################
-##
-##      breakTranscriptsOnGenes 
-##      Date: 2014-2-19
-##
 #' breakTranscriptsOnGenes Breaks transcripts on genes 
 #'
 #' Breaks transcripts when they are overlapped with multiple well annotated genes.
@@ -83,7 +76,8 @@ breakInterval <- function(gr, brPos, gap=5, strand="+") {
 #' @param annox GRanges of non-overlapping annotations for reference.
 #' @param strand Takes "+" or "-" Default: "+"
 #' @param geneSize Numeric. Minimum gene size in annox to be used as reference. Default: 5000
-#' @param threshold Numeric. Ratio of overlapped region relative to a gene width. Transcripts only greater than this threshold are subjected to be broken. Default: 0.8
+#' @param threshold Numeric. Ratio of overlapped region relative to a gene width. 
+#' Transcripts only greater than this threshold are subjected to be broken. Default: 0.8
 #' @param gap Numeric.  Gap (bp) between broken transcripts.  Default: 5
 #' @param plot Logical.  If set to TRUE, show each step in a plot. Default: FALSE
 #' @author Minho Chae and Charles G. Danko
@@ -91,8 +85,6 @@ breakInterval <- function(gr, brPos, gap=5, strand="+") {
 #' tx <- GRanges("chr7", IRanges(1000, 30000), strand="+")
 #' annox <- GRanges("chr7", IRanges(start=c(1000, 20000), width=c(10000,10000)), strand="+")
 #' bPlus <- breakTranscriptsOnGenes(tx, annox, strand="+")
-##
-##########################################################################
 breakTranscriptsOnGenes <- function(tx, annox, strand="+", geneSize=5000, threshold=0.8, gap=5, plot=FALSE) {
 	tx <- tx[strand(tx) == strand,]
 	annox <- annox[strand(annox) == strand,]
@@ -146,16 +138,11 @@ breakTranscriptsOnGenes <- function(tx, annox, strand="+", geneSize=5000, thresh
 	mcols(bT)$ID <- paste(seqnames(bT), "_", start(bT), strand(bT), sep="")
 	okTrans <- setdiff(1:length(tx), dupTrans)
 	all <- c(tx[okTrans,], bT)
-	message(length(unique(ol.df$trans)), " transcripts are broken into ", length(bT))
+	cat(length(unique(ol.df$trans)), " transcripts are broken into ", length(bT), "\n")
 
 	return(all[order(as.character(seqnames(all)), start(all)),])
 }
 
-##########################################################################
-##
-##      combineTranscripts 
-##      Date: 2014-2-19
-##
 #' combineTranscripts Combines transnscipts. 
 #'
 #' Combines transcripts  that are within the same gene annotation, combining smaller transcripts for genes
@@ -164,15 +151,14 @@ breakTranscriptsOnGenes <- function(tx, annox, strand="+", geneSize=5000, thresh
 #' @param tx GRanges of transcripts.
 #' @param annotations GRanges of non-overlapping annotations for reference.
 #' @param geneSize Numeric. Minimum gene size in annotations to be used as reference. Default: 1000
-#' @param threshold Numeric. Ratio of overlapped region relative to transcript width. Transcripts only greater than this threshold are subjected to be combined. Default: 0.8
+#' @param threshold Numeric. Ratio of overlapped region relative to transcript width. 
+#' Transcripts only greater than this threshold are subjected to be combined. Default: 0.8
 #' @param plot Logical.  If set to TRUE, show easch step in a plot. Default: FALSE
 #' @author Minho Chae and Charles G. Danko
 #' @examples
 #' tx <- GRanges("chr7", IRanges(start=c(1000, 20000), width=c(10000,10000)), strand="+")
 #' annox <- GRanges("chr7", IRanges(1000, 30000), strand="+")
 #' combined <- combineTranscripts(tx, annox)
-##
-##########################################################################
 combineTranscripts <- function(tx, annox, geneSize=1000, threshold=0.8, plot=FALSE) {
 	annox <- annox[width(annox) > geneSize,]
 	ol <- findOverlaps(tx, annox)
@@ -211,7 +197,7 @@ combineTranscripts <- function(tx, annox, geneSize=1000, threshold=0.8, plot=FAL
 		}
 	}
 
-	message(NROW(ol.df), " transcripts are combined to ", NROW(cT))
+	cat(NROW(ol.df), " transcripts are combined to ", NROW(cT), "\n")
 	mcols(cT)$ID <- paste(seqnames(cT), "_", start(cT), strand(cT), sep="")
 	mcols(cT)$status <- "combined"
 
