@@ -34,10 +34,6 @@
  *
  ********************************************************************************/
 
-using namespace std;
-
-extern "C" {
-
 #include <R.h> 
 #include <S.h>
 #include <Rdefines.h>
@@ -202,10 +198,9 @@ SEXP Rviterbi(SEXP emi, SEXP nEmis, SEXP nstates, SEXP emiprobDist, SEXP emiprob
 	viterbi_path(hmm[0], emisDATA, maxT, NULL, NULL, hiddenstates);
 
 	// Get it in the correct state to return to R.
-	unprotect(1);
+	UNPROTECT(1);
 
 	// Return to R and exit!
 	return(hiddenStatesR);
 }
 
-}

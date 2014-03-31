@@ -31,10 +31,6 @@
  *
  ********************************************************************************/
 
-using namespace std;
-
-extern "C" {
-
 #include <R.h> 
 #include <S.h>
 #include <Rdefines.h>
@@ -268,4 +264,3 @@ void backward(fwbk_t *data) {
   data->bk_log_px = log(sum)+scalefactor;
 }
 
-}

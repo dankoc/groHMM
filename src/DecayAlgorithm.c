@@ -29,10 +29,6 @@
  *
  ********************************************************************************/
 
-using namespace std;
-
-extern "C" {
-
 #include <R.h> 
 #include <S.h>
 #include <Rdefines.h>
@@ -60,7 +56,7 @@ SEXP DecayAlgorithm(SEXP COUNTS, SEXP DECAY) {
 
 	// Get the dimensions.
 	SEXP DIM1;
-	PROTECT(DIM1 = getAttrib(COUNTS,R_DimSymbol));
+	DIM1 = getAttrib(COUNTS,R_DimSymbol);
 	int size = INTEGER(DIM1)[0];
 
 	// Construct return values.
@@ -78,7 +74,7 @@ SEXP DecayAlgorithm(SEXP COUNTS, SEXP DECAY) {
 						}*/
 	}
 
-	unprotect(2);
+	UNPROTECT(1);
 	return(ModCounts);
 }
 
@@ -93,6 +89,9 @@ SEXP DecayAlgorithm(SEXP COUNTS, SEXP DECAY) {
  *****************************************************************************************/
 SEXP getTranscriptPositions(SEXP Transform, SEXP Threshold, SEXP WindowSize) {
 
+	const int false= 0;
+	const int true= 1;
+
 	double *transform = REAL(Transform);
 	double threshold = REAL(Threshold)[0];
 	int windowsize = INTEGER(WindowSize)[0];
@@ -101,7 +100,7 @@ SEXP getTranscriptPositions(SEXP Transform, SEXP Threshold, SEXP WindowSize) {
 	int size = Rf_nrows(Transform);
 
 	// Run through once counting the size ...
-	bool currentlyInRegion=FALSE;
+	int currentlyInRegion=false;
 	int NumberOfRegions=0;
 	for(int i=0;i<size;i++) {
 		if( (transform[i] >= threshold) && !currentlyInRegion ) {
@@ -157,7 +156,7 @@ SEXP getTranscriptPositions(SEXP Transform, SEXP Threshold, SEXP WindowSize) {
 		}
 	}
 
-	unprotect(2);
+	UNPROTECT(2);
 	return(Regions);
 }
 
@@ -230,8 +229,7 @@ SEXP vect2bed(SEXP Transform, SEXP WindowSize) {
 		}
 	}
 
-	unprotect(2);
+	UNPROTECT(2);
 	return(Regions);
 }
 
-}

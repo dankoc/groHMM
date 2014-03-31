@@ -29,10 +29,6 @@
  *
  ********************************************************************************/
 
-using namespace std;
-
-extern "C" {
-
 #include <R.h> 
 #include <S.h>
 #include <Rdefines.h>
@@ -175,7 +171,6 @@ extern hmm_t *setupHMM(SEXP nstates, SEXP emiprobDist, SEXP emiprobVars, SEXP nE
 	return(hmm);
 }
 
-
 /*******************************************************************
  *
  *	Update paremeters of the emission functions for EM ...
@@ -246,27 +241,30 @@ extern void SStatsGamma_p1(int state, int emis_indx, void* ss, fwbk_t fwbk) {
 }
 extern void UpdateGamma(int state, void* ss, hmm_t *hmm) {
   ssGamma *SS = (ssGamma*)ss;
-  double shape, scale;
-  int updateRetVal= MLEGamma(SS[0].N, SS[0].sumPiXi, SS[0].sumLogPiXi, shape, scale, 1000, 10000);
+  double *shape= (double*)Calloc(1, double);
+  double *scale= (double*)Calloc(1, double);
+  int updateRetVal= MLEGamma(SS[0].N, SS[0].sumPiXi, SS[0].sumLogPiXi, shape, scale);
   if(updateRetVal == 0) {
-      hmm[0].em_args[state][0] = shape;
-      hmm[0].em_args[state][1] = scale;
+      hmm[0].em_args[state][0] = shape[0];
+      hmm[0].em_args[state][1] = scale[0];
   }
   else {
 	Rprintf("WARNING! [UpdateGamma]\t--> Gamma for state %d update failed due to instibility!  Using Shape: %f; Scale: %f\n", state, hmm[0].em_args[state][0], hmm[0].em_args[state][1]);
   }
+  Free(shape); 
+  Free(scale);
 }
 // Used to fit a constrained gamma, where E[x] = 1, and shape=1/scale.
 extern void UpdateGamma_SHAPEeq1overSCALE(int state, void* ss, hmm_t *hmm) {
   ssGamma *SS = (ssGamma*)ss;
-  MLEGamma_SHAPEeq1overSCALE(SS[0].N, SS[0].sumPiXi, SS[0].sumLogPiXi, SS[0].sumPiXiSq, hmm[0].em_args[state][0], hmm[0].em_args[state][1], 1000);
+  MLEGamma_SHAPEeq1overSCALE(SS[0].N, SS[0].sumPiXi, SS[0].sumLogPiXi, SS[0].sumPiXiSq, &(hmm[0].em_args[state][0]), &(hmm[0].em_args[state][1]));
   Rprintf("[UpdateGammaConstrained]\t--> Shape: %f; Scale: %f; Shape/Scale: %f (shape/scale must be 1!)\n", 
 		hmm[0].em_args[state][0], hmm[0].em_args[state][1], (hmm[0].em_args[state][0]/hmm[0].em_args[state][1]));
 }
 // Used to fit a constrained gamma where E[mean] = E[var].
 extern void UpdateGamma_SCALE1(int state, void* ss, hmm_t *hmm) {
   ssGamma *SS = (ssGamma*)ss;
-  MLEGamma_SCALE1(SS[0].N, SS[0].sumPiXi, SS[0].sumLogPiXi, hmm[0].em_args[state][0], hmm[0].em_args[state][1], 1000);
+  MLEGamma_SCALE1(SS[0].N, SS[0].sumPiXi, SS[0].sumLogPiXi, &(hmm[0].em_args[state][0]), &(hmm[0].em_args[state][1]));
   Rprintf("[UpdateGamma_Scale1]\t--> Shape: %f; Scale: %f\n", hmm[0].em_args[state][0], hmm[0].em_args[state][1]);
 }
 extern void SSfreeGamma(void* ss) { 
@@ -335,7 +333,7 @@ extern void SSfreeNormal(void* ss) {
 extern void* SSallocNormExp(int num) {
   void* ss = (void*)calloc(1,sizeof(ssNormExp));
   ssNormExp *SS = (ssNormExp*)ss;
-  SS[0].containsData = false;
+  SS[0].containsData = 0; // false;
   return(ss);
 }
 extern void SStatsNormExp(int state, int emis_indx, void* ss, fwbk_t fwbk) {
@@ -366,7 +364,7 @@ extern void SStatsNormExp(int state, int emis_indx, void* ss, fwbk_t fwbk) {
   if(SS[0].containsData)
      free((double*)SS[0].ex);
   SS[0].ex = newEx;
-  SS[0].containsData = true;
+  SS[0].containsData = 1; //true;
 }
 extern void UpdateNormExp(int state, void* ss, hmm_t *hmm) {
   Rprintf("[UpdateNormExp] START");
@@ -564,4 +562,3 @@ extern void  TransFree(void* ss) {
   free((ssTransition*)ss);
 }
 
-}

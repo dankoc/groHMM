@@ -29,6 +29,7 @@
  *
  ********************************************************************************/
 
+
 using namespace std;
 
 extern "C" {
@@ -137,7 +138,7 @@ SEXP WindowAnalysis(SEXP ProbeStart, SEXP ProbeEnd, SEXP ProbeStrand, SEXP Check
 
 	// Get the dimensions.
 	SEXP DIM1;
-	PROTECT(DIM1 = getAttrib(ProbeStart,R_DimSymbol));
+	DIM1 = getAttrib(ProbeStart,R_DimSymbol);
 	int NProbes = INTEGER(DIM1)[0];
 
 	// Construct return values.
@@ -149,7 +150,7 @@ SEXP WindowAnalysis(SEXP ProbeStart, SEXP ProbeEnd, SEXP ProbeStrand, SEXP Check
 	SlidingWindow(	Probe_Start, Probe_End, ProbeStrand, NProbes, CHAR(STRING_ELT(CheckStrand, 0)), 
 			WindowSize[0], StepSize[0], StartPosition[0], EndPosition[0], II, counts);
 
-	unprotect(2);
+	UNPROTECT(1);
 	return(COUNTS);
 }
 
@@ -216,7 +217,7 @@ int *MetaSlidingWindow(int Anchor_Start, const char *Anchor_Strand,
 
 // One loop starting at INDX.  Does not record unless its in the window.
 	int indx;
-	bool InWindow=FALSE;
+	int InWindow=0; // FALSE
 	for(int i=INDX;i<NProbes;i++) {
 		// If ANYWHERE in the region of interest AND on the same strand as feature (alternatively, don't count the strand if 'N'); record.
 		if((First <= (Probe_End[i])) && (Last >= Probe_Start[i]) &&
@@ -224,7 +225,7 @@ int *MetaSlidingWindow(int Anchor_Start, const char *Anchor_Strand,
 			// Put the start of the first INDX.
 			if(!InWindow) {
 				ans[size] = i;
-				InWindow=TRUE;
+				InWindow=1; // TRUE
 			}
 
 			// Foreach bin that contains a read, Increment!
@@ -270,7 +271,7 @@ SEXP CountUnMAQableReads(SEXP FeatureStart, SEXP FeatureEnd, SEXP UnMAQ, SEXP of
 
 	// Get the dimensions.
 	SEXP DIM1;
-	PROTECT(DIM1 = getAttrib(FeatureStart,R_DimSymbol));
+	DIM1 = getAttrib(FeatureStart,R_DimSymbol);
 	int NFEATURES = INTEGER(DIM1)[0];
 
 	// Construct return values.
@@ -299,7 +300,7 @@ SEXP CountUnMAQableReads(SEXP FeatureStart, SEXP FeatureEnd, SEXP UnMAQ, SEXP of
 
 	}
 
-	UNPROTECT(2);
+	UNPROTECT(1);
 	return(fID);
 }
 
@@ -331,9 +332,9 @@ SEXP HistogramOfReadsByFeature(SEXP FeatureStart, SEXP FeatureStrand,
 
 	// Get the dimensions.
 	SEXP DIM1, DIM2;
-	PROTECT(DIM1 = getAttrib(FeatureStart,R_DimSymbol));
+	DIM1 = getAttrib(FeatureStart,R_DimSymbol);
 	int NGENES = INTEGER(DIM1)[0];
-	PROTECT(DIM2 = getAttrib(ReadStart, R_DimSymbol));
+	DIM2 = getAttrib(ReadStart, R_DimSymbol);
 	int NREADS = INTEGER(DIM2)[0];
 
 	// Construct return values.
@@ -358,7 +359,7 @@ SEXP HistogramOfReadsByFeature(SEXP FeatureStart, SEXP FeatureStrand,
 		InitIndex = ADD[sz];
 	}
 
-	unprotect(3);
+	UNPROTECT(1);
 	return(counts);
 }
 
@@ -389,9 +390,9 @@ SEXP MatrixOfReadsByFeature(SEXP FeatureStart, SEXP FeatureStrand,
 
 	// Get the dimensions.
 	SEXP DIM1, DIM2;
-	PROTECT(DIM1 = getAttrib(FeatureStart,R_DimSymbol));
+	DIM1 = getAttrib(FeatureStart,R_DimSymbol);
 	int NGENES = INTEGER(DIM1)[0];
-	PROTECT(DIM2 = getAttrib(ReadStart, R_DimSymbol));
+	DIM2 = getAttrib(ReadStart, R_DimSymbol);
 	int NREADS = INTEGER(DIM2)[0];
 
 	// Construct return values.
@@ -417,7 +418,7 @@ SEXP MatrixOfReadsByFeature(SEXP FeatureStart, SEXP FeatureStrand,
 		InitIndex = ADD[sz];
 	}
 
-	unprotect(3);
+	UNPROTECT(1);
 	return(counts);
 }
 
@@ -446,9 +447,9 @@ SEXP NumberOfReadsInMaximalSlidingWindow(SEXP FeatureStart, SEXP FeatureStrand,
 	int UP 		= INTEGER(up)[0];
 	int DOWN	= INTEGER(down)[0];
 	SEXP DIM1, DIM2;
-	PROTECT(DIM1 = getAttrib(FeatureStart,R_DimSymbol));
+	DIM1 = getAttrib(FeatureStart,R_DimSymbol);
 	int NGENES = INTEGER(DIM1)[0];
-	PROTECT(DIM2 = getAttrib(ReadStart, R_DimSymbol));
+	DIM2 = getAttrib(ReadStart, R_DimSymbol);
 	int NREADS = INTEGER(DIM2)[0];
 
 	// Return values.
@@ -477,8 +478,7 @@ SEXP NumberOfReadsInMaximalSlidingWindow(SEXP FeatureStart, SEXP FeatureStrand,
 		InitIndex = ADD[sz];
 	}
 
-	unprotect(3);
+	UNPROTECT(1);
 	return(counts);
 }
-
 }
