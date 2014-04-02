@@ -34,7 +34,7 @@
 #' @param Fp Wiggle-formatted read counts on "+" strand. Optionally, Fp and Fm represent list() filled with a vector of counts for each chromosome.  Can detect transcripts starting from a fixed-step wiggle.
 #' @param Fm Wiggle-formatted read counts on "-" strand. 
 #' @param LtProbA Log probability of t... .  Default: -5. One of these is just an initialization, and the final value is set by EM.  The other is a holdout parameter.
-#' @param LtProbB Log probability of t... .  Default: -5.
+#' @param LtProbB Log probability of t... .  Default: -200.
 #' @param UTS Varience in read counts of the untranscribed sequence.  Default: 5.
 #' @param size Log probability of t... .  Default: -5.
 #' @param threshold Threshold change in total likelihood, below which EM exits. 
@@ -44,7 +44,7 @@
 #' @author Charles G. Danko and Minho Chae
 ## CGD: TODO: Test switch over to gamma, rather than dGamma?!
 
-detectTranscripts <- function(reads=NULL, Fp=NULL, Fm=NULL, LtProbA=-5, LtProbB=-5, UTS=5, size=50, threshold=0.1, debug=TRUE, ...) {
+detectTranscripts <- function(reads=NULL, Fp=NULL, Fm=NULL, LtProbA=-5, LtProbB=-200, UTS=5, size=50, threshold=0.1, debug=TRUE, ...) {
 
 	stopifnot(!is.null(reads)|(!is.null(Fp) & !is.null(Fm)))
 
