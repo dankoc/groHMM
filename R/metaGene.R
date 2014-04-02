@@ -140,8 +140,8 @@ runMetaGene <- function(features, reads, anchorType="TSS", size=100L, normCounts
 	}
 	message("OK")
 	
-	sense <- sense*normCounts
-	antisense <- antisense*normCounts
+	sense <- sense*normCounts/length(features)
+	antisense <- antisense*normCounts/length(features)
 	return(list(sense=sense, antisense=antisense))
 }
 
