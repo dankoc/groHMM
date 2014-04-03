@@ -96,7 +96,7 @@ cores to use can be set using \Rcode{mc.cores} option.
 
 <<use groHMM, eval=TRUE>>=
 library(groHMM)
-options(mc.cores=9)
+options(mc.cores=4)
 @
 
 \Rpackage{groHMM} uses the \Rpackage{GRanges} class from the \Rpackage{GenomicRanges} packages to represent a
