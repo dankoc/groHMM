@@ -30,7 +30,7 @@
 #' @param reverse If set to TRUE, multiplies values by -1.  Used for reversing GRO-seq data on the negative (-) strand. Default: FALSE
 #' @param track.type.line If set to TRUE, prints a header identifying the file as a wiggle.  Necessary to upload a custom track to the UCSC genome browser.  Default: TRUE
 #' @param ... Extra argument passed to export function in rtracklayer package. 
-#' @return Writes a wiggle file to the specified file.
+#' @return Writes a wiggle or BigWig file to the specified file.
 #' @author Charles G. Danko and Minho Chae
 #' @examples
 #' S0mR1 <- as(readGAlignments(system.file("extdata", "S0mR1.bam", package="groHMM")), "GRanges")

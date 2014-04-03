@@ -35,7 +35,7 @@
 #' @param nSampling Numeric. Number of subsampling.  Default: 0L
 #' @param samplingRatio Numeric. Ratio of sampling for annotations.  Default: 0.1
 #' @param ... Extra argument passed to mclapply.
-#' @return A list of FTD, TTD, PostTTS, and AUC. 
+#' @return Returns a list of FTD, TTD, PostTTS, and AUC. 
 #' @author Minho Chae
 #' @examples
 #' tx <- GRanges("chr7", IRanges(start=seq(1000,4000, by=1000), width=seq(1000, 1300, by=100)), strand=rep("+", 4))
@@ -202,7 +202,7 @@ getLIValues <- function (vals, n) {
 #'
 #' @param tx GRanges of transcripts predicted by HMM. 
 #' @param annox GRanges of non-overlapping annotatoins.
-#' @return  List of error information; runGenes, brokenSingleAnnotations, total, and rate.
+#' @return a list of error information; runGenes, brokenSingleAnnotations, total, and rate.
 #' @author Minho Chae
 #' @examples
 #' library(TxDb.Hsapiens.UCSC.hg19.knownGene)

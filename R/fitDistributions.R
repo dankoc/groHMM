@@ -40,7 +40,7 @@
 #' RgammaMLE fits a gamma distribution to a specified data vector using maximum likelihood.
 #'
 #' @param X A vector of observations, assumed to be real numbers in the inveraval [0,+Inf).  
-#' @return List of parameters for the best-fit gamma distribution (shape and scale).
+#' @return Returns a list of parameters for the best-fit gamma distribution (shape and scale).
 #' @author Charles G. Danko
 RgammaMLE <- function(X) {
     if(sum(X<0) > 0) message("Negative values not allowed!")
@@ -54,7 +54,7 @@ RgammaMLE <- function(X) {
 #' Rnorm fits a normal distribution to a specified data vector using maximum likelihood.
 #'
 #' @param X A vector of observations, assumed to be real numbers in the inveraval (-Inf,+Inf).  
-#' @return List of parameters for the best-fit normal distribution (mean and varience).
+#' @return Returns a list of parameters for the best-fit normal distribution (mean and varience).
 #' @author Charles G. Danko
 Rnorm <- function(X) {
 	returnList      <- list()
@@ -81,7 +81,7 @@ Rnorm <- function(X) {
 #' @param guess Initial guess for paremeters.  Default: c(0.5, 0, 1, 1).
 #' @param tol Convergence tolerance.  Default: sqrt(.Machine$double.eps).
 #' @param maxit  Maximum number of iterations.  Default: 10,000.
-#' @return List of parameters for the best-fit normal distribution (alpha, mean, varience, and lambda).
+#' @return Returns a list of parameters for the best-fit normal distribution (alpha, mean, varience, and lambda).
 #' @author Charles G. Danko
 Rnorm.exp <- function(xi, wi=rep(1,NROW(xi)), guess=c(0.5, 0, 1, 1), tol=sqrt(.Machine$double.eps), maxit=10000) {
   	Fit <- .Call("RNormExpMLE", xi, wi, guess, tol, as.integer(maxit), PACKAGE = "groHMM")

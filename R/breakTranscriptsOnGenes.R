@@ -81,6 +81,7 @@ breakInterval <- function(gr, brPos, gap=5, strand="+") {
 #' @param gap Numeric.  Gap (bp) between broken transcripts.  Default: 5
 #' @param plot Logical.  If set to TRUE, show each step in a plot. Default: FALSE
 #' @author Minho Chae and Charles G. Danko
+#' @return Returns GRanges object of broken transcripts. 
 #' @examples
 #' tx <- GRanges("chr7", IRanges(1000, 30000), strand="+")
 #' annox <- GRanges("chr7", IRanges(start=c(1000, 20000), width=c(10000,10000)), strand="+")
@@ -154,6 +155,7 @@ breakTranscriptsOnGenes <- function(tx, annox, strand="+", geneSize=5000, thresh
 #' @param threshold Numeric. Ratio of overlapped region relative to transcript width. 
 #' Transcripts only greater than this threshold are subjected to be combined. Default: 0.8
 #' @param plot Logical.  If set to TRUE, show easch step in a plot. Default: FALSE
+#' @return Returns GRanges object of combined transcripts. 
 #' @author Minho Chae and Charles G. Danko
 #' @examples
 #' tx <- GRanges("chr7", IRanges(start=c(1000, 20000), width=c(10000,10000)), strand="+")

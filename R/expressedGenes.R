@@ -32,7 +32,7 @@
 #' @param UnMap List object representing the position of un-mappable reads.  Default: not used.
 #' @param debug If set to true, returns the number of positions.  Default: FALSE.
 #' @param ... Extra argument passed to mclapply
-#' @return A data.frame representing the expression p.values for features of interest.
+#' @return Returns a data.frame representing the expression p.values for features of interest.
 #' @author Charles G. Danko and Minho Chae
 ##	This identifes genes that are expressed in a given cell, based on short read data.
 ##		f  == genes/annotations; columns represent: Chr, Start, End, Strand, ID.

@@ -40,8 +40,16 @@
 #' @param threshold Threshold change in total likelihood, below which EM exits. 
 #' @param debug If set to TRUE, provides additional print options. Default: FALSE
 #' @param ... Extra argument passed to mclapply
-#' @return Returns a GRanges object representing the predicted genomic coordinates of transcripts on both the + and - strand.
+#' @return Returns a list of emisParams, trnasParams, viterbiStates, and transcripts.  The transcript element is a GRanges object representing the predicted genomic coordinates of transcripts on both the + and - strand.
 #' @author Charles G. Danko and Minho Chae
+#' @examples
+#' S0mR1 <- as(readGAlignments(system.file("extdata", "S0mR1.bam",
+#'                package="groHMM")), "GRanges")
+#' S0mR2 <- as(readGAlignments(system.file("extdata", "S0mR2.bam",
+#'                package="groHMM")), "GRanges")
+#' S0m <- c(S0mR1, S0mR2)
+#' hmmResult <- detectTranscripts(S0m, LtProbB=-200, UTS=5, threshold=1)
+#' txHMM <- hmmResult$transcripts
 ## CGD: TODO: Test switch over to gamma, rather than dGamma?!
 
 detectTranscripts <- function(reads=NULL, Fp=NULL, Fm=NULL, LtProbA=-5, LtProbB=-200, UTS=5, size=50, threshold=0.1, debug=TRUE, ...) {

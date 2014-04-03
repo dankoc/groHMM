@@ -35,7 +35,7 @@
 #' @param ar GRanges of annotations to be collapsed. 
 #' @param minGap Minimun gap between overlapped annotations after truncated. Default: 1L
 #' @param minWidth Minimun width of consensus annotations. Default: 1000L
-#' @return GenomicRanges object of annotations. 
+#' @return Returns GRanges object of annotations. 
 #' @author Minho Chae
 #' @examples
 #' library(TxDb.Hsapiens.UCSC.hg19.knownGene)

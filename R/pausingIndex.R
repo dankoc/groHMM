@@ -66,7 +66,7 @@ approx.ratios.CI <- function(num.counts, denom.counts, alpha=0.05) {
 #'  @param UnMAQ Data structure representing the coordinates of all un-mappable regions in the genome.
 #'  @param debug If set to TRUE, provides additional print options. Default: FALSE
 #'  @param ... Extra argument passed to mclapply
-#'  @return Data.frame of the pausing indices for the input genes.
+#'  @return Returns a data.frame of the pausing indices for the input genes.
 #'  @author Charles G. Danko and Minho Chae.
 ##	Returns the pausing index for different genes.
 ##

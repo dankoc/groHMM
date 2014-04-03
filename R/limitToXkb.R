@@ -24,8 +24,11 @@
 #' @param features A GRanges object representing a set of genomic coordinates.  The meta-plot will be centered on the start position.
 #' @param offset Starts the interval from this position relative to the start of each genomic features.
 #' @param size Specifies the size of the window.
-#' @return Returns a new 'GRanges' object representing the size new size.
+#' @return Returns GRanges object with new genomic coordiates.
 #' @author Minho Chae and Charles G. Danko
+#' @examples
+#' tx <- GRanges("chr7", IRanges(1000, 30000), strand="+")
+#' newTX <- limitToXkb(tx)
 ##  This function limits a genomic range to a samll region relative to the transcription site.
 limitToXkb <- function(features, offset=1000, size=13000) {
 	w <- width(features)
@@ -154,7 +157,7 @@ countMappableReadsInInterval_foreachChrom <- function(i, C, features, UnMap) {
 #'
 #' @param file Path to the input file.
 #' @param ... Extra argument passed to read.table
-#' @return GenomicRanges object, representing mapped reads.
+#' @return Returns GRanges object representing mapped reads.
 #' @author Minho Chae and Charles G. Danko.
 readBed <- function(file, ...) {
     df <- read.table(file, ...)

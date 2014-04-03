@@ -31,7 +31,7 @@
 #' @param chrom Chromosome for which to return data.  Default: returns all avaliable data.
 #' @param limitPCRDups Counts only one read mapping to each start site.  NOTE: If set to TRUE, assumes that all reads are the same length (don't use for paired-end data).  Default: FALSE.  
 #' @param ... Extra argument passed to mclapply
-#' @return List object, each element of which represents a chromosome.
+#' @return Returns a list object, each element of which represents a chromosome.
 #' @author Charles G. Danko and Minho Chae
 windowAnalysis <- function(reads, strand="*", windowSize=stepSize, stepSize=windowSize, chrom=NULL, limitPCRDups=FALSE, ...) {
 	if (!(windowSize > 0 & (windowSize <= max(end(reads)))))

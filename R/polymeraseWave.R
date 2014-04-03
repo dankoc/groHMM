@@ -58,7 +58,7 @@
 #'  @param limitPCRDups If true, counts only 1 read at each position with >= 1 read.  NOT recommended to set this to TRUE.  Defulat: FALSE.
 #'  @param returnVal Takes value "simple" (default) or "alldata". "simple" returns a data.frame with Pol II wave end positions.  "alldata" returns all of the availiable data from each gene, including the full posterior distribution of the model after EM.
 #'	@param debug If TRUE, prints error messages.
-#'  @return Either a data.frame with Pol II wave end positions, or a List() structure with additional data, as specified by returnVal.
+#'  @return Returns either a data.frame with Pol II wave end positions, or a List() structure with additional data, as specified by returnVal.
 #'  @author Charles G. Danko and Minho Chae.
 ##	Given GRO-seq data, identifies the location of the polymerase wave in up- or down-
 ##	regulated genes.  This version is based on a full Baum-Welch EM implementation.

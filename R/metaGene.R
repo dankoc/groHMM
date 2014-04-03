@@ -33,7 +33,7 @@
 #' @param up Distance upstream of each features to align and histogram. Default: 10 kb.
 #' @param down Distance downstream of each features to align and histogram. If NULL, same as up. Default: NULL.
 #' @param ... Extra argument passed to mclapply
-#' @return A integer-Rle representing the 'typical' signal centered on a point of interest.
+#' @return Returns a integer-Rle representing the 'typical' signal centered on a point of interest.
 #' @author Charles G. Danko and Minho Chae
 #' @examples
 #' features <- GRanges("chr7", IRanges(1000, 1000), strand="+")
@@ -96,7 +96,7 @@ metaGene_foreachChrom <- function(chrom, featureList, plusCVG, minusCVG, size, u
 #' @param nSampling Numeric. Number of subsampling.  Default: 1000L
 #' @param samplingRatio Numeric. Ratio of sampling for features.  Default: 0.1
 #' @param ... Extra argument passed to mclapply.
-#' @return A integer-Rle representing the 'typical' signal centered on a point of interest.
+#' @return A list of integer-Rle for sense and antisene.
 #' @author Minho Chae
 #' features <- GRanges("chr7", IRanges(start=1000:1001, width=rep(1,2)), strand=c("+", "-"))
 #' reads <- GRanges("chr7", IRanges(start=c(1000:1003, 1100:1101), width=rep(1, 6)), strand=rep(c("+","-"), 3))
@@ -177,7 +177,7 @@ samplingMetaGene <- function(features, plusCVG, minusCVG, size=100L, up=10000L, 
 #' @param down Distance downstream of each f to align and histogram Default: same as up.
 #' @param debug If set to TRUE, provides additional print options. Default: FALSE
 #' @param ... Extra argument passed to mclapply
-#' @return A vector representing the 'typical' signal across genes of different length.
+#' @return Returns a vector representing the 'typical' signal across genes of different length.
 #' @author Charles G. Danko and Minho Chae
 ##	Returns a matrix of counts.  Rows represent different streches of DNA.
 ##	Columns represent positions relative to a certain feature.  Summed together,
@@ -264,7 +264,7 @@ metaGeneMatrix_foreachChrom <- function(i, C, features, reads, size, up, down, d
 #' @param n_windows The number of windows to break genes into.
 #' @param debug If set to TRUE, provides additional print options. Default: FALSE
 #' @param ... Extra argument passed to mclapply
-#' @return A vector representing the 'typical' signal across genes of different length.
+#' @return Returns a vector representing the 'typical' signal across genes of different length.
 #' @author Charles G. Danko and Minho Chae
 ##	Returns a histogram of the number of reads in each section of a
 ##	moving window of variable size across genes.
