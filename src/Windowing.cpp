@@ -216,7 +216,7 @@ int *MetaSlidingWindow(int Anchor_Start, const char *Anchor_Strand,
 		ans[i]=0;
 
 // One loop starting at INDX.  Does not record unless its in the window.
-	int indx;
+	int indx=0;     // Initialize
 	int InWindow=0; // FALSE
 	for(int i=INDX;i<NProbes;i++) {
 		// If ANYWHERE in the region of interest AND on the same strand as feature (alternatively, don't count the strand if 'N'); record.

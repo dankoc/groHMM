@@ -90,7 +90,7 @@ SEXP DecayAlgorithm(SEXP COUNTS, SEXP DECAY) {
 SEXP getTranscriptPositions(SEXP Transform, SEXP Threshold, SEXP WindowSize) {
 
 	const int false= 0;
-	const int true= 1;
+	// const int true= 1; unused
 
 	double *transform = REAL(Transform);
 	double threshold = REAL(Threshold)[0];

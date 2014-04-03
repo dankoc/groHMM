@@ -239,10 +239,10 @@ extern double normal_exp_optimfn(int n, double *par, void *ex);
  *************************************************/
 
 // Returns the log(prob.) of  being in state=state, at sequence position=position, given the fwbk output= fwbk.
-static  double MargainalizeSumLogProbOver(int state, int position, fwbk_t fwbk) {
-	double logPP = fwbk.forward[position][state]+fwbk.backward[position][state]-fwbk.log_px;
-	return(logPP);
-}
+// static  double MargainalizeSumLogProbOver(int state, int position, fwbk_t fwbk) {  // Unused
+// 	double logPP = fwbk.forward[position][state]+fwbk.backward[position][state]-fwbk.log_px;
+// 	return(logPP);
+// }
   
  /**************
   * expDif -- Robustly returns log(abs(exp(pGr)-exp(pLs))).
@@ -256,21 +256,21 @@ static  double expDif(double pLs, double pGr){
     return(log(1-exp(pGr-pLs))+pLs);
  }
 
-static  double expSum(double *logValues, int length) {
-  double scalefactor, CurrentSum;
-  double TotalSum=0;
-  scalefactor = logValues[0];
-  for(int k=1;k<length;k++)
-	scalefactor= max(scalefactor, logValues[k]);
-
-  for(int k=0;k<length;k++) {
-    CurrentSum=logValues[k]-scalefactor;
-    if(-1*CurrentSum < APPROX_EXP_VALUE_THRESHOLD)
-	TotalSum += exp(CurrentSum);
-  }
-
-  return(log(TotalSum) + scalefactor);
-}
+// static  double expSum(double *logValues, int length) { // Unused
+//  double scalefactor, CurrentSum;
+//  double TotalSum=0;
+//  scalefactor = logValues[0];
+//  for(int k=1;k<length;k++)
+//	scalefactor= max(scalefactor, logValues[k]);
+//
+//  for(int k=0;k<length;k++) {
+//    CurrentSum=logValues[k]-scalefactor;
+//    if(-1*CurrentSum < APPROX_EXP_VALUE_THRESHOLD)
+//	TotalSum += exp(CurrentSum);
+//  }
+//
+// return(log(TotalSum) + scalefactor);
+// }
 
 // expSum w/ just two values.  Inelegant, yet saves having to copy two doubles to a new double*.
 static  double expSum2(double v1, double v2) {
@@ -351,8 +351,8 @@ static R_INLINE double UNIFORM		(double value, double *args, int nArgs) {
 // args order: alpha, mu, sigma, lambda
 static R_INLINE double NORMAL_EXP		(double value, double *args, int nArgs) {
     if(isnan(value)!=0) return 0;
-	int useLowerTailN = (round(pnorm(value, args[1], args[2], FALSE, TRUE))==0); // Check for underflow.
-	int useLowerTailE = (round(pexp(value, args[3], FALSE, TRUE))==0); // Check for underflow.
+	// int useLowerTailN = (round(pnorm(value, args[1], args[2], FALSE, TRUE))==0); // Check for underflow.  Unused
+	// int useLowerTailE = (round(pexp(value, args[3], FALSE, TRUE))==0); // Check for underflow. Unused
 	double N= NORMAL(value, &args[1], 2);
 	double E= EXPONENTIAL(value, &args[3], 1);
 	double funcVal= expSum2(log(args[0])+N,log(1-args[0])+E);
@@ -363,8 +363,8 @@ static R_INLINE double NORMAL_EXP		(double value, double *args, int nArgs) {
 static R_INLINE double NORMAL_EXP_MINUS		(double value, double *args, int nArgs) {
     if(isnan(value)!=0) return 0;
 	value= -1*value; // reverse the VALUE.
-	int useLowerTailN = (round(pnorm(value, args[1], args[2], FALSE, TRUE))==0); // Check for underflow.
-	int useLowerTailE = (round(pexp(value, args[3], FALSE, TRUE))==0); // Check for underflow.
+	// int useLowerTailN = (round(pnorm(value, args[1], args[2], FALSE, TRUE))==0); // Check for underflow. Unused
+	// int useLowerTailE = (round(pexp(value, args[3], FALSE, TRUE))==0); // Check for underflow. Unused
 	double N= NORMAL(value, &args[1], 2);
 	double E= EXPONENTIAL(value, &args[3], 1);
 	double funcVal= expSum2(log(args[0])+N,log(1-args[0])+E);

@@ -91,7 +91,7 @@ extern int MLEGamma(double N, double SumXi, double SumLogXi, double *shape, doub
 	Rprintf("[MLEGamma] s=%f; shape=%f\n", s, shape[0]);
 
 	// Refine shape (k) using Newton's method.
-	int counter = 0;
+	// int counter = 0; Unused
 	double kPrime;
 	for( int counter=0; counter < maxIterations; counter++) {
 		kPrime=shape[0]-(log(shape[0])-digamma(shape[0])-s)/((1/shape[0])-trigamma(shape[0]));
@@ -174,7 +174,7 @@ extern int MLEGamma_SCALE1(double N, double SumXi, double SumLogXi, double *shap
 	shape[0] = SumXi/N;
 
 	// Refine shape (k) using Newton's method.
-	int counter = 0;
+	// int counter = 0; Unused
 	double kPrime;
 	for( int counter=0; counter < maxIterations; counter++) {
 		kPrime=shape[0]-((digamma(shape[0])-s)/trigamma(shape[0]));
@@ -206,7 +206,7 @@ extern int MLEGamma_SHAPEeq1overSCALE(double N, double SumXi, double SumLogXi, d
 	Rprintf("[MLEGamma_SHAPEeq1overSCALE] SumXi=%f; SumLogXi=%f; SumXiSq=%f; N=%f\n", SumXi, SumLogXi, SumXiSq, N);
 
 	// Refine shape (k) using Newton's method.
-	int counter = 0;
+	// int counter = 0; // Unused
 	double kPrime;
 	for( int counter=0; counter < maxIterations; counter++) {
 		Rprintf("[MLEGamma_SHAPEeq1overSCALE] shape: %f\n", shape[0]);
@@ -269,7 +269,7 @@ extern void normal_exp_optimgr(int n, double *par, double *gr, void *ex) {
 	for(int j=0;j<n;j++)
 		gr[j] = 0;
 
-	int c_lP=0, c_lM=0;
+	// int c_lP=0, c_lM=0; Unused
 	for(int i=1;i<maxn;i+=2){
 	  xi  = data[i];
 	  wi  = data[i+1];
