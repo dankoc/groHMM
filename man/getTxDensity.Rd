@@ -13,9 +13,6 @@ getTxDensity(tx, annox, plot = TRUE, scale = 1000L, nSampling = 0L,
   \item{plot}{Logical.  If TRUE, plot transcript density.
   Default: TRUE}
 
-  \item{strand}{Character.  "+" or "-"; NA for all
-  chromosomes.  Default: NA}
-
   \item{scale}{Numeric. Scaled size of a gene for
   transcript density calculation. Default: 1000L}
 
@@ -28,7 +25,7 @@ getTxDensity(tx, annox, plot = TRUE, scale = 1000L, nSampling = 0L,
   \item{...}{Extra argument passed to mclapply.}
 }
 \value{
-A list of FTD, TTD, PostTTS, and AUC.
+Returns a list of FTD, TTD, PostTTS, and AUC.
 }
 \description{
 Calculates transcript density for transcripts which

@@ -150,7 +150,7 @@ breakTranscriptsOnGenes <- function(tx, annox, strand="+", geneSize=5000, thresh
 #'  with low regulation into a single transcript representing the gene.
 #'
 #' @param tx GRanges of transcripts.
-#' @param annotations GRanges of non-overlapping annotations for reference.
+#' @param annox GRanges of non-overlapping annotations for reference.
 #' @param geneSize Numeric. Minimum gene size in annotations to be used as reference. Default: 1000
 #' @param threshold Numeric. Ratio of overlapped region relative to transcript width. 
 #' Transcripts only greater than this threshold are subjected to be combined. Default: 0.8

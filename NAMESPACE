@@ -1,7 +1,7 @@
 useDynLib(groHMM)
-import(MASS)
+import(MASS, IRanges, GenomicRanges, rtracklayer)
 importFrom(IRanges, unlist, split)
-export(writeWiggle, detectTranscript, makeConsensusAnnotation, evaluateHMMInAnnotations, windowAnalysis, 
+export(writeWiggle, detectTranscripts, makeConsensusAnnotations, evaluateHMMInAnnotations, windowAnalysis, 
 	breakTranscriptsOnGenes, combineTranscripts, getTxDensity, limitToXkb, runMetaGene, 
 	metaGene, countMappableReadsInInterval, pausingIndex,  expressedGenes, metaGeneMatrix, 
 	metaGene_nL, averagePlot, polymeraseWave, RgammaMLE, Rnorm, Rnorm.exp, tlsLoess, 

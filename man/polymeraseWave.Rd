@@ -73,8 +73,8 @@ polymeraseWave(reads1, reads2, genes, approxDist, size = 50,
   \item{debug}{If TRUE, prints error messages.}
 }
 \value{
-Either a data.frame with Pol II wave end positions, or a
-List() structure with additional data, as specified by
+Returns either a data.frame with Pol II wave end positions,
+or a List() structure with additional data, as specified by
 returnVal.
 }
 \description{

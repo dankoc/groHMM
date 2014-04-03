@@ -31,8 +31,8 @@ metaGene(features, reads = NULL, plusCVG = NULL, minusCVG = NULL,
   \item{...}{Extra argument passed to mclapply}
 }
 \value{
-A integer-Rle representing the 'typical' signal centered on
-a point of interest.
+Returns a integer-Rle representing the 'typical' signal
+centered on a point of interest.
 }
 \description{
 Supports parallel processing using mclapply in the

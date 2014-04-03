@@ -26,8 +26,8 @@ metaGeneMatrix(features, reads, size = 50, up = 1000, down = up,
   \item{...}{Extra argument passed to mclapply}
 }
 \value{
-A vector representing the 'typical' signal across genes of
-different length.
+Returns a vector representing the 'typical' signal across
+genes of different length.
 }
 \description{
 Supports parallel processing using mclapply in the

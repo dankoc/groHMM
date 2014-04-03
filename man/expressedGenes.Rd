@@ -28,8 +28,8 @@ expressedGenes(features, reads, Lambda = NULL, UnMap = NULL,
   \item{...}{Extra argument passed to mclapply}
 }
 \value{
-A data.frame representing the expression p.values for
-features of interest.
+Returns a data.frame representing the expression p.values
+for features of interest.
 }
 \description{
 Supports parallel processing using mclapply in the

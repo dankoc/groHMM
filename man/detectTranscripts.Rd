@@ -3,7 +3,7 @@
 \title{detectTranscripts detects transcripts de novo using a two-state hidden Markov model (HMM).}
 \usage{
 detectTranscripts(reads = NULL, Fp = NULL, Fm = NULL, LtProbA = -5,
-  LtProbB = -5, UTS = 5, size = 50, threshold = 0.1, debug = TRUE,
+  LtProbB = -200, UTS = 5, size = 50, threshold = 0.1, debug = TRUE,
   ...)
 }
 \arguments{
@@ -21,7 +21,7 @@ detectTranscripts(reads = NULL, Fp = NULL, Fm = NULL, LtProbA = -5,
   One of these is just an initialization, and the final
   value is set by EM.  The other is a holdout parameter.}
 
-  \item{LtProbB}{Log probability of t... .  Default: -5.}
+  \item{LtProbB}{Log probability of t... .  Default: -200.}
 
   \item{UTS}{Varience in read counts of the untranscribed
   sequence.  Default: 5.}
@@ -37,8 +37,10 @@ detectTranscripts(reads = NULL, Fp = NULL, Fm = NULL, LtProbA = -5,
   \item{...}{Extra argument passed to mclapply}
 }
 \value{
-Returns a GRanges object representing the predicted genomic
-coordinates of transcripts on both the + and - strand.
+Returns a list of emisParams, trnasParams, viterbiStates,
+and transcripts.  The transcript element is a GRanges
+object representing the predicted genomic coordinates of
+transcripts on both the + and - strand.
 }
 \description{
 Read counts can be specified as either a GRanges object
@@ -56,6 +58,15 @@ Lis JT, Kraus WL. A rapid, extensive, and transient
 transcriptional response to estrogen signaling in breast
 cancer cells. Cell. 2011 May 13;145(4):622-34. doi:
 10.1016/j.cell.2011.03.042.
+}
+\examples{
+S0mR1 <- as(readGAlignments(system.file("extdata", "S0mR1.bam",
+               package="groHMM")), "GRanges")
+S0mR2 <- as(readGAlignments(system.file("extdata", "S0mR2.bam",
+               package="groHMM")), "GRanges")
+S0m <- c(S0mR1, S0mR2)
+hmmResult <- detectTranscripts(S0m, LtProbB=-200, UTS=5, threshold=1)
+txHMM <- hmmResult$transcripts
 }
 \author{
 Charles G. Danko and Minho Chae

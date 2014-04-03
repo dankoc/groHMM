@@ -24,8 +24,8 @@ Rnorm.exp(xi, wi = rep(1, NROW(xi)), guess = c(0.5, 0, 1, 1),
   10,000.}
 }
 \value{
-List of parameters for the best-fit normal distribution
-(alpha, mean, varience, and lambda).
+Returns a list of parameters for the best-fit normal
+distribution (alpha, mean, varience, and lambda).
 }
 \description{
 Distrubtion function devined by: alpha*Normal(mean,

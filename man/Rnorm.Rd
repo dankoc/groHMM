@@ -9,8 +9,8 @@ Rnorm(X)
   numbers in the inveraval (-Inf,+Inf).}
 }
 \value{
-List of parameters for the best-fit normal distribution
-(mean and varience).
+Returns a list of parameters for the best-fit normal
+distribution (mean and varience).
 }
 \description{
 Rnorm fits a normal distribution to a specified data vector

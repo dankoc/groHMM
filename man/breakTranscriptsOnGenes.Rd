@@ -26,6 +26,9 @@ breakTranscriptsOnGenes(tx, annox, strand = "+", geneSize = 5000,
   \item{plot}{Logical.  If set to TRUE, show each step in a
   plot. Default: FALSE}
 }
+\value{
+Returns GRanges object of broken transcripts.
+}
 \description{
 Breaks transcripts when they are overlapped with multiple
 well annotated genes.

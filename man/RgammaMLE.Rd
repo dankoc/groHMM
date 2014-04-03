@@ -9,8 +9,8 @@ RgammaMLE(X)
   numbers in the inveraval [0,+Inf).}
 }
 \value{
-List of parameters for the best-fit gamma distribution
-(shape and scale).
+Returns a list of parameters for the best-fit gamma
+distribution (shape and scale).
 }
 \description{
 RgammaMLE fits a gamma distribution to a specified data

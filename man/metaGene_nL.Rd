@@ -20,8 +20,8 @@ metaGene_nL(features, reads, n_windows = 1000, debug = FALSE, ...)
   \item{...}{Extra argument passed to mclapply}
 }
 \value{
-A vector representing the 'typical' signal across genes of
-different length.
+Returns a vector representing the 'typical' signal across
+genes of different length.
 }
 \description{
 Supports parallel processing using mclapply in the

@@ -35,7 +35,7 @@ writeWiggle(reads, file, strand = "*", fileType = "wig",
   rtracklayer package.}
 }
 \value{
-Writes a wiggle file to the specified file.
+Writes a wiggle or BigWig file to the specified file.
 }
 \description{
 writeWiggle writes a wiggle track or BigWig file suitable

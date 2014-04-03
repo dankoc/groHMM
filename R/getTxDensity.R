@@ -30,7 +30,6 @@
 #' @param tx GRanges of transcripts. 
 #' @param annox GRanges of non-overlapping annotatoins.
 #' @param plot Logical.  If TRUE, plot transcript density.  Default: TRUE
-#' @param strand Character.  "+" or "-";  NA for all chromosomes.  Default: NA
 #' @param scale Numeric. Scaled size of a gene for transcript density calculation. Default: 1000L
 #' @param nSampling Numeric. Number of subsampling.  Default: 0L
 #' @param samplingRatio Numeric. Ratio of sampling for annotations.  Default: 0.1
@@ -205,7 +204,6 @@ getLIValues <- function (vals, n) {
 #' @return a list of error information; runGenes, brokenSingleAnnotations, total, and rate.
 #' @author Minho Chae
 #' @examples
-#' library(TxDb.Hsapiens.UCSC.hg19.knownGene)
 #' tx <- GRanges("chr7", IRanges(start=seq(100, 1000, by=200), width=seq(100, 1000, by=100)), strand="+")
 #' annox <- GRanges("chr7", IRanges(start=seq(110, 1100, by=150), width=seq(100, 1000, by=150)), strand="+")
 #' error <- evaluateHMMAnnotations(tx, annox)

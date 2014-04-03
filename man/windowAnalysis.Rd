@@ -28,7 +28,8 @@ windowAnalysis(reads, strand = "*", windowSize = stepSize,
   \item{...}{Extra argument passed to mclapply}
 }
 \value{
-List object, each element of which represents a chromosome.
+Returns a list object, each element of which represents a
+chromosome.
 }
 \description{
 Supports parallel processing using mclapply in the

@@ -7,12 +7,11 @@ Author: Charles G. Danko <dankoc@gmail.com>, Minho Chae <minho.chae@gmail.com>,
 Maintainer: Minho Chae<minho.chae@gmail.com>, Charles G. Danko
     <dankoc@gmail.com>
 Depends:
-    R (>= 2.14),
-    MASS,
+    R (>= 3.0.2), MASS,
+    IRanges, 
     GenomicRanges,
     rtracklayer,
     parallel
-LinkingTo: 
 Suggests:
     GenomicFeatures,
     edgeR,

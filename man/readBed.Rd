@@ -10,7 +10,7 @@ readBed(file, ...)
   \item{...}{Extra argument passed to read.table}
 }
 \value{
-GenomicRanges object, representing mapped reads.
+Returns GRanges object representing mapped reads.
 }
 \description{
 Bed file format is assumed to be either four column:

@@ -29,7 +29,8 @@ pausingIndex(features, reads, size = 50, up = 1000, down = 1000,
   \item{...}{Extra argument passed to mclapply}
 }
 \value{
-Data.frame of the pausing indices for the input genes.
+Returns a data.frame of the pausing indices for the input
+genes.
 }
 \description{
 Supports parallel processing using mclapply in the

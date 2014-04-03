@@ -12,9 +12,11 @@ makeConsensusAnnotations(ar, minGap = 1L, minWidth = 1000L, ...)
 
   \item{minWidth}{Minimun width of consensus annotations.
   Default: 1000L}
+
+  \item{...}{Extra argument passed to mclapply.}
 }
 \value{
-GenomicRanges object of annotations.
+Returns GRanges object of annotations.
 }
 \description{
 Makes a non-overlapping consensus annotation.  Gene

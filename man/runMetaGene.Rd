@@ -19,6 +19,9 @@ runMetaGene(features, reads, anchorType = "TSS", size = 100L,
   \item{size}{Numeric.  The size of the moving window.
   Default: 100L}
 
+  \item{normCounts}{Numeric.  Normalization vector such as
+  average reads.  Default: 1L}
+
   \item{up}{Numeric. Distance upstream of each feature to
   align and histogram. Default: 1 kb}
 
@@ -38,8 +41,7 @@ runMetaGene(features, reads, anchorType = "TSS", size = 100L,
   \item{...}{Extra argument passed to mclapply.}
 }
 \value{
-A integer-Rle representing the 'typical' signal centered on
-a point of interest.
+A list of integer-Rle for sense and antisene.
 }
 \description{
 Supports parallel processing using mclapply in the

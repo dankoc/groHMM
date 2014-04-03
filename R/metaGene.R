@@ -90,6 +90,7 @@ metaGene_foreachChrom <- function(chrom, featureList, plusCVG, minusCVG, size, u
 #' @param reads GRanges of reads.
 #' @param anchorType Either 'TSS' or 'TTS'.  Metagene will be centered on the transcription start site(TSS) or transcription termination site(TTS).  Default: TSS.
 #' @param size Numeric.  The size of the moving window. Default: 100L
+#' @param normCounts Numeric.  Normalization vector such as average reads.  Default: 1L
 #' @param up Numeric. Distance upstream of each feature to align and histogram. Default: 1 kb
 #' @param down Numeric. Distance downstream of each feature to align and histogram.  If NULL, down is same as up. Default: NULL
 #' @param sampling Logical.  If TRUE, subsampling of Metagene is used.  Default: FALSE

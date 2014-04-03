@@ -8,8 +8,8 @@ combineTranscripts(tx, annox, geneSize = 1000, threshold = 0.8,
 \arguments{
   \item{tx}{GRanges of transcripts.}
 
-  \item{annotations}{GRanges of non-overlapping annotations
-  for reference.}
+  \item{annox}{GRanges of non-overlapping annotations for
+  reference.}
 
   \item{geneSize}{Numeric. Minimum gene size in annotations
   to be used as reference. Default: 1000}
@@ -21,6 +21,9 @@ combineTranscripts(tx, annox, geneSize = 1000, threshold = 0.8,
 
   \item{plot}{Logical.  If set to TRUE, show easch step in
   a plot. Default: FALSE}
+}
+\value{
+Returns GRanges object of combined transcripts.
 }
 \description{
 Combines transcripts that are within the same gene

@@ -15,12 +15,15 @@ limitToXkb(features, offset = 1000, size = 13000)
   \item{size}{Specifies the size of the window.}
 }
 \value{
-Returns a new 'GRanges' object representing the size new
-size.
+Returns GRanges object with new genomic coordiates.
 }
 \description{
 limitToXkb truncates a set of genomic itnervals at a
 constant, maximum size.
+}
+\examples{
+tx <- GRanges("chr7", IRanges(1000, 30000), strand="+")
+newTX <- limitToXkb(tx)
 }
 \author{
 Minho Chae and Charles G. Danko
