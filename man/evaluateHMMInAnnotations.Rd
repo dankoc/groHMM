@@ -20,7 +20,7 @@ annotations.
 \examples{
 tx <- GRanges("chr7", IRanges(start=seq(100, 1000, by=200), width=seq(100, 1000, by=100)), strand="+")
 annox <- GRanges("chr7", IRanges(start=seq(110, 1100, by=150), width=seq(100, 1000, by=150)), strand="+")
-error <- evaluateHMMAnnotations(tx, annox)
+error <- evaluateHMMInAnnotations(tx, annox)
 }
 \author{
 Minho Chae

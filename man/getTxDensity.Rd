@@ -41,7 +41,7 @@ the option 'mc.cores'.
 \examples{
 tx <- GRanges("chr7", IRanges(start=seq(1000,4000, by=1000), width=seq(1000, 1300, by=100)), strand=rep("+", 4))
 annox <- GRanges("chr7", IRanges(start=seq(1100,4100, by=1000), width=seq(900, 1200, by=100)), strand=rep("+", 4))
-density <- plotTxDensity(tx, annox)
+density <- getTxDensity(tx, annox)
 }
 \author{
 Minho Chae

@@ -89,8 +89,16 @@ approx.ratios.CI <- function(num.counts, denom.counts, alpha=0.05) {
 ##			where 0 indicates the start of transcription, and negative numbers specify upstream sequence.
 ##			This is likely useful for rate; perhaps for identifying internal paused-peaks...
 pausingIndex <- function(features, reads, size=50, up=1000, down=1000, UnMAQ=NULL, debug=FALSE, ...) {
+	# make sure reads are sorted
+	reads <- reads[order(as.character(seqnames(reads)), start(reads)), ]
         f <- data.frame(chrom=as.character(seqnames(features)), start=as.integer(start(features)),
                                 end=as.integer(end(features)), strand=as.character(strand(features)))
+	if ("symbol" %in% names(mcols(features))){
+		f <- cbind(f, symbol=features$symbol) 
+	} else {
+		f <- cbind(f, symbol=GeneID <- as.character(seq_len(NROW(f))))
+	}
+
         p <- data.frame(chrom=as.character(seqnames(reads)), start=as.integer(start(reads)),
                                 end=as.integer(end(reads)), strand=as.character(strand(reads)))
 
@@ -98,7 +106,7 @@ pausingIndex <- function(features, reads, size=50, up=1000, down=1000, UnMAQ=NUL
 	Pause <- rep(0,NROW(f))
 	Body  <- rep(0,NROW(f))
 	Fish  <- rep(0,NROW(f))
-	GeneID <- rep("",NROW(f))
+	GeneID <- rep("", NROW(f))
 	CIl  <- rep(0,NROW(f))
 	CIu  <- rep(0,NROW(f))
 

@@ -239,10 +239,10 @@ extern double normal_exp_optimfn(int n, double *par, void *ex);
  *************************************************/
 
 // Returns the log(prob.) of  being in state=state, at sequence position=position, given the fwbk output= fwbk.
-// static  double MargainalizeSumLogProbOver(int state, int position, fwbk_t fwbk) {  // Unused
-// 	double logPP = fwbk.forward[position][state]+fwbk.backward[position][state]-fwbk.log_px;
-// 	return(logPP);
-// }
+static  double MargainalizeSumLogProbOver(int state, int position, fwbk_t fwbk) {  
+ 	double logPP = fwbk.forward[position][state]+fwbk.backward[position][state]-fwbk.log_px;
+ 	return(logPP);
+}
   
  /**************
   * expDif -- Robustly returns log(abs(exp(pGr)-exp(pLs))).
@@ -256,21 +256,21 @@ static  double expDif(double pLs, double pGr){
     return(log(1-exp(pGr-pLs))+pLs);
  }
 
-// static  double expSum(double *logValues, int length) { // Unused
-//  double scalefactor, CurrentSum;
-//  double TotalSum=0;
-//  scalefactor = logValues[0];
-//  for(int k=1;k<length;k++)
-//	scalefactor= max(scalefactor, logValues[k]);
-//
-//  for(int k=0;k<length;k++) {
-//    CurrentSum=logValues[k]-scalefactor;
-//    if(-1*CurrentSum < APPROX_EXP_VALUE_THRESHOLD)
-//	TotalSum += exp(CurrentSum);
-//  }
-//
-// return(log(TotalSum) + scalefactor);
-// }
+static  double expSum(double *logValues, int length) {
+  double scalefactor, CurrentSum;
+  double TotalSum=0;
+  scalefactor = logValues[0];
+  for(int k=1;k<length;k++)
+	scalefactor= max(scalefactor, logValues[k]);
+
+  for(int k=0;k<length;k++) {
+    CurrentSum=logValues[k]-scalefactor;
+    if(-1*CurrentSum < APPROX_EXP_VALUE_THRESHOLD)
+	TotalSum += exp(CurrentSum);
+  }
+
+ return(log(TotalSum) + scalefactor);
+}
 
 // expSum w/ just two values.  Inelegant, yet saves having to copy two doubles to a new double*.
 static  double expSum2(double v1, double v2) {

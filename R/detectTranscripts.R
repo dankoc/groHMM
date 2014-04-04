@@ -43,6 +43,7 @@
 #' @return Returns a list of emisParams, trnasParams, viterbiStates, and transcripts.  The transcript element is a GRanges object representing the predicted genomic coordinates of transcripts on both the + and - strand.
 #' @author Charles G. Danko and Minho Chae
 #' @examples
+#' library(GenomicRanges)
 #' S0mR1 <- as(readGAlignments(system.file("extdata", "S0mR1.bam",
 #'                package="groHMM")), "GRanges")
 #' S0mR2 <- as(readGAlignments(system.file("extdata", "S0mR2.bam",

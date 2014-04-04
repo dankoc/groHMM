@@ -34,8 +34,8 @@
 #' @author Charles G. Danko and Minho Chae
 #' @examples
 #' S0mR1 <- as(readGAlignments(system.file("extdata", "S0mR1.bam", package="groHMM")), "GRanges")
-#' writeWiggleNew(reads=S0mR1, file="S0mR1_Plus.wig", fileType="wig", strand="+", reverse=FALSE)
-#' writeWiggleNew(reads=S0mR1, file="S0mR1_Plus.bw", fileType="BigWig", strand="+", reverse=FALSE)
+#' writeWiggle(reads=S0mR1, file="S0mR1_Plus.wig", fileType="wig", strand="+", reverse=FALSE)
+#' writeWiggle(reads=S0mR1, file="S0mR1_Plus.bw", fileType="BigWig", strand="+", reverse=FALSE)
 writeWiggle <- function(reads, file, strand="*", fileType="wig",  
 							normCounts=NULL, reverse=FALSE, track.type.line=FALSE, ...) {
 	if (strand == "*") {

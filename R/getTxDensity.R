@@ -39,7 +39,7 @@
 #' @examples
 #' tx <- GRanges("chr7", IRanges(start=seq(1000,4000, by=1000), width=seq(1000, 1300, by=100)), strand=rep("+", 4))
 #' annox <- GRanges("chr7", IRanges(start=seq(1100,4100, by=1000), width=seq(900, 1200, by=100)), strand=rep("+", 4))
-#' density <- plotTxDensity(tx, annox) 
+#' density <- getTxDensity(tx, annox) 
 getTxDensity <- function(tx, annox, plot=TRUE, scale=1000L, nSampling=0L, samplingRatio=0.1, ...) {
 	ol <- findOverlaps(tx, annox)
 
@@ -206,7 +206,7 @@ getLIValues <- function (vals, n) {
 #' @examples
 #' tx <- GRanges("chr7", IRanges(start=seq(100, 1000, by=200), width=seq(100, 1000, by=100)), strand="+")
 #' annox <- GRanges("chr7", IRanges(start=seq(110, 1100, by=150), width=seq(100, 1000, by=150)), strand="+")
-#' error <- evaluateHMMAnnotations(tx, annox)
+#' error <- evaluateHMMInAnnotations(tx, annox)
 evaluateHMMInAnnotations <- function (tx, annox) {
     o <- findOverlaps(tx, annox)
     runGenes <- length(unique(queryHits(o[duplicated(queryHits(o)),])))  # count tx
