@@ -82,7 +82,7 @@ getTxDensity <- function(tx, annox, plot=TRUE, scale=1000L, nSampling=0L, sampli
 	if (length(remove_bu) > 0)  
 		ol <- ol[-remove_bu,]
 
-	cat(" Used for density = ", length(ol))
+	cat(" Used for density = ", length(ol), "\n")
 
 	olTx <- tx[queryHits(ol),]
 	# Now get the coverage of selected transcripts

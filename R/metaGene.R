@@ -129,6 +129,7 @@ runMetaGene <- function(features, reads, anchorType="TSS", size=100L, normCounts
 				nSampling=nSampling, samplingRatio=samplingRatio, ...) 
 	} else {
 		sense <- metaGene(features=f, plusCVG=plusCVG, minusCVG=minusCVG, size=size, up=up, down=down, ...)
+		sense <- sense/length(features)
 	}
 	message("OK")
 
@@ -138,11 +139,12 @@ runMetaGene <- function(features, reads, anchorType="TSS", size=100L, normCounts
 				nSampling=nSampling, samplingRatio=samplingRatio, ...)
 	} else {
 		antisense <- metaGene(features=fRev, plusCVG=plusCVG, minusCVG=minusCVG, size=size, up=up, down=down, ...)
+		antisense <- antisense/length(features)
 	}
 	message("OK")
 	
-	sense <- sense*normCounts/length(features)
-	antisense <- antisense*normCounts/length(features)
+	sense <- sense*normCounts
+	antisense <- antisense*normCounts
 	return(list(sense=sense, antisense=antisense))
 }
 
