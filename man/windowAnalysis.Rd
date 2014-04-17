@@ -36,6 +36,10 @@ Supports parallel processing using mclapply in the
 'parallel' package.  To change the number of processors set
 the option 'mc.cores'.
 }
+\examples{
+S0mR1 <- as(readGAlignments(system.file("extdata", "S0mR1.bam",
+		package="groHMM")), "GRanges")
+}
 \author{
 Charles G. Danko and Minho Chae
 }

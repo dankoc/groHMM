@@ -60,7 +60,6 @@ cancer cells. Cell. 2011 May 13;145(4):622-34. doi:
 10.1016/j.cell.2011.03.042.
 }
 \examples{
-library(GenomicRanges)
 S0mR1 <- as(readGAlignments(system.file("extdata", "S0mR1.bam",
                package="groHMM")), "GRanges")
 S0mR2 <- as(readGAlignments(system.file("extdata", "S0mR2.bam",

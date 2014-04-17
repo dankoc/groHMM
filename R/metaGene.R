@@ -392,7 +392,7 @@ averagePlot <- function(ProbeData, Peaks, size=50, bins= seq(-1000,1000,size)) {
 	  
 	  ## The '$' ensures that chrom is end of line.  Otherwise, grep for chr1 returns chr10-chr19 as well.
 	  ## Should work fine, even when chromsome is simply "chrN".
-	  indxAffxProbes <- grep(paste(chr,"$", sep=""), ProbeData[[1]], perl=T)
+	  indxAffxProbes <- grep(paste(chr,"$", sep=""), ProbeData[[1]], perl=TRUE)
 
 	  ##   Calculate the minimum distance between the probe and the vector over all features ... 
 	  ProbeData$minDist[indxAffxProbes] <- unlist(lapply(indxAffxProbes, function(x) {
