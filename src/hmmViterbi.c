@@ -22,15 +22,15 @@
 
 /********************************************************************************
  *
- *	Source code written for GRO-seq package by Charles Danko.
+ *  Source code written for GRO-seq package by Charles Danko.
  *
- *	Implementation of standard Viterbi algorithm heavily based off of 
- *	code by Andre Martins (alm253@cornell.edu).
+ *  Implementation of standard Viterbi algorithm heavily based off of 
+ *  code by Andre Martins (alm253@cornell.edu).
  *
- *	This implementation assumes that emission probabilities are modeled by 
- *	parametric probability distributions.  
- *	
- *	It should be fairly easy to write your own distribution/ function.  
+ *  This implementation assumes that emission probabilities are modeled by 
+ *  parametric probability distributions.  
+ *  
+ *  It should be fairly easy to write your own distribution/ function.  
  *
  ********************************************************************************/
 
@@ -90,8 +90,8 @@ extern void viterbi_path(hmm_t hmm, double **data, int seq_len, double **matrix,
   /* fill first row */
   for (l = 0; l < cols; ++l) { /* -1 = start state */
     matrix[0][l] = log_iProb[l];
-	for(emis_count=0;emis_count<n_emis;emis_count++) 
-		matrix[0][l] += (log_eProb[l+cols*emis_count])(data[emis_count][0], emargs[l+cols*emis_count], 4);
+    for(emis_count=0;emis_count<n_emis;emis_count++) 
+        matrix[0][l] += (log_eProb[l+cols*emis_count])(data[emis_count][0], emargs[l+cols*emis_count], 4);
     backptr[0][l] = -1; /* stop */
   }
 
@@ -102,24 +102,24 @@ extern void viterbi_path(hmm_t hmm, double **data, int seq_len, double **matrix,
     b_row = backptr[i];
 
     for (l = 0; l < cols; ++l) {
-		double max = -HUGE_VAL;
-		int argmax = -1;
-		
-		for (k = 0; k<hmm.n_states; k++) {
-			double value = m_row_prev[k] + log_tProb[k][l];
+        double max = -HUGE_VAL;
+        int argmax = -1;
+        
+        for (k = 0; k<hmm.n_states; k++) {
+            double value = m_row_prev[k] + log_tProb[k][l];
 
-			if (value > max) {
-				max = value;
-				argmax = k;
-			}
-		}
+            if (value > max) {
+                max = value;
+                argmax = k;
+            }
+        }
 
-		// for loop over emissions...
-		m_row[l] = max; 
-		for(emis_count=0;emis_count<n_emis;emis_count++) 
-				m_row[l] += (log_eProb[l+cols*emis_count])(data[emis_count][i], emargs[l+cols*emis_count], 4);
-		b_row[l] = argmax;
-	}
+        // for loop over emissions...
+        m_row[l] = max; 
+        for(emis_count=0;emis_count<n_emis;emis_count++) 
+                m_row[l] += (log_eProb[l+cols*emis_count])(data[emis_count][i], emargs[l+cols*emis_count], 4);
+        b_row[l] = argmax;
+    }
   }
   
   /* backtrace */
@@ -132,7 +132,7 @@ extern void viterbi_path(hmm_t hmm, double **data, int seq_len, double **matrix,
   for (k = 0; k < cols; ++k) {
     double value = m_row[k];
     if (value > max) {
-	  max = value;
+      max = value;
       argmax = k;
     }
   }
@@ -147,60 +147,60 @@ extern void viterbi_path(hmm_t hmm, double **data, int seq_len, double **matrix,
 
   // Free matrices.
   if(m_free)
-	  matrix_free(matrix, 0, -1);
+      matrix_free(matrix, 0, -1);
   if(b_free)
-  	imatrix_free(backptr, 0, -1);
+    imatrix_free(backptr, 0, -1);
 }
 
 /*****************************************************************************************
  *
  * Rviterbi -- Returns a vector of states which maxamizes the probability given the emissions. 
- *	       Serves as a wrapper to Andre's Viterbi implementation.
+ *         Serves as a wrapper to Andre's Viterbi implementation.
  *
- *	emi	--	Vector of observed emission over all sequence.
+ *  emi --  Vector of observed emission over all sequence.
  *  nEmis   --  Number of emissions vectors.
- *	nstates	--	Number of states in the HMM.
- *	emiprobD-- 	Vector (1 x nstates) of strings representing the emission probability distirubitons.
- *	emiprobV--	Matrix (3? x nstates) representing arguments to pdist*.  Unused paremeters can be set to 0.
- *	tprob	--	Matrix (nstates x nstates) representing transition probabilities between states.
- *	iprob 	--	Vector (1 x nstates) of initial probabilities.
+ *  nstates --  Number of states in the HMM.
+ *  emiprobD--  Vector (1 x nstates) of strings representing the emission probability distirubitons.
+ *  emiprobV--  Matrix (3? x nstates) representing arguments to pdist*.  Unused paremeters can be set to 0.
+ *  tprob   --  Matrix (nstates x nstates) representing transition probabilities between states.
+ *  iprob   --  Vector (1 x nstates) of initial probabilities.
  *
- *	Assumptions: 
- *	(1) Emission probabilities are drawn from a continuous prob. distribution;
- *	    which prob. distribution they are drawn from is set using emiprobD.
- *	(2) emi represents emissions from one sequence only!  Rviterbi, and/or viterbi_path 
- *	    are run multiple times, once for each sequence.
+ *  Assumptions: 
+ *  (1) Emission probabilities are drawn from a continuous prob. distribution;
+ *      which prob. distribution they are drawn from is set using emiprobD.
+ *  (2) emi represents emissions from one sequence only!  Rviterbi, and/or viterbi_path 
+ *      are run multiple times, once for each sequence.
  *
- *	Questions/Implementation Notes:
- *	What is the best way to pass a distribution from R?  Can I pass the name of the function?!
- *	  Also needs to pass the arguments!
- *	  For now, assume that we can pass a string representing the function name, and make it in an if statement.
+ *  Questions/Implementation Notes:
+ *  What is the best way to pass a distribution from R?  Can I pass the name of the function?!
+ *    Also needs to pass the arguments!
+ *    For now, assume that we can pass a string representing the function name, and make it in an if statement.
  *
- *	Updates/Information:
- * 	2009-09-09: Wrote this function to integrate R with Andre's Viterbi implementation.
+ *  Updates/Information:
+ *  2009-09-09: Wrote this function to integrate R with Andre's Viterbi implementation.
  *
  *****************************************************************************************/
 SEXP Rviterbi(SEXP emi, SEXP nEmis, SEXP nstates, SEXP emiprobDist, SEXP emiprobVars, SEXP tprob, SEXP iprob) {
 
-	// Init hmm_t.
-	hmm_t *hmm = setupHMM(nstates, emiprobDist, emiprobVars, nEmis, tprob, iprob);
+    // Init hmm_t.
+    hmm_t *hmm = setupHMM(nstates, emiprobDist, emiprobVars, nEmis, tprob, iprob);
 
-	// Set up emissions.
-	int maxT = Rf_nrows(VECTOR_ELT(emi, 0));
-	double **emisDATA = (double**)R_alloc(hmm[0].n_emis, sizeof(double*));
-	for(int s=0;s<hmm[0].n_emis;s++) {
-		emisDATA[s]   = REAL(VECTOR_ELT(emi, s));
-	}
-	
-	SEXP hiddenStatesR;
-	PROTECT(hiddenStatesR = allocVector(INTSXP,maxT));
-	int *hiddenstates = INTEGER(hiddenStatesR);
-	viterbi_path(hmm[0], emisDATA, maxT, NULL, NULL, hiddenstates);
+    // Set up emissions.
+    int maxT = Rf_nrows(VECTOR_ELT(emi, 0));
+    double **emisDATA = (double**)R_alloc(hmm[0].n_emis, sizeof(double*));
+    for(int s=0;s<hmm[0].n_emis;s++) {
+        emisDATA[s]   = REAL(VECTOR_ELT(emi, s));
+    }
+    
+    SEXP hiddenStatesR;
+    PROTECT(hiddenStatesR = allocVector(INTSXP,maxT));
+    int *hiddenstates = INTEGER(hiddenStatesR);
+    viterbi_path(hmm[0], emisDATA, maxT, NULL, NULL, hiddenstates);
 
-	// Get it in the correct state to return to R.
-	UNPROTECT(1);
+    // Get it in the correct state to return to R.
+    UNPROTECT(1);
 
-	// Return to R and exit!
-	return(hiddenStatesR);
+    // Return to R and exit!
+    return(hiddenStatesR);
 }
 

@@ -19,52 +19,52 @@
 ##
 ##########################################################################
 plot2Ranges <- function(tr, gr, main = "NA", col = "black", sep = 0.5, ...) {
-	height <- 1
-	xlim <- c(min(min(start(tr), min(start(gr)))), max(max(end(tr)), max(end(gr))))
+    height <- 1
+    xlim <- c(min(min(start(tr), min(start(gr)))), max(max(end(tr)), max(end(gr))))
 
-	plot.new()
-	ybottom <- seq(1,length(tr)+length(gr))
-	plot.window(xlim, c(0,max(ybottom+height)))
+    plot.new()
+    ybottom <- seq(1,length(tr)+length(gr))
+    plot.window(xlim, c(0,max(ybottom+height)))
 
-	if (length(tr)>0) {
-		tbottom <- seq(1,length(tr))
-		rect(start(tr)-sep, tbottom, end(tr)+sep, tbottom + height-sep, col = "gray", ...)
-	}
+    if (length(tr)>0) {
+        tbottom <- seq(1,length(tr))
+        rect(start(tr)-sep, tbottom, end(tr)+sep, tbottom + height-sep, col = "gray", ...)
+    }
 
-	bSymbol <- FALSE
-	if ("symbol" %in% colnames(elementMetadata(gr)))
-	bSymbol <- TRUE
+    bSymbol <- FALSE
+    if ("symbol" %in% colnames(elementMetadata(gr)))
+    bSymbol <- TRUE
 
-	if (length(gr) >0) {
-		gbottom <- seq(1,length(gr))
-		rect(start(gr)-sep, gbottom, end(gr)+sep, gbottom + height-sep,
-			col = rgb(red=255, green=0, blue=0, alpha=150, maxColorValue=255))
-		if (bSymbol)
-			text((start(gr) + end(gr))/2, gbottom + 0.2, elementMetadata(gr)$symbol)
-	}
-	title(main)
-	axis(1)
+    if (length(gr) >0) {
+        gbottom <- seq(1,length(gr))
+        rect(start(gr)-sep, gbottom, end(gr)+sep, gbottom + height-sep,
+            col = rgb(red=255, green=0, blue=0, alpha=150, maxColorValue=255))
+        if (bSymbol)
+            text((start(gr) + end(gr))/2, gbottom + 0.2, elementMetadata(gr)$symbol)
+    }
+    title(main)
+    axis(1)
 }
-	
+    
 
 
 #
 # Break an Interval by break points with minimum gap 
 #----------------------------------------------------------------------------------------------
 breakInterval <- function(gr, brPos, gap=5, strand="+") {
-	result <- rep(gr, length(brPos)+1)
-	if (strand == "+") {
-		for(i in seq_along(brPos)) { 
-		    end(result[i,]) <- brPos[i] - gap   
-		    start(result[i+1,]) <- brPos[i]
-		}
-	} else {
-		for(i in seq_along(brPos)) { 
-		    end(result[i,]) <- brPos[i] 
-		    start(result[i+1,]) <- brPos[i] + gap
-		}
-	}
-	return(result)
+    result <- rep(gr, length(brPos)+1)
+    if (strand == "+") {
+        for(i in seq_along(brPos)) { 
+            end(result[i,]) <- brPos[i] - gap   
+            start(result[i+1,]) <- brPos[i]
+        }
+    } else {
+        for(i in seq_along(brPos)) { 
+            end(result[i,]) <- brPos[i] 
+            start(result[i+1,]) <- brPos[i] + gap
+        }
+    }
+    return(result)
 }
 
 
@@ -87,61 +87,61 @@ breakInterval <- function(gr, brPos, gap=5, strand="+") {
 #' annox <- GRanges("chr7", IRanges(start=c(1000, 20000), width=c(10000,10000)), strand="+")
 #' bPlus <- breakTranscriptsOnGenes(tx, annox, strand="+")
 breakTranscriptsOnGenes <- function(tx, annox, strand="+", geneSize=5000, threshold=0.8, gap=5, plot=FALSE) {
-	tx <- tx[strand(tx) == strand,]
-	annox <- annox[strand(annox) == strand,]
-	mcols(tx)$status <- "NA"
+    tx <- tx[strand(tx) == strand,]
+    annox <- annox[strand(annox) == strand,]
+    mcols(tx)$status <- "NA"
 
-	annox <- annox[width(annox) > geneSize,]
-	ol <- findOverlaps(tx, annox)
+    annox <- annox[width(annox) > geneSize,]
+    ol <- findOverlaps(tx, annox)
 
-	ol.df <- data.frame(trans=queryHits(ol), gene=subjectHits(ol), 
-	    ratio=width(pintersect(tx[queryHits(ol),], annox[subjectHits(ol),]))
-		/width(annox[subjectHits(ol),]))
+    ol.df <- data.frame(trans=queryHits(ol), gene=subjectHits(ol), 
+        ratio=width(pintersect(tx[queryHits(ol),], annox[subjectHits(ol),]))
+        /width(annox[subjectHits(ol),]))
 
-	# Keep only major overlappings
-	ol.df <- ol.df[ol.df$ratio > threshold,]
+    # Keep only major overlappings
+    ol.df <- ol.df[ol.df$ratio > threshold,]
 
-	# Keep only multiple genes on a transcript cases
-	dupTrans <- unique(ol.df$trans[duplicated(ol.df$trans)])
-	ol.df <- ol.df[ol.df$trans %in% dupTrans,]
+    # Keep only multiple genes on a transcript cases
+    dupTrans <- unique(ol.df$trans[duplicated(ol.df$trans)])
+    ol.df <- ol.df[ol.df$trans %in% dupTrans,]
 
-	ol.tab <- table(ol.df$trans)
-	ol.tabCS <- cumsum(ol.tab)
+    ol.tab <- table(ol.df$trans)
+    ol.tabCS <- cumsum(ol.tab)
 
-	bT <- NULL
+    bT <- NULL
 
-	for (i in seq_along(ol.tab)) {
-		txNo <- as.integer(names(ol.tab[i]))
-		aNo <- ol.df$gene[(ol.tabCS[i]-ol.tab[i]+1):ol.tabCS[i]]
+    for (i in seq_along(ol.tab)) {
+        txNo <- as.integer(names(ol.tab[i]))
+        aNo <- ol.df$gene[(ol.tabCS[i]-ol.tab[i]+1):ol.tabCS[i]]
 
-		if (strand == "+") {
-			brPos <- start(annox[aNo[-1],])        # No need of break position for the first annotation
-		} else {
-			brPos <- end(annox[aNo[-length(aNo)],])  # No need of break position for the last annotation
-		}
+        if (strand == "+") {
+            brPos <- start(annox[aNo[-1],])        # No need of break position for the first annotation
+        } else {
+            brPos <- end(annox[aNo[-length(aNo)],])  # No need of break position for the last annotation
+        }
 
-		frags <- breakInterval(tx[txNo,], brPos=brPos, gap=gap, strand=strand)
+        frags <- breakInterval(tx[txNo,], brPos=brPos, gap=gap, strand=strand)
 
-		if(is.null(bT)) {
-			bT <- frags 
-		} else {
-			bT <- c(bT, frags) 
-		}
-		if (plot) {
-			par(mfrow=c(2,1))
-			plot2Ranges(tx[txNo,], annox[aNo,], main="Before")
-			plot2Ranges(frags, annox[aNo,], main="After")
-			browser()
-		}
-	}
+        if(is.null(bT)) {
+            bT <- frags 
+        } else {
+            bT <- c(bT, frags) 
+        }
+        if (plot) {
+            par(mfrow=c(2,1))
+            plot2Ranges(tx[txNo,], annox[aNo,], main="Before")
+            plot2Ranges(frags, annox[aNo,], main="After")
+            browser()
+        }
+    }
 
-	mcols(bT)$status <- "broken"
-	mcols(bT)$ID <- paste(seqnames(bT), "_", start(bT), strand(bT), sep="")
-	okTrans <- setdiff(1:length(tx), dupTrans)
-	all <- c(tx[okTrans,], bT)
-	cat(length(unique(ol.df$trans)), " transcripts are broken into ", length(bT), "\n")
+    mcols(bT)$status <- "broken"
+    mcols(bT)$ID <- paste(seqnames(bT), "_", start(bT), strand(bT), sep="")
+    okTrans <- setdiff(1:length(tx), dupTrans)
+    all <- c(tx[okTrans,], bT)
+    cat(length(unique(ol.df$trans)), " transcripts are broken into ", length(bT), "\n")
 
-	return(all[order(as.character(seqnames(all)), start(all)),])
+    return(all[order(as.character(seqnames(all)), start(all)),])
 }
 
 #' combineTranscripts Combines transnscipts. 
@@ -162,48 +162,48 @@ breakTranscriptsOnGenes <- function(tx, annox, strand="+", geneSize=5000, thresh
 #' annox <- GRanges("chr7", IRanges(1000, 30000), strand="+")
 #' combined <- combineTranscripts(tx, annox)
 combineTranscripts <- function(tx, annox, geneSize=1000, threshold=0.8, plot=FALSE) {
-	annox <- annox[width(annox) > geneSize,]
-	ol <- findOverlaps(tx, annox)
-	ol.df <- data.frame(trans=queryHits(ol), gene=subjectHits(ol),
-	    ratio=width(pintersect(tx[queryHits(ol),], annox[subjectHits(ol),]))
-			    /width(tx[queryHits(ol),]))
+    annox <- annox[width(annox) > geneSize,]
+    ol <- findOverlaps(tx, annox)
+    ol.df <- data.frame(trans=queryHits(ol), gene=subjectHits(ol),
+        ratio=width(pintersect(tx[queryHits(ol),], annox[subjectHits(ol),]))
+                /width(tx[queryHits(ol),]))
 
-	# Keep only major overlappings
-	ol.df <- ol.df[ol.df$ratio > threshold,]
+    # Keep only major overlappings
+    ol.df <- ol.df[ol.df$ratio > threshold,]
 
-	# Keep only multiple transcripts on a gene cases
-	dupGenes <- ol.df$gene[which(duplicated(ol.df$gene))]
-	ol.df <- ol.df[ol.df$gene %in% dupGenes,]
+    # Keep only multiple transcripts on a gene cases
+    dupGenes <- ol.df$gene[which(duplicated(ol.df$gene))]
+    ol.df <- ol.df[ol.df$gene %in% dupGenes,]
 
-	uniqGene <- unique(ol.df$gene)
-	N <- length(uniqGene)
-	cT <- GRanges(seqnames=Rle(rep("chr1", N)),
-	    ranges = IRanges(rep(1, N), rep(max(end(tx)), N)),
-	    strand = rep("+", N),
-	    type = Rle(rep("tx", N)))
-	seqlevels(cT) <- seqlevels(tx)
+    uniqGene <- unique(ol.df$gene)
+    N <- length(uniqGene)
+    cT <- GRanges(seqnames=Rle(rep("chr1", N)),
+        ranges = IRanges(rep(1, N), rep(max(end(tx)), N)),
+        strand = rep("+", N),
+        type = Rle(rep("tx", N)))
+    seqlevels(cT) <- seqlevels(tx)
 
-	for (i in seq_along(uniqGene)) {
-		block <- ol.df[uniqGene[i]==ol.df$gene,]
-		strand(cT[i,]) <- strand(tx[block[1,"trans"],])
-		seqnames(cT[i,]) <- seqnames(tx[block[1,"trans"],])
-		start(cT[i,]) <- start(tx[block[1,"trans"],])
-		end(cT[i,]) <- end(tx[block[NROW(block),"trans"],])
-		if (plot) { # plot before and after the comine
-			#b4combine <- c(gr[uniqGene[i],], tr[ol.df[ol.df$gene == uniqGene[i], "trans"],-2])
-			#af.combine <- c(gr[uniqGene[i],], cT[i,])
-			par(mfrow=c(2,1))
-			plot2Ranges(tx[ol.df[ol.df$gene == uniqGene[i], "trans"],], annox[uniqGene[i],], main="Before")
-			plot2Ranges(cT[i,], annox[uniqGene[i],], main="After")
-			browser()
-		}
-	}
+    for (i in seq_along(uniqGene)) {
+        block <- ol.df[uniqGene[i]==ol.df$gene,]
+        strand(cT[i,]) <- strand(tx[block[1,"trans"],])
+        seqnames(cT[i,]) <- seqnames(tx[block[1,"trans"],])
+        start(cT[i,]) <- start(tx[block[1,"trans"],])
+        end(cT[i,]) <- end(tx[block[NROW(block),"trans"],])
+        if (plot) { # plot before and after the comine
+            #b4combine <- c(gr[uniqGene[i],], tr[ol.df[ol.df$gene == uniqGene[i], "trans"],-2])
+            #af.combine <- c(gr[uniqGene[i],], cT[i,])
+            par(mfrow=c(2,1))
+            plot2Ranges(tx[ol.df[ol.df$gene == uniqGene[i], "trans"],], annox[uniqGene[i],], main="Before")
+            plot2Ranges(cT[i,], annox[uniqGene[i],], main="After")
+            browser()
+        }
+    }
 
-	cat(NROW(ol.df), " transcripts are combined to ", NROW(cT), "\n")
-	mcols(cT)$ID <- paste(seqnames(cT), "_", start(cT), strand(cT), sep="")
-	mcols(cT)$status <- "combined"
+    cat(NROW(ol.df), " transcripts are combined to ", NROW(cT), "\n")
+    mcols(cT)$ID <- paste(seqnames(cT), "_", start(cT), strand(cT), sep="")
+    mcols(cT)$status <- "combined"
 
-	okTrans <- setdiff(seq_along(tx), ol.df$trans)
-	all <- c(tx[okTrans,], cT)
-	return(all[order(as.character(seqnames(all)), start(all)),])
+    okTrans <- setdiff(seq_along(tx), ol.df$trans)
+    all <- c(tx[okTrans,], cT)
+    return(all[order(as.character(seqnames(all)), start(all)),])
 }

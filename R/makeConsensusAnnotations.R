@@ -45,108 +45,108 @@
 #' tx <- tx[grep("random", as.character(seqnames(tx)), invert=TRUE),]
 #' ca <- makeConsensusAnnotations(tx)
 makeConsensusAnnotations <- function(ar, minGap=1L, minWidth=1000L, ...) {
-	# check missing gene_id
-	missing <- elementLengths(mcols(ar)[,"gene_id"]) == 0 
-	if (any(missing)) {
-		ar <- ar[!missing,]
-		warning(sum(missing), " ranges do not have gene_id and they are dropped")
-	}
+    # check missing gene_id
+    missing <- elementLengths(mcols(ar)[,"gene_id"]) == 0 
+    if (any(missing)) {
+        ar <- ar[!missing,]
+        warning(sum(missing), " ranges do not have gene_id and they are dropped")
+    }
 
-	many <-	elementLengths(mcols(ar)[,"gene_id"]) > 1 
-	if (any(many)) {
-		ar <- ar[!many,]
-		warning(sum(many), " ranges have multiple gene_id and they are dropped")
-	}
+    many <- elementLengths(mcols(ar)[,"gene_id"]) > 1 
+    if (any(many)) {
+        ar <- ar[!many,]
+        warning(sum(many), " ranges have multiple gene_id and they are dropped")
+    }
 
-	ar_list <- split(ar, unlist(mcols(ar)[,"gene_id"]))
-	singles <- unlist(ar_list[elementLengths(ar_list) == 1])
-	isoforms <- ar_list[elementLengths(ar_list) > 1]
-	
-	message("Reduce isoforms(", length(isoforms),") ... ", appendLF=FALSE)
-	isoforms <- GRangesList(mclapply(isoforms, function(x) {
-		# For mixed strands or chrom, choose the longest	
-		if ((length(seqlevelsInUse(x)) > 1) || (length(unique(strand(x))) > 1)) {
-			result <- x[which.max(width(x)), "gene_id"]
-		} else {
-			dx <- disjoin(x)
-			mcols(dx)$gene_id <- mcols(x)$gene_id[1]
-			olcnt <- countOverlaps(dx, x)
+    ar_list <- split(ar, unlist(mcols(ar)[,"gene_id"]))
+    singles <- unlist(ar_list[elementLengths(ar_list) == 1])
+    isoforms <- ar_list[elementLengths(ar_list) > 1]
+    
+    message("Reduce isoforms(", length(isoforms),") ... ", appendLF=FALSE)
+    isoforms <- GRangesList(mclapply(isoforms, function(x) {
+        # For mixed strands or chrom, choose the longest    
+        if ((length(seqlevelsInUse(x)) > 1) || (length(unique(strand(x))) > 1)) {
+            result <- x[which.max(width(x)), "gene_id"]
+        } else {
+            dx <- disjoin(x)
+            mcols(dx)$gene_id <- mcols(x)$gene_id[1]
+            olcnt <- countOverlaps(dx, x)
 
-			multi <- dx[olcnt > 1]    # Use the disjoint ranges covered more than once
-			if (length(multi) == 0) { # For non-overlapping isoforms, choose the longest
-				result <- x[which.max(width(x)), "gene_id"]
-			} else if (length(multi) == 1) {
-				result <- multi
-			} else {
-				reduced <- reduce(multi)
-				if (length(reduced) == 1) 
-					result <- reduced
-				else (length(reduced) > 1) 
-					result <- reduced[which.max(width(reduced)),]
-				
-			}
-			mcols(result)$gene_id <- mcols(x)$gene_id[1]
+            multi <- dx[olcnt > 1]    # Use the disjoint ranges covered more than once
+            if (length(multi) == 0) { # For non-overlapping isoforms, choose the longest
+                result <- x[which.max(width(x)), "gene_id"]
+            } else if (length(multi) == 1) {
+                result <- multi
+            } else {
+                reduced <- reduce(multi)
+                if (length(reduced) == 1) 
+                    result <- reduced
+                else (length(reduced) > 1) 
+                    result <- reduced[which.max(width(reduced)),]
+                
+            }
+            mcols(result)$gene_id <- mcols(x)$gene_id[1]
         }
-		return(result)
-	}, mc.cores=10))
-	isoforms <- unlist(isoforms)
-	message("OK")
+        return(result)
+    }, mc.cores=10))
+    isoforms <- unlist(isoforms)
+    message("OK")
 
-	# Check redundancy 
-	isoforms <- removeRedundant(isoforms)
-	singles <- removeRedundant(singles)
+    # Check redundancy 
+    isoforms <- removeRedundant(isoforms)
+    singles <- removeRedundant(singles)
 
     o <- findOverlaps(singles, isoforms, type="equal")
     if(length(o) != 0)
-    	singles <- singles[-queryHits(o),]
+        singles <- singles[-queryHits(o),]
 
     o <- findOverlaps(singles, isoforms, type="within")
     if(length(o) != 0)
-    	singles <- singles[-queryHits(o),]
+        singles <- singles[-queryHits(o),]
 
     o <- findOverlaps(isoforms, singles, type="within")
     if(length(o) != 0)
-    	isoforms <- isoforms[-queryHits(o),]
+        isoforms <- isoforms[-queryHits(o),]
 
-	noiso <- sort(c(isoforms, singles[,"gene_id"])) 
-	message("Truncate overlapped ranges ... ", appendLF=FALSE)		# with different gene_ids
-	while(!isDisjoint(noiso)) { 
-		ol <- findOverlaps(noiso, ignoreSelf=TRUE, ignoreRedundant=TRUE)
-		ol_gr <- GRangesList(lapply(1:length(ol), function(x) {
-						sort(c(noiso[queryHits(ol)[x]], noiso[subjectHits(ol)[x]])) 
-				}))
+    noiso <- sort(c(isoforms, singles[,"gene_id"])) 
+    message("Truncate overlapped ranges ... ", appendLF=FALSE)      # with different gene_ids
+    while(!isDisjoint(noiso)) { 
+        ol <- findOverlaps(noiso, ignoreSelf=TRUE, ignoreRedundant=TRUE)
+        ol_gr <- GRangesList(lapply(1:length(ol), function(x) {
+                        sort(c(noiso[queryHits(ol)[x]], noiso[subjectHits(ol)[x]])) 
+                }))
 
-		# Truncate 3' end
-		ol_gr <- unlist(endoapply(ol_gr, function(x) {
-			if (as.character(strand(x[1,])) == "+") {
-				end(x[1,]) <- start(x[2,]) - minGap 	# first range's end is truncated
-			} else {
-				start(x[2,]) <- end(x[1,]) + minGap 	# sencond range's end is truncated
-			}
-			x
-		}))
+        # Truncate 3' end
+        ol_gr <- unlist(endoapply(ol_gr, function(x) {
+            if (as.character(strand(x[1,])) == "+") {
+                end(x[1,]) <- start(x[2,]) - minGap     # first range's end is truncated
+            } else {
+                start(x[2,]) <- end(x[1,]) + minGap     # sencond range's end is truncated
+            }
+            x
+        }))
 
-		# Remove any ranges with duplicated names since they already adujsted in the previous call
-		ol_gr <- ol_gr[!duplicated(names(ol_gr)),]
-		
-		noiso <- noiso[-unique(c(queryHits(ol), subjectHits(ol))),] # update noiso
-		noiso <- c(noiso, ol_gr)
-	}
-	message("OK")
+        # Remove any ranges with duplicated names since they already adujsted in the previous call
+        ol_gr <- ol_gr[!duplicated(names(ol_gr)),]
+        
+        noiso <- noiso[-unique(c(queryHits(ol), subjectHits(ol))),] # update noiso
+        noiso <- c(noiso, ol_gr)
+    }
+    message("OK")
 
-	noiso <- noiso[width(noiso) >= minWidth,]
-	return(sort(noiso))
+    noiso <- noiso[width(noiso) >= minWidth,]
+    return(sort(noiso))
 }
 
 removeRedundant <- function(annox) {
-	o <- findOverlaps(annox, ignoreSelf=TRUE, type="equal", ignoreRedundant=TRUE)
-	if(length(o) != 0)
-		annox <- annox[-subjectHits(o),]
+    o <- findOverlaps(annox, ignoreSelf=TRUE, type="equal", ignoreRedundant=TRUE)
+    if(length(o) != 0)
+        annox <- annox[-subjectHits(o),]
 
-	o <- findOverlaps(annox, ignoreSelf=TRUE, type="within", ignoreRedundant=TRUE)
-	if(length(o) != 0)
-		annox <- annox[-queryHits(o),]
+    o <- findOverlaps(annox, ignoreSelf=TRUE, type="within", ignoreRedundant=TRUE)
+    if(length(o) != 0)
+        annox <- annox[-queryHits(o),]
 
-	return(annox)
+    return(annox)
 }
 

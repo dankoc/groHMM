@@ -19,5 +19,5 @@ Suggests:
     org.Hs.eg.db
 Description: A pipeline for the analysis of GRO-seq data.
 License: GPL-3
-biocViews: Preprocessing, Sequencing, Analysis
+biocViews: Sequencing, Software
 LazyLoad: yes

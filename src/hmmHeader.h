@@ -22,10 +22,10 @@
 
 /*************************************************************
  *
- *	This file is comprised of prototypes and structure 
- *	definitions for the components of the HMM class.
+ *  This file is comprised of prototypes and structure 
+ *  definitions for the components of the HMM class.
  *
- *	Started: 11-25-2009.
+ *  Started: 11-25-2009.
  *
  *************************************************************/
 
@@ -48,11 +48,11 @@ typedef double (**emiss_func)(double value, double* args, int nArgs);//(double d
  ****************************************/
  
 typedef struct {
-  double *log_iProb;	/* (1 x n_states) Log of initial probabilities. */
-  double **log_tProb;	/* (n_states x n_states) table of transition probabilities. */
-  emiss_func log_eProb;	/* log emission probability; CHARLES: Changed to an array of unique functions for each state. */
-  double **em_args;	/* CHARLES: Add an appropriate container (i.e. **double) to store vars. for emission prob. */
-  int n_states; 	/* number of states (excluding initial state). */
+  double *log_iProb;    /* (1 x n_states) Log of initial probabilities. */
+  double **log_tProb;   /* (n_states x n_states) table of transition probabilities. */
+  emiss_func log_eProb; /* log emission probability; CHARLES: Changed to an array of unique functions for each state. */
+  double **em_args; /* CHARLES: Add an appropriate container (i.e. **double) to store vars. for emission prob. */
+  int n_states;     /* number of states (excluding initial state). */
   int n_emis; /* number of columns in emissions matrix **data */
 } hmm_t;
 
@@ -70,20 +70,20 @@ typedef struct {
 // Not quite so object-friendly as java :)
 // How about separating and using a void type ?!?
 typedef struct {
-  double sumPiXi; 	// \sum_{i}(Pi, Xi) --> (posterior probability of being in state)*(emission value).
-  double sumLogPiXi;	// \sum_{i}(log(Pi, Xi)) --> (posterior probability of being in state)*(emission value)..
-  double sumPiXiSq;	// This is useful in fitting first version of parameters in update by method of moments.
-  double N;		// \sum_{i}(Pi).
+  double sumPiXi;   // \sum_{i}(Pi, Xi) --> (posterior probability of being in state)*(emission value).
+  double sumLogPiXi;    // \sum_{i}(log(Pi, Xi)) --> (posterior probability of being in state)*(emission value)..
+  double sumPiXiSq; // This is useful in fitting first version of parameters in update by method of moments.
+  double N;     // \sum_{i}(Pi).
 } ssGamma;
 
 typedef struct {
-  double sumPiXi;	// \sum_{i}(Pi, Xi) --> (posterior probability of being in state)*(emission value).
-  double N;		// \sum_{i}(Pi).
+  double sumPiXi;   // \sum_{i}(Pi, Xi) --> (posterior probability of being in state)*(emission value).
+  double N;     // \sum_{i}(Pi).
 } ssPoisson;
 
 typedef struct {
-  double sumPiXi;	// \sum_{i}(Pi, Xi) --> (posterior probability of being in state)*(emission value).
-  double N;		// \sum_{i}(Pi).
+  double sumPiXi;   // \sum_{i}(Pi, Xi) --> (posterior probability of being in state)*(emission value).
+  double N;     // \sum_{i}(Pi).
 } ssExp;
 
 typedef struct {
@@ -135,21 +135,21 @@ typedef void  (**free_trans_sstats)(void* ss);
  typedef struct {
     // Store function pointers for Transition sufficient stats.
     alloc_trans_sstats  AllocTssFunc;
-	update_trans_SS    UpdateTssFunc;
-	update_trans_Prob   UpdateTPFunc;
-	free_trans_sstats    FreeTssFunc;
-	void** TransSS;
-	
+    update_trans_SS    UpdateTssFunc;
+    update_trans_Prob   UpdateTPFunc;
+    free_trans_sstats    FreeTssFunc;
+    void** TransSS;
+    
     // Store function pointers for Emission sufficient stats.
-	alloc_emis_sstats sstats_alloc;
-	update_sstat_func sstats_emis;
-	update_emiss_func update_emis;
-	free_emis_sstats  free_emis_s;
-	void** ss;
-	
-	// To update, or not to update? That is the question ...
-	int *updateTrans;
-	int *updateEmis;
+    alloc_emis_sstats sstats_alloc;
+    update_sstat_func sstats_emis;
+    update_emiss_func update_emis;
+    free_emis_sstats  free_emis_s;
+    void** ss;
+    
+    // To update, or not to update? That is the question ...
+    int *updateTrans;
+    int *updateEmis;
  } em_t;
 
 /***************************************
@@ -178,11 +178,11 @@ extern void forward(fwbk_t *data);
 
 /**************
  * 
- *	Emission probability update functions.  
+ *  Emission probability update functions.  
  *
- *	Two functions are used for each supported distribution:
- *	 (1) SStats* -- updates the sufficient statistics with the results of a new fwbk run.
- *	 (2) Update* -- using the sufficient statistics, updates the paremeters in hmm.
+ *  Two functions are used for each supported distribution:
+ *   (1) SStats* -- updates the sufficient statistics with the results of a new fwbk run.
+ *   (2) Update* -- using the sufficient statistics, updates the paremeters in hmm.
  *
  **************/
 extern void *SSallocNormal(int num);
@@ -240,8 +240,8 @@ extern double normal_exp_optimfn(int n, double *par, void *ex);
 
 // Returns the log(prob.) of  being in state=state, at sequence position=position, given the fwbk output= fwbk.
 static  double MargainalizeSumLogProbOver(int state, int position, fwbk_t fwbk) {  
- 	double logPP = fwbk.forward[position][state]+fwbk.backward[position][state]-fwbk.log_px;
- 	return(logPP);
+    double logPP = fwbk.forward[position][state]+fwbk.backward[position][state]-fwbk.log_px;
+    return(logPP);
 }
   
  /**************
@@ -251,7 +251,7 @@ static  double expDif(double pLs, double pGr){
   if(pGr == pLs) 
     return(log(0));
   else if(pGr > pLs)
-	return(log(1-exp(pLs-pGr))+pGr);
+    return(log(1-exp(pLs-pGr))+pGr);
   else
     return(log(1-exp(pGr-pLs))+pLs);
  }
@@ -261,12 +261,12 @@ static  double expSum(double *logValues, int length) {
   double TotalSum=0;
   scalefactor = logValues[0];
   for(int k=1;k<length;k++)
-	scalefactor= max(scalefactor, logValues[k]);
+    scalefactor= max(scalefactor, logValues[k]);
 
   for(int k=0;k<length;k++) {
     CurrentSum=logValues[k]-scalefactor;
     if(-1*CurrentSum < APPROX_EXP_VALUE_THRESHOLD)
-	TotalSum += exp(CurrentSum);
+    TotalSum += exp(CurrentSum);
   }
 
  return(log(TotalSum) + scalefactor);
@@ -281,95 +281,95 @@ static  double expSum2(double v1, double v2) {
 
 /**************
  * 
- *	Emission probability functions -- using density functions from R where possible.  
- *	The functions below are set up such that they will pass to Rlibrary functions for 
- *	different distributions.  Mostly this is done to allow 3 arguments in functions 
- *	that do not normally take them.
+ *  Emission probability functions -- using density functions from R where possible.  
+ *  The functions below are set up such that they will pass to Rlibrary functions for 
+ *  different distributions.  Mostly this is done to allow 3 arguments in functions 
+ *  that do not normally take them.
  *
  **************/
 
-static R_INLINE double NORMAL			(double value, double *args, int nArgs) {	
+static R_INLINE double NORMAL           (double value, double *args, int nArgs) {   
     if(isnan(value)!=0) return 0;
-	int useLowerTail = (round(pnorm(value, args[0], args[1], FALSE, TRUE))==0); // Check for underflow.
-	double funcVal= expDif(pnorm(value-0.5, args[0], args[1], useLowerTail, TRUE), pnorm(value+0.5, args[0], args[1], useLowerTail, TRUE));
-	return funcVal; 
-	}
-static R_INLINE double dNORMAL		(double value, double *args, int nArgs) {
+    int useLowerTail = (round(pnorm(value, args[0], args[1], FALSE, TRUE))==0); // Check for underflow.
+    double funcVal= expDif(pnorm(value-0.5, args[0], args[1], useLowerTail, TRUE), pnorm(value+0.5, args[0], args[1], useLowerTail, TRUE));
+    return funcVal; 
+    }
+static R_INLINE double dNORMAL      (double value, double *args, int nArgs) {
     if(isnan(value)!=0) return 0;
-	return dnorm(value, args[0], args[1], TRUE);
-	} // Sometimes we have continuous value ...
-static R_INLINE double BETA			(double value, double *args, int nArgs) {
+    return dnorm(value, args[0], args[1], TRUE);
+    } // Sometimes we have continuous value ...
+static R_INLINE double BETA         (double value, double *args, int nArgs) {
     if(isnan(value)!=0) return 0;
-	int useLowerTail = (round(pbeta(value, args[0], args[1], FALSE, TRUE))==0); // Check for underflow.
-	return expDif(pbeta(value-0.5, args[0], args[1], useLowerTail, TRUE), pbeta(value+0.5, args[0], args[1], useLowerTail, TRUE)); 
-	}
-static R_INLINE double NONCENTRALBETA	(double value, double *args, int nArgs) {
+    int useLowerTail = (round(pbeta(value, args[0], args[1], FALSE, TRUE))==0); // Check for underflow.
+    return expDif(pbeta(value-0.5, args[0], args[1], useLowerTail, TRUE), pbeta(value+0.5, args[0], args[1], useLowerTail, TRUE)); 
+    }
+static R_INLINE double NONCENTRALBETA   (double value, double *args, int nArgs) {
     if(isnan(value)!=0) return 0;
-	int useLowerTail = (round(pnbeta(value, args[0], args[1], args[2], FALSE, TRUE))==0); // Check for underflow.
-	return expDif(pnbeta(value-0.5, args[0], args[1], args[2], useLowerTail, TRUE), pnbeta(value+0.5, args[0], args[1], args[2], useLowerTail, TRUE)); 
-	}
-static R_INLINE double BINOMIAL		(double value, double *args, int nArgs) {
+    int useLowerTail = (round(pnbeta(value, args[0], args[1], args[2], FALSE, TRUE))==0); // Check for underflow.
+    return expDif(pnbeta(value-0.5, args[0], args[1], args[2], useLowerTail, TRUE), pnbeta(value+0.5, args[0], args[1], args[2], useLowerTail, TRUE)); 
+    }
+static R_INLINE double BINOMIAL     (double value, double *args, int nArgs) {
     if(isnan(value)!=0) return 0;
-	return dbinom(value, args[0], args[1], TRUE);
-	}
-static R_INLINE double EXPONENTIAL	(double value, double *args, int nArgs) {
+    return dbinom(value, args[0], args[1], TRUE);
+    }
+static R_INLINE double EXPONENTIAL  (double value, double *args, int nArgs) {
     if(isnan(value)!=0) return 0;
-	int useLowerTail = (round(pexp(value, args[0], FALSE, TRUE))==0); // Check for underflow.
-	return expDif(pexp(value-0.5, args[0], useLowerTail, TRUE), pexp(value+0.5, args[0], useLowerTail, TRUE)); 
-	}
-static R_INLINE double GAMMA			(double value, double *args, int nArgs) {
+    int useLowerTail = (round(pexp(value, args[0], FALSE, TRUE))==0); // Check for underflow.
+    return expDif(pexp(value-0.5, args[0], useLowerTail, TRUE), pexp(value+0.5, args[0], useLowerTail, TRUE)); 
+    }
+static R_INLINE double GAMMA            (double value, double *args, int nArgs) {
     if(isnan(value)!=0) return 0;
-	int useLowerTail = (round(pgamma(value, args[0], args[1], FALSE, TRUE))==0); // Check for underflow.
-	return expDif(pgamma(value-0.5, args[0], args[1], useLowerTail, TRUE), pgamma(value+0.5, args[0], args[1], useLowerTail, TRUE)); 
-	}
-static R_INLINE double dGAMMA			(double value, double *args, int nArgs) {
+    int useLowerTail = (round(pgamma(value, args[0], args[1], FALSE, TRUE))==0); // Check for underflow.
+    return expDif(pgamma(value-0.5, args[0], args[1], useLowerTail, TRUE), pgamma(value+0.5, args[0], args[1], useLowerTail, TRUE)); 
+    }
+static R_INLINE double dGAMMA           (double value, double *args, int nArgs) {
     if(isnan(value)!=0) return 0;
-	return dgamma(value, args[0], args[1], TRUE);
-	} // Included for legacy support of the transcript detection HMM in Hah et al. 2011.
-static R_INLINE double GAMMA_p1		(double value, double *args, int nArgs) {
+    return dgamma(value, args[0], args[1], TRUE);
+    } // Included for legacy support of the transcript detection HMM in Hah et al. 2011.
+static R_INLINE double GAMMA_p1     (double value, double *args, int nArgs) {
     if(isnan(value)!=0) return 0;
-	int useLowerTail = (round(pgamma(value+1,args[0], args[1], FALSE, TRUE))==0); // Check for underflow.
-	return expDif(pgamma(value-0.5+1, args[0], args[1], useLowerTail, TRUE), pgamma(value+0.5+1, args[0], args[1], useLowerTail, TRUE)); 
-	} // Gamma of random variable (x+1).
-static R_INLINE double HYPERGEOMETRIC	(double value, double *args, int nArgs) {
+    int useLowerTail = (round(pgamma(value+1,args[0], args[1], FALSE, TRUE))==0); // Check for underflow.
+    return expDif(pgamma(value-0.5+1, args[0], args[1], useLowerTail, TRUE), pgamma(value+0.5+1, args[0], args[1], useLowerTail, TRUE)); 
+    } // Gamma of random variable (x+1).
+static R_INLINE double HYPERGEOMETRIC   (double value, double *args, int nArgs) {
     if(isnan(value)!=0) return 0;
-	return dhyper(value, args[0], args[1], args[2], TRUE);
-	}
-static R_INLINE double NEGATIVEBINOMIAL	(double value, double *args, int nArgs) {
+    return dhyper(value, args[0], args[1], args[2], TRUE);
+    }
+static R_INLINE double NEGATIVEBINOMIAL (double value, double *args, int nArgs) {
     if(isnan(value)!=0) return 0;
-	return dnbinom(value, args[0], args[1], TRUE);
-	}
-static R_INLINE double POISSON		(double value, double *args, int nArgs) {
+    return dnbinom(value, args[0], args[1], TRUE);
+    }
+static R_INLINE double POISSON      (double value, double *args, int nArgs) {
     if(isnan(value)!=0) return 0;
-	return dpois(value, args[0], TRUE);
-	}
-static R_INLINE double UNIFORM		(double value, double *args, int nArgs) {
+    return dpois(value, args[0], TRUE);
+    }
+static R_INLINE double UNIFORM      (double value, double *args, int nArgs) {
     if(isnan(value)!=0) return 0;
-	int useLowerTail = (round(punif(value, args[0], args[1], FALSE, TRUE))==0); // Check for underflow.
-	return expDif(punif(value-0.5, args[0], args[1], useLowerTail, TRUE), punif(value+0.5, args[0], args[1], useLowerTail, TRUE)); 
-	}
+    int useLowerTail = (round(punif(value, args[0], args[1], FALSE, TRUE))==0); // Check for underflow.
+    return expDif(punif(value-0.5, args[0], args[1], useLowerTail, TRUE), punif(value+0.5, args[0], args[1], useLowerTail, TRUE)); 
+    }
 // args order: alpha, mu, sigma, lambda
-static R_INLINE double NORMAL_EXP		(double value, double *args, int nArgs) {
+static R_INLINE double NORMAL_EXP       (double value, double *args, int nArgs) {
     if(isnan(value)!=0) return 0;
-	// int useLowerTailN = (round(pnorm(value, args[1], args[2], FALSE, TRUE))==0); // Check for underflow.  Unused
-	// int useLowerTailE = (round(pexp(value, args[3], FALSE, TRUE))==0); // Check for underflow. Unused
-	double N= NORMAL(value, &args[1], 2);
-	double E= EXPONENTIAL(value, &args[3], 1);
-	double funcVal= expSum2(log(args[0])+N,log(1-args[0])+E);
-	return funcVal;
-	}
+    // int useLowerTailN = (round(pnorm(value, args[1], args[2], FALSE, TRUE))==0); // Check for underflow.  Unused
+    // int useLowerTailE = (round(pexp(value, args[3], FALSE, TRUE))==0); // Check for underflow. Unused
+    double N= NORMAL(value, &args[1], 2);
+    double E= EXPONENTIAL(value, &args[3], 1);
+    double funcVal= expSum2(log(args[0])+N,log(1-args[0])+E);
+    return funcVal;
+    }
 // Can also write a function for a multinomial distribution given an index of possible emissions.
 
-static R_INLINE double NORMAL_EXP_MINUS		(double value, double *args, int nArgs) {
+static R_INLINE double NORMAL_EXP_MINUS     (double value, double *args, int nArgs) {
     if(isnan(value)!=0) return 0;
-	value= -1*value; // reverse the VALUE.
-	// int useLowerTailN = (round(pnorm(value, args[1], args[2], FALSE, TRUE))==0); // Check for underflow. Unused
-	// int useLowerTailE = (round(pexp(value, args[3], FALSE, TRUE))==0); // Check for underflow. Unused
-	double N= NORMAL(value, &args[1], 2);
-	double E= EXPONENTIAL(value, &args[3], 1);
-	double funcVal= expSum2(log(args[0])+N,log(1-args[0])+E);
-	return funcVal;
-	}
+    value= -1*value; // reverse the VALUE.
+    // int useLowerTailN = (round(pnorm(value, args[1], args[2], FALSE, TRUE))==0); // Check for underflow. Unused
+    // int useLowerTailE = (round(pexp(value, args[3], FALSE, TRUE))==0); // Check for underflow. Unused
+    double N= NORMAL(value, &args[1], 2);
+    double E= EXPONENTIAL(value, &args[3], 1);
+    double funcVal= expSum2(log(args[0])+N,log(1-args[0])+E);
+    return funcVal;
+    }
 
 
 #endif

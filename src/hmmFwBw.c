@@ -22,12 +22,12 @@
 
 /********************************************************************************
  *
- *	Forward/Backward algorithms.  Initial implementation by Andre Martins.
+ *  Forward/Backward algorithms.  Initial implementation by Andre Martins.
  *
- *	2009-11-23 File pulled in from implementation by Andre Martins (thanks!). 
+ *  2009-11-23 File pulled in from implementation by Andre Martins (thanks!). 
  *
- *	TODO: 
- *	(1) Finish up backwards.
+ *  TODO: 
+ *  (1) Finish up backwards.
  *
  ********************************************************************************/
 
@@ -49,12 +49,12 @@
  *
  * Convenient forward/backward data storage struct, alloc, and free functions.
  *
- * N 		- sequence size
- * data		- observed emissions 
- * forward	- N X hmmt->n_states matrix representing the forward algorithm output
- * backward	- ^-- same; for backward algorithm
- * log_px	- log probability of model|data (???)
- * bk_log_px	- (???)
+ * N        - sequence size
+ * data     - observed emissions 
+ * forward  - N X hmmt->n_states matrix representing the forward algorithm output
+ * backward - ^-- same; for backward algorithm
+ * log_px   - log probability of model|data (???)
+ * bk_log_px    - (???)
  *
  *************************************************************************/
 extern fwbk_t * fwbk_alloc(double **data, int N, hmm_t *hmm) {
@@ -110,9 +110,9 @@ void forward(fwbk_t *data) {
 // Initialization step @ i=0.
   m_col = matrix[0];
   for (k = 0; k < n; ++k) {
-    m_col[k] =  log_iProb[k]; // 	+ (log_eProb[k])(edata[0], emisargs[k][0], emisargs[k][1], emisargs[k][2]);
-	for(emis_count=0;emis_count<n_emis;emis_count++) 
-		matrix[0][k] += (log_eProb[k+n*emis_count])(edata[emis_count][0], emargs[k+n*emis_count], 4);
+    m_col[k] =  log_iProb[k]; //    + (log_eProb[k])(edata[0], emisargs[k][0], emisargs[k][1], emisargs[k][2]);
+    for(emis_count=0;emis_count<n_emis;emis_count++) 
+        matrix[0][k] += (log_eProb[k+n*emis_count])(edata[emis_count][0], emargs[k+n*emis_count], 4);
   }
 // Recursion step.
   for (i = 1; i < N; ++i) {
@@ -135,26 +135,26 @@ void forward(fwbk_t *data) {
       for(k=1; k<n; k++)
         scalefactor = max((m_col_prev[k] + log_tProb[k][l]), scalefactor);
 
-		for (k = 0; k<n; k++) {
+        for (k = 0; k<n; k++) {
         current_sum = m_col_prev[k] + log_tProb[k][l] - scalefactor;
 
-// 	The following assertion fails if k --> l is prohibited by transition probabilities.
+//  The following assertion fails if k --> l is prohibited by transition probabilities.
 //       Happens because (scalefactor --> -inf) (it is the max); 
-//	 This causes (currentsum --> nan) because -inf+inf --> nan
-//	if(!(current_sum <= 0))
+//   This causes (currentsum --> nan) because -inf+inf --> nan
+//  if(!(current_sum <= 0))
 //        assert(current_sum <= 0);
         if((-1*current_sum) < APPROX_EXP_VALUE_THRESHOLD)
           sum += exp(current_sum);
 
-	    if(i>(N-2) || i<2) // Report the first and last case for debuging...
-			Rprintf("i=%d, l=%d, k=%d, prev[k]=%f, scalefactor=%f, prod=%f, sum=%f\n", 
-						i, l, k, m_col_prev[k], scalefactor, current_sum, sum);
+        if(i>(N-2) || i<2) // Report the first and last case for debuging...
+            Rprintf("i=%d, l=%d, k=%d, prev[k]=%f, scalefactor=%f, prod=%f, sum=%f\n", 
+                        i, l, k, m_col_prev[k], scalefactor, current_sum, sum);
       }
 
       // Update matrix.
       m_col[l] = log(sum)+scalefactor;
       for(emis_count=0;emis_count<n_emis;emis_count++) {
-		m_col[l] += (log_eProb[l+n*emis_count])(edata[emis_count][i], emargs[l+n*emis_count], 4);
+        m_col[l] += (log_eProb[l+n*emis_count])(edata[emis_count][i], emargs[l+n*emis_count], 4);
       }
     }
   }
@@ -169,10 +169,10 @@ void forward(fwbk_t *data) {
 
   for (i = 0; i < n; ++i) {
     current_sum = m_col[i]-scalefactor;
-	if(!(current_sum <= 0)) {
-	  Rprintf("WARNING: Assertion about to fail in hmmFwBw.cpp (at line ~189). current_sum= %f, m_col[%d]= %f, scalefactor= %f\n", current_sum, i, m_col[i], scalefactor); //likely nan
+    if(!(current_sum <= 0)) {
+      Rprintf("WARNING: Assertion about to fail in hmmFwBw.cpp (at line ~189). current_sum= %f, m_col[%d]= %f, scalefactor= %f\n", current_sum, i, m_col[i], scalefactor); //likely nan
       error("ERROR: current_sum <= 0 (likely NaN)\n"); // If this fails, likely one of yoru stats is unreachable. // Commented Apr. 10 2010.  Getting ALL rate genes (for NH and LC reps) to run through.
-	}
+    }
 
     if(-1*(current_sum) < APPROX_EXP_VALUE_THRESHOLD)
       sum += exp(current_sum);
@@ -218,19 +218,19 @@ void backward(fwbk_t *data) {
       sum=0;
       scalefactor = m_col_next[0] + log_tProb[k][0];
       for(emis_count=0;emis_count<n_emis;emis_count++) 
-		scalefactor += (log_eProb[0+n*emis_count])(edata[emis_count][i+1], emargs[0+n*emis_count], 4);
+        scalefactor += (log_eProb[0+n*emis_count])(edata[emis_count][i+1], emargs[0+n*emis_count], 4);
 
       for (l=1;l<n;l++) {
-	    sf =  m_col_next[l] + log_tProb[k][l];
+        sf =  m_col_next[l] + log_tProb[k][l];
         for(emis_count=0;emis_count<n_emis;emis_count++) 
-			sf += (log_eProb[l+n*emis_count])(edata[emis_count][i+1], emargs[l+n*emis_count], 4);
+            sf += (log_eProb[l+n*emis_count])(edata[emis_count][i+1], emargs[l+n*emis_count], 4);
         scalefactor = max(scalefactor, sf);
-	  }
+      }
 
       for (l=0;l<n;l++) {
         current_sum = m_col_next[l] + log_tProb[k][l] -scalefactor;// +  // Are these indices correct ??? (99% certain)
         for(emis_count=0;emis_count<n_emis;emis_count++) 
-			current_sum += (log_eProb[l+n*emis_count])(edata[emis_count][i+1], emargs[l+n*emis_count], 4);
+            current_sum += (log_eProb[l+n*emis_count])(edata[emis_count][i+1], emargs[l+n*emis_count], 4);
         if((-1*current_sum) < APPROX_EXP_VALUE_THRESHOLD)
           sum += exp(current_sum);
       }
@@ -244,19 +244,19 @@ void backward(fwbk_t *data) {
   sum=0;
   scalefactor = (m_col[0] + log_iProb[0]);// + (log_eProb[0])(edata[0], emisargs[0][0], emisargs[0][1], emisargs[0][2]));
   for(emis_count=0;emis_count<n_emis;emis_count++) 
-	scalefactor += (log_eProb[0+n*emis_count])(edata[emis_count][0], emargs[0+n*emis_count], 4);
+    scalefactor += (log_eProb[0+n*emis_count])(edata[emis_count][0], emargs[0+n*emis_count], 4);
 
   for (k = 1; k < n; ++k) { // BUG?!  Should be log_iProb[k]?! 
-  	sf =  m_col[k] + log_iProb[k];
+    sf =  m_col[k] + log_iProb[k];
     for(emis_count=0;emis_count<n_emis;emis_count++) 
-		sf += (log_eProb[k+n*emis_count])(edata[emis_count][0], emargs[k+n*emis_count], 4);
+        sf += (log_eProb[k+n*emis_count])(edata[emis_count][0], emargs[k+n*emis_count], 4);
     scalefactor = max(scalefactor, sf);
   }
 
   for(k=0;k<n;k++) {
     current_sum = m_col[k]+ log_iProb[k]- scalefactor;
     for(emis_count=0;emis_count<n_emis;emis_count++) 
-		current_sum += (log_eProb[k+n*emis_count])(edata[emis_count][0], emargs[k+n*emis_count], 4);
+        current_sum += (log_eProb[k+n*emis_count])(edata[emis_count][0], emargs[k+n*emis_count], 4);
 
     if((-1*current_sum) < APPROX_EXP_VALUE_THRESHOLD)
       sum += exp(current_sum);// Are these indices correct ???

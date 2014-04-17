@@ -111,21 +111,21 @@ following commands.
 
 <<load data, eval=TRUE>>=
 S0mR1 <- as(readGAlignments(system.file("extdata", "S0mR1.bam", 
-		package="groHMM")), "GRanges")
+        package="groHMM")), "GRanges")
 S0mR2 <- as(readGAlignments(system.file("extdata", "S0mR2.bam", 
-		package="groHMM")), "GRanges")
+        package="groHMM")), "GRanges")
 S10mR1 <- as(readGAlignments(system.file("extdata", "S10mR1.bam", 
-		package="groHMM")), "GRanges")
+        package="groHMM")), "GRanges")
 S10mR2 <- as(readGAlignments(system.file("extdata", "S10mR2.bam", 
-		package="groHMM")), "GRanges")
+        package="groHMM")), "GRanges")
 S40mR1 <- as(readGAlignments(system.file("extdata", "S40mR1.bam", 
-		package="groHMM")), "GRanges")
+        package="groHMM")), "GRanges")
 S40mR2 <- as(readGAlignments(system.file("extdata", "S40mR2.bam", 
-		package="groHMM")), "GRanges")
+        package="groHMM")), "GRanges")
 S160mR1 <- as(readGAlignments(system.file("extdata", "S160mR1.bam", 
-		package="groHMM")), "GRanges")
+        package="groHMM")), "GRanges")
 S160mR2 <- as(readGAlignments(system.file("extdata", "S160mR2.bam", 
-		package="groHMM")), "GRanges")
+        package="groHMM")), "GRanges")
 @
 
 \subsection{Create a Wiggle File}
@@ -144,11 +144,11 @@ S160m <- c(S160mR1, S160mR2)
 
 <<write wiggle files, eval=FALSE>>=
 writeWiggle(reads=S0m, file="S0m_Plus.wig", fileType="wig", strand="+",  
-		reverse=FALSE)
+        reverse=FALSE)
 writeWiggle(reads=S0m, file="S0m_Minus.wig", fileType="wig", strand="-",  
-		reverse=TRUE)
+        reverse=TRUE)
 writeWiggle(reads=S0m, file="S0m_Plus.bw", fileType="BigWig", strand="+", 
-		reverse=FALSE)
+        reverse=FALSE)
 
 # Normalized wiggle files
 expCounts <- mean(c(NROW(S0m), NROW(S10m), NROW(S40m), NROW(S160m)))
@@ -184,7 +184,7 @@ separately dividing the genome into non-overlapping 50 bp windows classified as 
 <<transcript calling, eval=TRUE, keep.source=TRUE, results=hide>>=
 Sall <- sort(c(S0m, S10m, S40m, S160m))
 hmmResult <- detectTranscripts(Sall, LtProbB=-200, UTS=5, 
-			       threshold=1)
+                   threshold=1)
 txHMM <- hmmResult$transcripts
 @
 <<called transcripts, eval=TRUE, keep.source=TRUE>>=
@@ -233,10 +233,10 @@ consensus annotations are used for the evaluation of HMM calling.
 <<make consensus annotations, eval=TRUE, keep.source=TRUE, results=hide>>=
 # Collapse overlapping annotations
 kgConsensus <- makeConsensusAnnotations(kgChr7, keytype="gene_id", 
-		mc.cores=getOption("mc.cores"))
+        mc.cores=getOption("mc.cores"))
 library(org.Hs.eg.db)
 map <- select(org.Hs.eg.db, 
-	keys=unlist(mcols(kgConsensus)$gene_id),
+    keys=unlist(mcols(kgConsensus)$gene_id),
         columns=c("SYMBOL"), keytype=c("ENTREZID"))
 mcols(kgConsensus)$symbol <- map$SYMBOL
 mcols(kgConsensus)$type <- "gene"
@@ -274,7 +274,7 @@ Fm <- windowAnalysis(Sall, strand="-", windowSize=50)
 
 evals <- mclapply(seq_len(9), function(x) {
         hmm <- detectTranscripts(Fp=Fp, Fm=Fm, LtProbB=tune$LtProbB[x], 
-				  UTS=tune$UTS[x])
+                  UTS=tune$UTS[x])
         e <- evaluateHMMInAnnotations(hmm$transcripts, kgConsensus)
         e$eval
         }, mc.cores=getOption("mc.cores"),  mc.silent=TRUE)
@@ -323,7 +323,7 @@ getExpressedAnnotations <- function(features, reads) {
      count <- countOverlaps(fLimit, reads)
      features <- features[count!=0,]
      return(features[(quantile(width(features), .05) < width(features)) 
-	& (width(features) < quantile(width(features), .95)),])}
+    & (width(features) < quantile(width(features), .95)),])}
 conExpressed <- getExpressedAnnotations(features=kgConsensus,reads=Sall)
 @
 
@@ -473,10 +473,10 @@ expReads <- mean(c(NROW(S0m), NROW(S10m), NROW(S40m), NROW(S160m)))
 # Metagene around TSS
 mg0m <- runMetaGene(features=upGenes, reads=S0m, size=100, 
                        normCounts=expReads/NROW(S0m), sampling=TRUE,
-		       mc.cores=getOption("mc.cores"))
+               mc.cores=getOption("mc.cores"))
 mg40m <- runMetaGene(features=upGenes, reads=S40m, size=100, 
                         normCounts=expReads/NROW(S40m), sampling=TRUE,
-		       	mc.cores=getOption("mc.cores"))
+                mc.cores=getOption("mc.cores"))
 @
 
 <<plot metagene, eval=TRUE, keep.source=TRUE, results=hide>>=

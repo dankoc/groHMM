@@ -21,18 +21,18 @@
 
 ########################################################################
 ##
-##	Distribution Fitting Functions -- MLEfit given X.
-##	Date: 2014-03-27
+##  Distribution Fitting Functions -- MLEfit given X.
+##  Date: 2014-03-27
 ##
-##	Presently, fits:
-##		-- Gamma distribution  (RgammaMLE)
-##		-- Normal distrubution (Rnorm)
+##  Presently, fits:
+##      -- Gamma distribution  (RgammaMLE)
+##      -- Normal distrubution (Rnorm)
 ##
-##	Todo:
-##	(1) Add fits for: 
-##		-- Normal by MLE
-##		-- Poisson
-##		-- Negative binomial (??)
+##  Todo:
+##  (1) Add fits for: 
+##      -- Normal by MLE
+##      -- Poisson
+##      -- Negative binomial (??)
 ##
 ########################################################################
 
@@ -44,11 +44,11 @@
 #' @author Charles G. Danko
 RgammaMLE <- function(X) {
     if(sum(X<0) > 0) message("Negative values not allowed!")
-	N <- as.double(NROW(X))
-	sumxis <- as.double(sum(X))
-	sumlogxis <- as.double(sum(log(X)))
-	Fit <- .Call("RgammaMLE", N, sumxis, sumlogxis, PACKAGE = "groHMM")
-	return(Fit)
+    N <- as.double(NROW(X))
+    sumxis <- as.double(sum(X))
+    sumlogxis <- as.double(sum(log(X)))
+    Fit <- .Call("RgammaMLE", N, sumxis, sumlogxis, PACKAGE = "groHMM")
+    return(Fit)
 }
 
 #' Rnorm fits a normal distribution to a specified data vector using maximum likelihood.
@@ -57,11 +57,11 @@ RgammaMLE <- function(X) {
 #' @return Returns a list of parameters for the best-fit normal distribution (mean and varience).
 #' @author Charles G. Danko
 Rnorm <- function(X) {
-	returnList      <- list()
-	returnList$mean <- mean(X)
-	returnList$var  <- var(X)
+    returnList      <- list()
+    returnList$mean <- mean(X)
+    returnList$var  <- var(X)
 
-	return(returnList)
+    return(returnList)
 }
 
 ################################
@@ -84,7 +84,7 @@ Rnorm <- function(X) {
 #' @return Returns a list of parameters for the best-fit normal distribution (alpha, mean, varience, and lambda).
 #' @author Charles G. Danko
 Rnorm.exp <- function(xi, wi=rep(1,NROW(xi)), guess=c(0.5, 0, 1, 1), tol=sqrt(.Machine$double.eps), maxit=10000) {
-  	Fit <- .Call("RNormExpMLE", xi, wi, guess, tol, as.integer(maxit), PACKAGE = "groHMM")
+    Fit <- .Call("RNormExpMLE", xi, wi, guess, tol, as.integer(maxit), PACKAGE = "groHMM")
 }
 
 ################################

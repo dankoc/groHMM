@@ -37,32 +37,32 @@
 #' writeWiggle(reads=S0mR1, file="S0mR1_Plus.wig", fileType="wig", strand="+", reverse=FALSE)
 #' writeWiggle(reads=S0mR1, file="S0mR1_Plus.bw", fileType="BigWig", strand="+", reverse=FALSE)
 writeWiggle <- function(reads, file, strand="*", fileType="wig",  
-							normCounts=NULL, reverse=FALSE, track.type.line=FALSE, ...) {
-	if (strand == "*") {
-		reads_str <- reads
-		strand(reads_str) <- "*"
-		reads_str <- unique(reads_str)
-	} else 
-		reads_str <- unique(reads[as.character(strand(reads))==strand,])
-	
+                            normCounts=NULL, reverse=FALSE, track.type.line=FALSE, ...) {
+    if (strand == "*") {
+        reads_str <- reads
+        strand(reads_str) <- "*"
+        reads_str <- unique(reads_str)
+    } else 
+        reads_str <- unique(reads[as.character(strand(reads))==strand,])
+    
 
-	if (is.null(score(reads_str))) {
-		reads_str$score <- countOverlaps(reads_str, reads) 
-	}
-	 
-	if (reverse) 
-		reads_str$score <- (-1)*reads_str$score
+    if (is.null(score(reads_str))) {
+        reads_str$score <- countOverlaps(reads_str, reads) 
+    }
+     
+    if (reverse) 
+        reads_str$score <- (-1)*reads_str$score
 
-	if (!is.null(normCounts)) 
-		reads_str$score <- normCounts*reads_str$score
-	
-	if (fileType=="wig") {
-		if (track.type.line) {
-			wigfile <- export(reads_str, format="wig", ...)
-			cat("type wiggle_0\n", file=file)
-			cat(wigfile, file=file, append=TRUE)
-		} else 
-			export(reads_str, file, format="wig", ...)
-	} else 
-		export(reads_str, file, format="BigWig", ...)
+    if (!is.null(normCounts)) 
+        reads_str$score <- normCounts*reads_str$score
+    
+    if (fileType=="wig") {
+        if (track.type.line) {
+            wigfile <- export(reads_str, format="wig", ...)
+            cat("type wiggle_0\n", file=file)
+            cat(wigfile, file=file, append=TRUE)
+        } else 
+            export(reads_str, file, format="wig", ...)
+    } else 
+        export(reads_str, file, format="BigWig", ...)
 }

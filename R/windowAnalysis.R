@@ -35,48 +35,48 @@
 #' @author Charles G. Danko and Minho Chae
 #' @examples
 #' S0mR1 <- as(readGAlignments(system.file("extdata", "S0mR1.bam",
-#'		package="groHMM")), "GRanges")
+#'      package="groHMM")), "GRanges")
 #; Fp <- windowAnalysis(S0mR1, strand="+", windowSize=50)
 windowAnalysis <- function(reads, strand="*", windowSize=stepSize, stepSize=windowSize, chrom=NULL, limitPCRDups=FALSE, ...) {
-	if (!(windowSize > 0 & (windowSize <= max(end(reads)))))
-		stop("'windowSize' is out of range!")
+    if (!(windowSize > 0 & (windowSize <= max(end(reads)))))
+        stop("'windowSize' is out of range!")
 
-	if (!(stepSize > 0 & (stepSize <= max(end(reads)))))
-		stop("'stepSize' is out of range!")
+    if (!(stepSize > 0 & (stepSize <= max(end(reads)))))
+        stop("'stepSize' is out of range!")
 
-	if (!is.null(chrom))  
-		reads <- reads[seqnames(reads) == chrom,]
+    if (!is.null(chrom))  
+        reads <- reads[seqnames(reads) == chrom,]
 
-	readsList <- split(reads, seqnames(reads))
-	if (limitPCRDups) {
-    	warning("Using limitPCRDups assumes all reads are the same size!  Don't use for paired end data!")
-		readsList <- endoapply(readsList, function(x) {
-			pStarts <- unique(start(x[strand(x) == "+",]))
-			mEnds <- unique(end(x[strand(x) == "-",]))
-			c(GRanges(seqnames(x)[1], IRanges(start=pStarts, width=1), strand="+"),
-			  GRanges(seqnames(x)[1], IRanges(start=mEnds, width=1), strand="-"))
+    readsList <- split(reads, seqnames(reads))
+    if (limitPCRDups) {
+        warning("Using limitPCRDups assumes all reads are the same size!  Don't use for paired end data!")
+        readsList <- endoapply(readsList, function(x) {
+            pStarts <- unique(start(x[strand(x) == "+",]))
+            mEnds <- unique(end(x[strand(x) == "-",]))
+            c(GRanges(seqnames(x)[1], IRanges(start=pStarts, width=1), strand="+"),
+              GRanges(seqnames(x)[1], IRanges(start=mEnds, width=1), strand="-"))
 
-		})
-	}
+        })
+    }
 
-	# Change reads' strand 
-	readsList <- endoapply(readsList, function(x) {
-			if (strand == "*") 
-				strand(x) <- "*"
-			else
-				x <- x[strand(x) == strand,]
-			x 
-	})
+    # Change reads' strand 
+    readsList <- endoapply(readsList, function(x) {
+            if (strand == "*") 
+                strand(x) <- "*"
+            else
+                x <- x[strand(x) == strand,]
+            x 
+    })
 
-	H <- mclapply(readsList, function(x) {
-			cov <- coverage(x)[[1]]
-			to <- (length(cov) %/% windowSize)*windowSize
-			starts <- seq(1, to, stepSize)
-			vi <- Views(cov, start=starts, width=windowSize)
-			Rle(viewSums(vi))
-		}, ...) 
-	
-	
-	return(H)
+    H <- mclapply(readsList, function(x) {
+            cov <- coverage(x)[[1]]
+            to <- (length(cov) %/% windowSize)*windowSize
+            starts <- seq(1, to, stepSize)
+            vi <- Views(cov, start=starts, width=windowSize)
+            Rle(viewSums(vi))
+        }, ...) 
+    
+    
+    return(H)
 
 }

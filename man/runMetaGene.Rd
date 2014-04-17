@@ -48,11 +48,12 @@ Supports parallel processing using mclapply in the
 'parallel' package.  To change the number of processors set
 the option 'mc.cores'.
 }
+\examples{
+features <- GRanges("chr7", IRanges(start=1000:1001, width=rep(1,2)), strand=c("+", "-"))
+reads <- GRanges("chr7", IRanges(start=c(1000:1003, 1100:1101), width=rep(1, 6)), strand=rep(c("+","-"), 3))
+mg <- runMetaGene(features, reads, size=4, up=10)
+}
 \author{
-Minho Chae features <- GRanges("chr7",
-IRanges(start=1000:1001, width=rep(1,2)), strand=c("+",
-"-")) reads <- GRanges("chr7", IRanges(start=c(1000:1003,
-1100:1101), width=rep(1, 6)), strand=rep(c("+","-"), 3)) mg
-<- runMetaGene(features, reads, size=4, up=10)
+Minho Chae
 }
 

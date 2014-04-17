@@ -21,10 +21,10 @@
 
 /*************************************************************
  *
- *	This file is comprised of prototypes and structure 
- *	definitions for the components of the HMM class.
+ *  This file is comprised of prototypes and structure 
+ *  definitions for the components of the HMM class.
  *
- *	Started: 11-25-2009.
+ *  Started: 11-25-2009.
  *
  *************************************************************/
 
@@ -45,9 +45,9 @@ static double VERY_LARGE_DOUBLE_VALUE = 1e20;
  *
  *************************************/
 #ifndef max
-	#define max( a, b ) ( ((a) > (b)) ? (a) : (b) )
+    #define max( a, b ) ( ((a) > (b)) ? (a) : (b) )
 #endif
 
 #ifndef min
-	#define min( a, b ) ( ((a) < (b)) ? (a) : (b) )
+    #define min( a, b ) ( ((a) < (b)) ? (a) : (b) )
 #endif

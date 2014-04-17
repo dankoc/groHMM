@@ -23,9 +23,9 @@
 #####################################################
 ##
 ## tlsFits.R -- Total least squares fits for several functional forms, including:
-## 	-- Linear; done using Demming regression (tlsDemming), and svd (tlsSvd).
+##  -- Linear; done using Demming regression (tlsDemming), and svd (tlsSvd).
 ##  -- LOESS; hacked approximation done by transforming data.  Rotats data so that the LOESS fit approximates a 
-##				given angle (by default 45 degrees; assumes varience of two data types is equal). 
+##              given angle (by default 45 degrees; assumes varience of two data types is equal). 
 ##
 ##
 ## WARNING -- FUNCTIONS CURRENTLY EXPERIMENTAL!! USE WITH EXTREME CATION!!

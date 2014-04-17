@@ -22,10 +22,10 @@
 
 /********************************************************************************
  *
- *	Misclaneous functions for the hmm implementation in the GROseq package ...
- *	Charles Danko.
+ *  Misclaneous functions for the hmm implementation in the GROseq package ...
+ *  Charles Danko.
  *
- *	Started 12-2-09
+ *  Started 12-2-09
  *
  ********************************************************************************/
 
@@ -119,70 +119,70 @@ extern void imatrix_free(int ** matrix, int reverse, int rows) {
 
 /**************
  * 
- *	Set up paremeters for an HMM.
+ *  Set up paremeters for an HMM.
  *
- *	Used to interface R and C in hmmViterbi.cpp and hmmEM.cpp.
+ *  Used to interface R and C in hmmViterbi.cpp and hmmEM.cpp.
  *
  **************/
 extern hmm_t *setupHMM(SEXP nstates, SEXP emiprobDist, SEXP emiprobVars, SEXP nEmis, SEXP tprob, SEXP iprob) {
-	hmm_t *hmm = (hmm_t*)R_alloc(1, sizeof(hmm_t));
+    hmm_t *hmm = (hmm_t*)R_alloc(1, sizeof(hmm_t));
 
-	hmm[0].n_states  = INTEGER(nstates)[0];
-	hmm[0].n_emis    = INTEGER(nEmis)[0];
-	hmm[0].log_iProb = REAL(iprob); // Initial probabilities.
+    hmm[0].n_states  = INTEGER(nstates)[0];
+    hmm[0].n_emis    = INTEGER(nEmis)[0];
+    hmm[0].log_iProb = REAL(iprob); // Initial probabilities.
 
-	hmm[0].log_tProb = (double**)R_alloc(hmm[0].n_states, sizeof(double*)); // (n_states x n_states).
-	hmm[0].em_args   = (double**)R_alloc(hmm[0].n_states*hmm[0].n_emis, sizeof(double*)); // (3 x n_states).
-
-   /***************************************************
-	* Set up the transition probability distributions.   
-	****************************************************/
-	for(int s=0;s<(hmm[0].n_states);s++)
-		hmm[0].log_tProb[s] = REAL(VECTOR_ELT(tprob, s));
+    hmm[0].log_tProb = (double**)R_alloc(hmm[0].n_states, sizeof(double*)); // (n_states x n_states).
+    hmm[0].em_args   = (double**)R_alloc(hmm[0].n_states*hmm[0].n_emis, sizeof(double*)); // (3 x n_states).
 
    /***************************************************
-	* Set up the emission probability distributions.   
-	****************************************************/
-	for(int s=0;s<(hmm[0].n_states*hmm[0].n_emis);s++)
-		hmm[0].em_args[s]   = REAL(VECTOR_ELT(emiprobVars, s));
+    * Set up the transition probability distributions.   
+    ****************************************************/
+    for(int s=0;s<(hmm[0].n_states);s++)
+        hmm[0].log_tProb[s] = REAL(VECTOR_ELT(tprob, s));
 
-	hmm[0].log_eProb = (emiss_func) R_alloc(hmm[0].n_states*hmm[0].n_emis, sizeof( emiss_func ));
-	for(int i=0;i<(hmm[0].n_states*hmm[0].n_emis);i++) {
-		if(strcmp(CHAR(STRING_ELT(emiprobDist, i)), "norm") == 0)		hmm[0].log_eProb[i] = NORMAL;
-		else if(strcmp(CHAR(STRING_ELT(emiprobDist, i)), "dnorm") == 0)		hmm[0].log_eProb[i] = dNORMAL;
-		else if(strcmp(CHAR(STRING_ELT(emiprobDist, i)), "beta") == 0)		hmm[0].log_eProb[i] = BETA;
-		else if(strcmp(CHAR(STRING_ELT(emiprobDist, i)), "nbeta") == 0)		hmm[0].log_eProb[i] = NONCENTRALBETA;
-		else if(strcmp(CHAR(STRING_ELT(emiprobDist, i)), "binom") == 0)		hmm[0].log_eProb[i] = BINOMIAL;
-		else if(strcmp(CHAR(STRING_ELT(emiprobDist, i)), "exp") == 0)		hmm[0].log_eProb[i] = EXPONENTIAL;
-		else if(strcmp(CHAR(STRING_ELT(emiprobDist, i)), "gamma") == 0)		hmm[0].log_eProb[i] = GAMMA;
-		else if(strcmp(CHAR(STRING_ELT(emiprobDist, i)), "dgamma") == 0)		hmm[0].log_eProb[i] = dGAMMA;
-		else if(strcmp(CHAR(STRING_ELT(emiprobDist, i)), "gamma_scale1") == 0)	hmm[0].log_eProb[i] = GAMMA;
-		else if(strcmp(CHAR(STRING_ELT(emiprobDist, i)), "gamma_SHAPEeq1overSCALE") == 0) hmm[0].log_eProb[i] = GAMMA;
-		else if(strcmp(CHAR(STRING_ELT(emiprobDist, i)), "gamma_p1") == 0)	hmm[0].log_eProb[i] = GAMMA_p1;
-		else if(strcmp(CHAR(STRING_ELT(emiprobDist, i)), "hyper") == 0)		hmm[0].log_eProb[i] = HYPERGEOMETRIC;
-		else if(strcmp(CHAR(STRING_ELT(emiprobDist, i)), "nbinom") == 0)	hmm[0].log_eProb[i] = NEGATIVEBINOMIAL;
-		else if(strcmp(CHAR(STRING_ELT(emiprobDist, i)), "pois") == 0)		hmm[0].log_eProb[i] = POISSON;
-		else if(strcmp(CHAR(STRING_ELT(emiprobDist, i)), "uniform") == 0)	hmm[0].log_eProb[i] = UNIFORM;
-		else if(strcmp(CHAR(STRING_ELT(emiprobDist, i)), "normexp") == 0)		hmm[0].log_eProb[i] = NORMAL_EXP;
-		else if(strcmp(CHAR(STRING_ELT(emiprobDist, i)), "normexpminus") == 0)	hmm[0].log_eProb[i] = NORMAL_EXP_MINUS;
-		else error("ERROR: Can't set up EM.  Emission distribution ('%s') not recognized!", CHAR(STRING_ELT(emiprobDist, i)));
-	}
+   /***************************************************
+    * Set up the emission probability distributions.   
+    ****************************************************/
+    for(int s=0;s<(hmm[0].n_states*hmm[0].n_emis);s++)
+        hmm[0].em_args[s]   = REAL(VECTOR_ELT(emiprobVars, s));
 
-	return(hmm);
+    hmm[0].log_eProb = (emiss_func) R_alloc(hmm[0].n_states*hmm[0].n_emis, sizeof( emiss_func ));
+    for(int i=0;i<(hmm[0].n_states*hmm[0].n_emis);i++) {
+        if(strcmp(CHAR(STRING_ELT(emiprobDist, i)), "norm") == 0)       hmm[0].log_eProb[i] = NORMAL;
+        else if(strcmp(CHAR(STRING_ELT(emiprobDist, i)), "dnorm") == 0)     hmm[0].log_eProb[i] = dNORMAL;
+        else if(strcmp(CHAR(STRING_ELT(emiprobDist, i)), "beta") == 0)      hmm[0].log_eProb[i] = BETA;
+        else if(strcmp(CHAR(STRING_ELT(emiprobDist, i)), "nbeta") == 0)     hmm[0].log_eProb[i] = NONCENTRALBETA;
+        else if(strcmp(CHAR(STRING_ELT(emiprobDist, i)), "binom") == 0)     hmm[0].log_eProb[i] = BINOMIAL;
+        else if(strcmp(CHAR(STRING_ELT(emiprobDist, i)), "exp") == 0)       hmm[0].log_eProb[i] = EXPONENTIAL;
+        else if(strcmp(CHAR(STRING_ELT(emiprobDist, i)), "gamma") == 0)     hmm[0].log_eProb[i] = GAMMA;
+        else if(strcmp(CHAR(STRING_ELT(emiprobDist, i)), "dgamma") == 0)        hmm[0].log_eProb[i] = dGAMMA;
+        else if(strcmp(CHAR(STRING_ELT(emiprobDist, i)), "gamma_scale1") == 0)  hmm[0].log_eProb[i] = GAMMA;
+        else if(strcmp(CHAR(STRING_ELT(emiprobDist, i)), "gamma_SHAPEeq1overSCALE") == 0) hmm[0].log_eProb[i] = GAMMA;
+        else if(strcmp(CHAR(STRING_ELT(emiprobDist, i)), "gamma_p1") == 0)  hmm[0].log_eProb[i] = GAMMA_p1;
+        else if(strcmp(CHAR(STRING_ELT(emiprobDist, i)), "hyper") == 0)     hmm[0].log_eProb[i] = HYPERGEOMETRIC;
+        else if(strcmp(CHAR(STRING_ELT(emiprobDist, i)), "nbinom") == 0)    hmm[0].log_eProb[i] = NEGATIVEBINOMIAL;
+        else if(strcmp(CHAR(STRING_ELT(emiprobDist, i)), "pois") == 0)      hmm[0].log_eProb[i] = POISSON;
+        else if(strcmp(CHAR(STRING_ELT(emiprobDist, i)), "uniform") == 0)   hmm[0].log_eProb[i] = UNIFORM;
+        else if(strcmp(CHAR(STRING_ELT(emiprobDist, i)), "normexp") == 0)       hmm[0].log_eProb[i] = NORMAL_EXP;
+        else if(strcmp(CHAR(STRING_ELT(emiprobDist, i)), "normexpminus") == 0)  hmm[0].log_eProb[i] = NORMAL_EXP_MINUS;
+        else error("ERROR: Can't set up EM.  Emission distribution ('%s') not recognized!", CHAR(STRING_ELT(emiprobDist, i)));
+    }
+
+    return(hmm);
 }
 
 /*******************************************************************
  *
- *	Update paremeters of the emission functions for EM ...
+ *  Update paremeters of the emission functions for EM ...
  *
  *  SHOULDN'T BE NECESSARY TO DO THIS ... POSTERIORS CAN BE USED DIRECTLY ...
  * 
  *******************************************************************/
 
 /*
- *	Returns the sum of the elements of logValues.
- *	logValues -- double*, vector.
- *	length    -- number of elements in logValues.
+ *  Returns the sum of the elements of logValues.
+ *  logValues -- double*, vector.
+ *  length    -- number of elements in logValues.
  */
 
 /////////////////////////////////////////////////////////////////////
@@ -204,20 +204,20 @@ extern void SStatsGamma(int state, int emis_indx, void* ss, fwbk_t fwbk) {
   ssGamma *SS = (ssGamma*)ss;
   for(int position=0;position<fwbk.N;position++) {
     if(isnan(fwbk.data[emis_indx][position]) != 0) continue;
-	logPP =  MargainalizeSumLogProbOver(state, position, fwbk);
+    logPP =  MargainalizeSumLogProbOver(state, position, fwbk);
 
-	// If the contribution matters at all within the bounds of the machine ... add its contribution.
-	if(!(logPP <= epsilon)) Rprintf("[SSallocGamma] -- Assertion about to fail!  logPP= %d\n", logPP);
-	assert(logPP < epsilon); // Require to be less than rounding error...
-	if(-1*logPP < APPROX_EXP_VALUE_THRESHOLD && !isnan(fwbk.data[emis_indx][position])) {
-		PP = exp(logPP);
-		data_i = fwbk.data[emis_indx][position];
-		if(data_i == 0) data_i = epsilon;
-		SS[0].N          += PP;
-		SS[0].sumPiXi    += PP*data_i;
-		SS[0].sumPiXiSq  += PP*data_i*data_i;
-		SS[0].sumLogPiXi += PP*log(data_i);
-	}
+    // If the contribution matters at all within the bounds of the machine ... add its contribution.
+    if(!(logPP <= epsilon)) Rprintf("[SSallocGamma] -- Assertion about to fail!  logPP= %d\n", logPP);
+    assert(logPP < epsilon); // Require to be less than rounding error...
+    if(-1*logPP < APPROX_EXP_VALUE_THRESHOLD && !isnan(fwbk.data[emis_indx][position])) {
+        PP = exp(logPP);
+        data_i = fwbk.data[emis_indx][position];
+        if(data_i == 0) data_i = epsilon;
+        SS[0].N          += PP;
+        SS[0].sumPiXi    += PP*data_i;
+        SS[0].sumPiXiSq  += PP*data_i*data_i;
+        SS[0].sumLogPiXi += PP*log(data_i);
+    }
 
   }
 //  Rprintf("[SStatsGamma]: SS.N: %f; SS.sumPiXi: %f; SS.sumLogPiXi: %f\n", SS[0].N, SS[0].sumPiXi, SS[0].sumLogPiXi);
@@ -226,16 +226,16 @@ extern void SStatsGamma_p1(int state, int emis_indx, void* ss, fwbk_t fwbk) {
   double PP, logPP;
   ssGamma *SS = (ssGamma*)ss;
   for(int position=0;position<fwbk.N;position++) {
-	logPP =  MargainalizeSumLogProbOver(state, position, fwbk);
+    logPP =  MargainalizeSumLogProbOver(state, position, fwbk);
 
-	// If the contribution matters at all within the bounds of the machine ... add its contribution.
-	assert(logPP <= 0);
-	if(-1*logPP < APPROX_EXP_VALUE_THRESHOLD && !isnan(fwbk.data[emis_indx][position])) {
-		PP = exp(logPP);
-		SS[0].N          += PP;
-		SS[0].sumPiXi    += PP*(fwbk.data[emis_indx][position]+1);
-		SS[0].sumLogPiXi += PP*log(fwbk.data[emis_indx][position]+1);
-	}
+    // If the contribution matters at all within the bounds of the machine ... add its contribution.
+    assert(logPP <= 0);
+    if(-1*logPP < APPROX_EXP_VALUE_THRESHOLD && !isnan(fwbk.data[emis_indx][position])) {
+        PP = exp(logPP);
+        SS[0].N          += PP;
+        SS[0].sumPiXi    += PP*(fwbk.data[emis_indx][position]+1);
+        SS[0].sumLogPiXi += PP*log(fwbk.data[emis_indx][position]+1);
+    }
 
   }
 }
@@ -249,7 +249,7 @@ extern void UpdateGamma(int state, void* ss, hmm_t *hmm) {
       hmm[0].em_args[state][1] = scale[0];
   }
   else {
-	Rprintf("WARNING! [UpdateGamma]\t--> Gamma for state %d update failed due to instibility!  Using Shape: %f; Scale: %f\n", state, hmm[0].em_args[state][0], hmm[0].em_args[state][1]);
+    Rprintf("WARNING! [UpdateGamma]\t--> Gamma for state %d update failed due to instibility!  Using Shape: %f; Scale: %f\n", state, hmm[0].em_args[state][0], hmm[0].em_args[state][1]);
   }
   Free(shape); 
   Free(scale);
@@ -259,7 +259,7 @@ extern void UpdateGamma_SHAPEeq1overSCALE(int state, void* ss, hmm_t *hmm) {
   ssGamma *SS = (ssGamma*)ss;
   MLEGamma_SHAPEeq1overSCALE(SS[0].N, SS[0].sumPiXi, SS[0].sumLogPiXi, SS[0].sumPiXiSq, &(hmm[0].em_args[state][0]), &(hmm[0].em_args[state][1]));
   Rprintf("[UpdateGammaConstrained]\t--> Shape: %f; Scale: %f; Shape/Scale: %f (shape/scale must be 1!)\n", 
-		hmm[0].em_args[state][0], hmm[0].em_args[state][1], (hmm[0].em_args[state][0]/hmm[0].em_args[state][1]));
+        hmm[0].em_args[state][0], hmm[0].em_args[state][1], (hmm[0].em_args[state][0]/hmm[0].em_args[state][1]));
 }
 // Used to fit a constrained gamma where E[mean] = E[var].
 extern void UpdateGamma_SCALE1(int state, void* ss, hmm_t *hmm) {
@@ -289,15 +289,15 @@ extern void SStatsNormal(int state, int emis_indx, void* ss, fwbk_t fwbk) {
   ssNormal *SS = (ssNormal*)ss;
   for(int position=0;position<fwbk.N;position++) {
     if(isnan(fwbk.data[emis_indx][position]) != 0) continue;
-	logPP =  MargainalizeSumLogProbOver(state, position, fwbk);
+    logPP =  MargainalizeSumLogProbOver(state, position, fwbk);
 
-	// If the contribution matters at all within the bounds of the machine ... add its contribution.
-	if(-1*logPP < APPROX_EXP_VALUE_THRESHOLD && !isnan(fwbk.data[emis_indx][position])) {
-		PP = exp(logPP);
-		SS[0].N          += PP;
-		SS[0].sumPiXi    += PP*fwbk.data[emis_indx][position];
-		SS[0].sumPiXiSq  += PP*fwbk.data[emis_indx][position]*fwbk.data[emis_indx][position];
-	}
+    // If the contribution matters at all within the bounds of the machine ... add its contribution.
+    if(-1*logPP < APPROX_EXP_VALUE_THRESHOLD && !isnan(fwbk.data[emis_indx][position])) {
+        PP = exp(logPP);
+        SS[0].N          += PP;
+        SS[0].sumPiXi    += PP*fwbk.data[emis_indx][position];
+        SS[0].sumPiXiSq  += PP*fwbk.data[emis_indx][position]*fwbk.data[emis_indx][position];
+    }
   }
 }
 
@@ -314,10 +314,10 @@ extern void UpdateNormal(int state, void* ss, hmm_t *hmm) {
   stateParams[1] = SS[0].sumPiXiSq/SS[0].N-(stateParams[0]*stateParams[0]);
 
   assert(stateParams[1] > -1); // Rounding error can makes this quantity JUST BARELY <1 for samples with 0 varience.
-				// This just checks that the error is not excessive (and thus explained by a bug in
-				// addition to rounding error).
+                // This just checks that the error is not excessive (and thus explained by a bug in
+                // addition to rounding error).
   if(stateParams[1] < epsilon)
-	stateParams[1] = epsilon; // Keep the varience >0.
+    stateParams[1] = epsilon; // Keep the varience >0.
   stateParams[1] = sqrt(stateParams[1]);
 
   Rprintf("[UpdateNormal]\t--> Mean: %f; Stdev: %f\n", hmm[0].em_args[state][0], hmm[0].em_args[state][1]);
@@ -348,7 +348,7 @@ extern void SStatsNormExp(int state, int emis_indx, void* ss, fwbk_t fwbk) {
     arraySize+= oldSize;
     newEx = (double*)calloc(arraySize*2+1, sizeof(double));
     for(int i_cp=1;i_cp<(2*oldSize+1);i_cp+=2)
-	  newEx[i_cp]=SS[0].ex[i_cp];
+      newEx[i_cp]=SS[0].ex[i_cp];
   }
   else { // Otherwise ... just alloc a new array.
     newEx = (double*)calloc(arraySize*2+1, sizeof(double));  
@@ -358,8 +358,8 @@ extern void SStatsNormExp(int state, int emis_indx, void* ss, fwbk_t fwbk) {
   // Put in new data from this chromsome.
   for(int position=0;position<fwbk.N;position++) {
     if(isnan(fwbk.data[emis_indx][position]) != 0) continue;
-	newEx[(position+oldSize)*2+1] = fwbk.data[emis_indx][position]; // xi
-	newEx[(position+oldSize)*2+2] = exp(MargainalizeSumLogProbOver(state, position, fwbk)); // wi
+    newEx[(position+oldSize)*2+1] = fwbk.data[emis_indx][position]; // xi
+    newEx[(position+oldSize)*2+2] = exp(MargainalizeSumLogProbOver(state, position, fwbk)); // wi
   }
   if(SS[0].containsData)
      free((double*)SS[0].ex);
@@ -411,13 +411,13 @@ extern void SStatsPoisson(int state, int emis_indx, void* ss, fwbk_t fwbk) {
   ssPoisson *SS = (ssPoisson*)ss;
   for(int position=0;position<fwbk.N;position++) {
     if(isnan(fwbk.data[emis_indx][position]) != 0) continue;
-	logPP =  MargainalizeSumLogProbOver(state, position, fwbk);
+    logPP =  MargainalizeSumLogProbOver(state, position, fwbk);
 
-	if(-1*logPP < APPROX_EXP_VALUE_THRESHOLD && !isnan(fwbk.data[emis_indx][position])) {
-		PP = exp(logPP);
-		SS[0].N          += PP;
-		SS[0].sumPiXi    += PP*fwbk.data[emis_indx][position];
-	}
+    if(-1*logPP < APPROX_EXP_VALUE_THRESHOLD && !isnan(fwbk.data[emis_indx][position])) {
+        PP = exp(logPP);
+        SS[0].N          += PP;
+        SS[0].sumPiXi    += PP*fwbk.data[emis_indx][position];
+    }
   }
 
 }
@@ -446,13 +446,13 @@ extern void SStatsExp(int state, int emis_indx, void* ss, fwbk_t fwbk) {
   ssExp *SS = (ssExp*)ss;
   for(int position=0;position<fwbk.N;position++) {
     if(isnan(fwbk.data[emis_indx][position]) != 0) continue;
-	logPP =  MargainalizeSumLogProbOver(state, position, fwbk);
+    logPP =  MargainalizeSumLogProbOver(state, position, fwbk);
 
-	if(-1*logPP < APPROX_EXP_VALUE_THRESHOLD && !isnan(fwbk.data[emis_indx][position])) {
-		PP = exp(logPP);
-		SS[0].N          += PP;
-		SS[0].sumPiXi    += PP*fwbk.data[emis_indx][position];
-	}
+    if(-1*logPP < APPROX_EXP_VALUE_THRESHOLD && !isnan(fwbk.data[emis_indx][position])) {
+        PP = exp(logPP);
+        SS[0].N          += PP;
+        SS[0].sumPiXi    += PP*fwbk.data[emis_indx][position];
+    }
   }
 }
 extern void UpdateExp(int state, void* ss, hmm_t *hmm) {
@@ -489,38 +489,38 @@ extern void  TransUpdate(int state, int sequence, void* ss, emiss_func EMI, fwbk
   double scalefactor;
 
   for(int l=0;l<n_states;l++) {
-	double *A = (double*)calloc(N, sizeof(double));
-	ChromSum =0;
+    double *A = (double*)calloc(N, sizeof(double));
+    ChromSum =0;
 
- 	/* Finds a suitable maximum for this chromosome ... */
-  	A[0] = fwbk.forward[0][state]+fwbk.backward[1][l]+fwbk.hmm[0].log_tProb[state][l];//+
+    /* Finds a suitable maximum for this chromosome ... */
+    A[0] = fwbk.forward[0][state]+fwbk.backward[1][l]+fwbk.hmm[0].log_tProb[state][l];//+
     for(emis_count=0;emis_count<n_emis;emis_count++) 
-		A[0] += (EMI[l+n_states*emis_count])(fwbk.data[emis_count][1], fwbk.hmm[0].em_args[l+n_states*emis_count], 4);
+        A[0] += (EMI[l+n_states*emis_count])(fwbk.data[emis_count][1], fwbk.hmm[0].em_args[l+n_states*emis_count], 4);
 
-  	scalefactor= A[0];
-	for(int i=1;i<(N-1);i++) {
-		A[i] = fwbk.forward[i][state]+fwbk.backward[i+1][l]+fwbk.hmm[0].log_tProb[state][l];//+
+    scalefactor= A[0];
+    for(int i=1;i<(N-1);i++) {
+        A[i] = fwbk.forward[i][state]+fwbk.backward[i+1][l]+fwbk.hmm[0].log_tProb[state][l];//+
         for(emis_count=0;emis_count<n_emis;emis_count++)
-			A[i] += (EMI[l+n_states*emis_count])(fwbk.data[emis_count][i+1], fwbk.hmm[0].em_args[l+n_states*emis_count], 4);
+            A[i] += (EMI[l+n_states*emis_count])(fwbk.data[emis_count][i+1], fwbk.hmm[0].em_args[l+n_states*emis_count], 4);
 
-		scalefactor = max(scalefactor, A[i]);
-	}
+        scalefactor = max(scalefactor, A[i]);
+    }
 
-	/* Calculates sum over chromsome using scalefactor ... */
-  	for(int i=0;i<(N-1);i++) {
-		CurrentSum = A[i]-scalefactor;
-		if(-1*CurrentSum < APPROX_EXP_VALUE_THRESHOLD)
-			ChromSum += exp(CurrentSum);
- 	}
-  	free(A);
+    /* Calculates sum over chromsome using scalefactor ... */
+    for(int i=0;i<(N-1);i++) {
+        CurrentSum = A[i]-scalefactor;
+        if(-1*CurrentSum < APPROX_EXP_VALUE_THRESHOLD)
+            ChromSum += exp(CurrentSum);
+    }
+    free(A);
 
-	assert(!isnan(ChromSum)); // Try this instead ...
-	
-	/* Assign the sum to the proper chromosome in total transitions. */
-	SS[0].totalTransK[l][sequence] = log(ChromSum) + scalefactor - fwbk.log_px;
+    assert(!isnan(ChromSum)); // Try this instead ...
+    
+    /* Assign the sum to the proper chromosome in total transitions. */
+    SS[0].totalTransK[l][sequence] = log(ChromSum) + scalefactor - fwbk.log_px;
 
-	Rprintf("[TransUpdate]\t--> Chrom: %d; State: %d; ChromSum=%f; Final=%f\n", 
-			sequence, l, ChromSum, SS[0].totalTransK[l][sequence]);
+    Rprintf("[TransUpdate]\t--> Chrom: %d; State: %d; ChromSum=%f; Final=%f\n", 
+            sequence, l, ChromSum, SS[0].totalTransK[l][sequence]);
   }
 }
 
@@ -542,10 +542,10 @@ extern void  TransUpdateP(int state, int nSequences, void* ss, hmm_t *hmm) {
     double CurrentDiff = ExpectedTransitions[l] - TotalSum;
 
     // Error checking.
-	if(isnan(CurrentDiff)) {
-		Rprintf("ASSERTION ABOUT TO FAIL.  CurrentDiff= %f\n", CurrentDiff);
-		error("CurrentDiff is nan.");
-	}
+    if(isnan(CurrentDiff)) {
+        Rprintf("ASSERTION ABOUT TO FAIL.  CurrentDiff= %f\n", CurrentDiff);
+        error("CurrentDiff is nan.");
+    }
     assert(CurrentDiff <= 0.001); // Allow for some rounding error...
 
     hmm[0].log_tProb[state][l] = CurrentDiff;
