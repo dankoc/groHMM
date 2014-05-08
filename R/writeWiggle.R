@@ -52,7 +52,7 @@ writeWiggle <- function(reads, file, strand="*", fileType="wig", size=50,
     append <- FALSE
     trackWritten <- FALSE
     writeBlock <- function(chr) {
-        reads_s <- GRanges(x, IRanges(seq(1, by=size, length.out=length(W[[chr]])),
+        reads_s <- GRanges(chr, IRanges(seq(1, by=size, length.out=length(W[[chr]])),
                                 seq(size, by=size, length.out=length(W[[chr]]))),
                                 strand=strand, score=normCounts*as.integer(W[[chr]]))
         if (track.type.line & !trackWritten) {
