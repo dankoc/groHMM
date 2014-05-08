@@ -26,43 +26,45 @@
 #' @param file Specifies the filename for output. 
 #' @param strand Takes values of "+", "-", or "*".  Computes Writes a wiggle on the speicified strand.  "*" denotes collapsing reads on both strands.  Default: "*".
 #' @param fileType Takes values of "wig" or "BigWig". Default: "wig".
+#' @param size Size of the moving window.
 #' @param normCounts A normalization factor correcting for library size or other effects.  For example, total mappible read counts might be a reasonable value.  Default: 1 (i.e. no normalization).
 #' @param reverse If set to TRUE, multiplies values by -1.  Used for reversing GRO-seq data on the negative (-) strand. Default: FALSE
+#' @param seqinfo Seqinfo object for reads. Default: NULL.
 #' @param track.type.line If set to TRUE, prints a header identifying the file as a wiggle.  Necessary to upload a custom track to the UCSC genome browser.  Default: TRUE
-#' @param ... Extra argument passed to export function in rtracklayer package. 
-#' @return Writes a wiggle or BigWig file to the specified file.
-#' @author Charles G. Danko and Minho Chae
+#' @param ...  Extra argument passed to mclapply.
+#' @author Minho Chae and Charles G. Danko
 #' @examples
 #' S0mR1 <- as(readGAlignments(system.file("extdata", "S0mR1.bam", package="groHMM")), "GRanges")
 #' writeWiggle(reads=S0mR1, file="S0mR1_Plus.wig", fileType="wig", strand="+", reverse=FALSE)
-#' writeWiggle(reads=S0mR1, file="S0mR1_Plus.bw", fileType="BigWig", strand="+", reverse=FALSE)
-writeWiggle <- function(reads, file, strand="*", fileType="wig",  
-                            normCounts=NULL, reverse=FALSE, track.type.line=FALSE, ...) {
-    if (strand == "*") {
-        reads_str <- reads
-        strand(reads_str) <- "*"
-        reads_str <- unique(reads_str)
-    } else 
-        reads_str <- unique(reads[as.character(strand(reads))==strand,])
-    
-
-    if (is.null(score(reads_str))) {
-        reads_str$score <- countOverlaps(reads_str, reads) 
+## library(GenomicRanges)
+## si <- seqinfo(BSgenome.Hsapiens.UCSC.hg19)
+## writeWiggle(reads=S0mR1, file="S0mR1_Plus.wig", fileType="BigWig", strand="+", reverse=FALSE, seqinfo=si)
+writeWiggle <- function(reads, file, strand="*", fileType="wig", size=50,
+                            normCounts=NULL, reverse=FALSE, seqinfo=NULL, track.type.line=FALSE, ...) {
+    W <- windowAnalysis(reads = reads, strand = strand, windowSize = size, ...)
+    if (is.null(normCounts)) {
+        normCounts <- 1
     }
-     
-    if (reverse) 
-        reads_str$score <- (-1)*reads_str$score
+    if (reverse) {
+        normCounts <- (-1L)*normCounts
+    }
 
-    if (!is.null(normCounts)) 
-        reads_str$score <- normCounts*reads_str$score
-    
-    if (fileType=="wig") {
-        if (track.type.line) {
-            wigfile <- export(reads_str, format="wig", ...)
-            cat("type wiggle_0\n", file=file)
-            cat(wigfile, file=file, append=TRUE)
-        } else 
-            export(reads_str, file, format="wig", ...)
-    } else 
-        export(reads_str, file, format="BigWig", ...)
+    append <- FALSE
+    trackWritten <- FALSE
+    writeBlock <- function(chr) {
+        reads_s <- GRanges(x, IRanges(seq(1, by=size, length.out=length(W[[chr]])),
+                                seq(size, by=size, length.out=length(W[[chr]]))),
+                                strand=strand, score=normCounts*as.integer(W[[chr]]))
+        if (track.type.line & !trackWritten) {
+            cat("track type=wiggle_0\n", file=file)
+            append <<- TRUE
+        }
+        export(reads_s, file, format="wig", dataFormat="fixedStep", append=append)
+        append <<- TRUE
+    }
+    lapply(names(W), writeBlock)
+
+    if (fileType=="BigWig") {
+        wigToBigWig(file, seqinfo)
+    }
 }

@@ -91,15 +91,14 @@ approx.ratios.CI <- function(num.counts, denom.counts, alpha=0.05) {
 pausingIndex <- function(features, reads, size=50, up=1000, down=1000, UnMAQ=NULL, debug=FALSE, ...) {
     # make sure reads are sorted
     reads <- reads[order(as.character(seqnames(reads)), start(reads)), ]
-        f <- data.frame(chrom=as.character(seqnames(features)), start=as.integer(start(features)),
+    f <- data.frame(chrom=as.character(seqnames(features)), start=as.integer(start(features)),
                                 end=as.integer(end(features)), strand=as.character(strand(features)))
     if ("symbol" %in% names(mcols(features))){
         f <- cbind(f, symbol=features$symbol) 
     } else {
         f <- cbind(f, symbol=GeneID <- as.character(seq_len(NROW(f))))
     }
-
-        p <- data.frame(chrom=as.character(seqnames(reads)), start=as.integer(start(reads)),
+    p <- data.frame(chrom=as.character(seqnames(reads)), start=as.integer(start(reads)),
                                 end=as.integer(end(reads)), strand=as.character(strand(reads)))
 
     C <- sort(as.character(unique(f[[1]])))
@@ -117,7 +116,7 @@ pausingIndex <- function(features, reads, size=50, up=1000, down=1000, UnMAQ=NUL
     UgCounts    <- rep(0, NROW(f))
 
     size        <- as.integer(size)
-    up      <- as.integer(up)
+    up          <- as.integer(up)
     down        <- as.integer(down)
 
     ###### Calculate PLUS and MINUS index, for DRY compliance.
@@ -152,7 +151,7 @@ pausingIndex <- function(features, reads, size=50, up=1000, down=1000, UnMAQ=NUL
     mcp <- mclapply(c(1:NROW(C)), pausingIndex_foreachChrom, C=C, f=f, p=p, 
                     gLEFT=gLEFT, gRIGHT=gRIGHT, c_tss=c_tss, 
                     size=size, up=up, down=down, UnMAQ=UnMAQ, debug=debug, ...)
-    
+   
     ## Unlist and re-order values for printing in a nice data.frame.
     for(i in 1:NROW(C)) {
         # Which KG?  prb?
@@ -214,6 +213,7 @@ pausingIndex_foreachChrom <- function(i, C, f, p, gLEFT, gRIGHT, c_tss, size, up
 
         ## Run the calculations on the gene.
             ## Calculate the maximal 50 bp window.
+            browser()
             if(debug) {
                 message(C[i],": Counting reads in pause peak.")
             }
@@ -250,10 +250,10 @@ pausingIndex_foreachChrom <- function(i, C, f, p, gLEFT, gRIGHT, c_tss, size, up
                     message(C[i],": Counting unMAQable regions.")
                     message("CHRSIZE:", CHRSIZE, "CHRSTART:", CHRSTART)
                 }
-
+                
                 ## Count unMAQable regions, and size of everything ... 
                 nonmappable <- .Call("CountUnMAQableReads", FeatureStart, FeatureEnd, 
-                        UnMAQ[[2]], CHRSTART, CHRSIZE, PACKAGE = "groHMM")
+                        as.integer(UnMAQ[[2]]), CHRSTART, CHRSIZE, PACKAGE = "groHMM")
 
                 ## Adjust size of gene body.
                 Difference <- Difference - nonmappable + 1 ## Otherwise, get -1 for some.

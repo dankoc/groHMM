@@ -147,8 +147,12 @@ writeWiggle(reads=S0m, file="S0m_Plus.wig", fileType="wig", strand="+",
         reverse=FALSE)
 writeWiggle(reads=S0m, file="S0m_Minus.wig", fileType="wig", strand="-",  
         reverse=TRUE)
-writeWiggle(reads=S0m, file="S0m_Plus.bw", fileType="BigWig", strand="+", 
-        reverse=FALSE)
+
+# For BigWig file:
+# library(BSgenome.Hsapiens.UCSC.hg19)
+# si <- seqinfo(BSgenome.Hsapiens.UCSC.hg19)
+# writeWiggle(reads=S0m, file="S0m_Plus.wig", fileType="BigWig", strand="+",# 
+#               reverse=FALSE, seqinfo=si)
 
 # Normalized wiggle files
 expCounts <- mean(c(NROW(S0m), NROW(S10m), NROW(S40m), NROW(S160m)))

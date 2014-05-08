@@ -38,7 +38,7 @@ the option 'mc.cores'.
 }
 \examples{
 S0mR1 <- as(readGAlignments(system.file("extdata", "S0mR1.bam",
-		package="groHMM")), "GRanges")
+     package="groHMM")), "GRanges")
 }
 \author{
 Charles G. Danko and Minho Chae

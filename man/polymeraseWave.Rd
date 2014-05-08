@@ -1,7 +1,7 @@
 \name{polymeraseWave}
 \alias{polymeraseWave}
 \title{Given GRO-seq data, identifies the location of the polymerase 'wave' in up- or down-
-	regulated genes.}
+ regulated genes.}
 \usage{
 polymeraseWave(reads1, reads2, genes, approxDist, size = 50,
   upstreamDist = 10000, TSmooth = NA, NonMap = NULL, prefix = NULL,
