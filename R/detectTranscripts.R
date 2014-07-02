@@ -84,16 +84,16 @@ detectTranscripts <- function(reads=NULL, Fp=NULL, Fm=NULL, LtProbA=-5, LtProbB=
 
     ## Cast counts to a real, and combine +/- strand into one list variable.  
     ##  Treat like separate training sequences (they really are).
-    F <- list()
-    for(i in 1:nFp) F[[i]]     <- as.double(Fp[[i]]+1) ## CGD: 3-3-13: Still legacy.  Switch to integrating gamma between read and read+1
-    for(i in 1:nFm) F[[i+nFp]] <- as.double(Fm[[i]]+1) ## CGD: 3-3-13: Still legacy.  Switch to integrating gamma between read and read+1
+    FT <- list()                 # MHC; 7/2/2014, bioconductor complains F thinking as False
+    for(i in 1:nFp) FT[[i]]<- as.double(Fp[[i]]+1) ## CGD: 3-3-13: Still legacy.  Switch to integrating gamma between read and read+1
+    for(i in 1:nFm) FT[[i+nFp]] <- as.double(Fm[[i]]+1) ## CGD: 3-3-13: Still legacy.  Switch to integrating gamma between read and read+1
 
     ## In case the above command copies, rather than points ... free unused memory.
     remove(Fp)
     remove(Fm)
 
     ## Run EM algorithm.
-    BWem <- .Call("RBaumWelchEM", HMM$nstates, F, as.integer(1),
+    BWem <- .Call("RBaumWelchEM", HMM$nstates, FT, as.integer(1),
                 HMM$ePrDist, HMM$ePrVars, HMM$tProb, HMM$iProb, 
                 as.double(threshold), c(TRUE, FALSE), c(FALSE, TRUE), as.integer(1), TRUE, PACKAGE="groHMM")
                         # Update Transitions, Emissions.

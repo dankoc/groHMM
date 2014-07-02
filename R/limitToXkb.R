@@ -87,16 +87,16 @@ countMappableReadsInInterval <- function(features, UnMap, debug=FALSE, ...) {
                     C=C, features=features, UnMap=UnMap, ...)
 
     ## Convert to a vector.
-    F <- rep(0,NROW(features))
+    FT <- rep(0,NROW(features))
     for(i in seq_along(C)) {
         indxF   <- which(as.character(seqnames(features)) == C[i])
 
         if(NROW(indxF) >0) {
-            F[indxF][mcp[[i]][["ord"]]] <- as.integer(mcp[[i]][["Difference"]])
+            FT[indxF][mcp[[i]][["ord"]]] <- as.integer(mcp[[i]][["Difference"]])
         }
     }
 
-    return(F)
+    return(FT)
 }
 
 
