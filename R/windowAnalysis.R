@@ -69,6 +69,7 @@ windowAnalysis <- function(reads, strand="*", windowSize=stepSize, stepSize=wind
     })
 
     H <- mclapply(readsList, function(x) {
+            seqlevels(x) <- seqlevelsInUse(x)
             cov <- coverage(x)[[1]]
             to <- (length(cov) %/% windowSize)*windowSize
             starts <- seq(1, to, stepSize)
