@@ -213,7 +213,6 @@ pausingIndex_foreachChrom <- function(i, C, f, p, gLEFT, gRIGHT, c_tss, size, up
 
         ## Run the calculations on the gene.
             ## Calculate the maximal 50 bp window.
-            browser()
             if(debug) {
                 message(C[i],": Counting reads in pause peak.")
             }

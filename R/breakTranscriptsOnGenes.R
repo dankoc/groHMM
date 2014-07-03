@@ -131,7 +131,7 @@ breakTranscriptsOnGenes <- function(tx, annox, strand="+", geneSize=5000, thresh
             par(mfrow=c(2,1))
             plot2Ranges(tx[txNo,], annox[aNo,], main="Before")
             plot2Ranges(frags, annox[aNo,], main="After")
-            browser()
+            Sys.sleep(5)
         }
     }
 
