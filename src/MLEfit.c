@@ -133,7 +133,7 @@ extern int MLEGamma(double N, double SumXi, double SumLogXi, double *shape,
     // By setting shape to 0, we are forcing any window that is not 0 to 
     // -Inf prob. 
     // BE CAREFUL!  THIS works ONLY in cases where all windows are set to >=1.
-    if( (N==0) ) {
+    if(N==0) {
         retVal = -2;
         shape[0]=0; scale[0]=1;
         Rprintf("SERIOUS WARNING!! [MLEGamma] N found to equal 0.  \
@@ -214,7 +214,7 @@ extern int MLEGamma_SHAPEeq1overSCALE(double N, double SumXi, double SumLogXi,
     // Get initial value of shape (k).
     double s = (SumXi/N)-(SumLogXi/N);
     shape[0] = ((SumXi/N)*(SumXi/N))/( (SumXiSq/N)-((SumXi/N)*(SumXi/N)) );
-    Rprintf("[MLEGamma_SHAPEeq1overSCALE] SumXi=%f; SumLogXi=%f; \ 
+    Rprintf("[MLEGamma_SHAPEeq1overSCALE] SumXi=%f; SumLogXi=%f; \
         SumXiSq=%f; N=%f\n", SumXi, SumLogXi, SumXiSq, N);
 
     // Refine shape (k) using Newton's method.
