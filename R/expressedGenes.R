@@ -21,34 +21,47 @@
 
 
 
-#' Function identifies expressed features using the methods introduced in Core, Waterfall, Lis; Science, Dec. 2008.
+#' Function identifies expressed features using the methods introduced in 
+#' Core, Waterfall, Lis; Science, Dec. 2008.
 #'
-#' Supports parallel processing using mclapply in the 'parallel' package.  To change the number of processors
-#' use the argument 'mc.cores'.
+#' Supports parallel processing using mclapply in the 'parallel' package.  
+#' To change the number of processors use the argument 'mc.cores'.
 #'
-#' @param features A GRanges object representing a set of genomic coordinates.  The meta-plot will be centered on the start position.  There can be optional "ID" column for gene ids.
+#' @param features A GRanges object representing a set of genomic coordinates.
+#' The meta-plot will be centered on the start position.  
+#' There can be optional "ID" column for gene ids.
 #' @param reads A GRanges object representing a set of mapped reads.
-#' @param Lambda Measurement of assay noise.  Default: 0.04 reads/ kb in a library of 10,751,533 mapped reads. (background computed in Core, Waterfall, Lis. (2008) Science.).
-#' @param UnMap List object representing the position of un-mappable reads.  Default: not used.
-#' @param debug If set to true, returns the number of positions.  Default: FALSE.
+#' @param Lambda Measurement of assay noise.  Default: 0.04 reads/ kb in a 
+#' library of 10,751,533 mapped reads. (background computed in Core, 
+#' Waterfall, Lis. (2008) Science.).
+#' @param UnMap List object representing the position of un-mappable reads.  
+#' Default: not used.
+#' @param debug If set to true, returns the number of positions.  
+#' Default: FALSE.
 #' @param ... Extra argument passed to mclapply
-#' @return Returns a data.frame representing the expression p.values for features of interest.
-#' @author Charles G. Danko and Minho Chae
-##  This identifes genes that are expressed in a given cell, based on short read data.
+#' @return Returns a data.frame representing the expression p.values for 
+#' features of interest.
+#' @author Charles G. Danko 
+##  This identifes genes that are expressed in a given cell, based on short 
+##  read data.
 ##      f  == genes/annotations; columns represent: Chr, Start, End, Strand, ID.
 ##      p  == short reads; columns represent: Chr, Start, End, Strand, ID.
 ##      UnMAQ == unmappable regions in the genome of interest.
 ##
 ##  Function defines expression as in Core, Waterfall, Lis; Science, Dec. 2008.
-expressedGenes <- function(features, reads, Lambda= NULL, UnMap=NULL, debug=FALSE, ...) {
-    # Order -- Make sure, b/c this is one of our main assumptions.  Otherwise violated for DBTSS.
+expressedGenes <- function(features, reads, Lambda= NULL, UnMap=NULL, 
+    debug=FALSE, ...) {
+    # Order -- Make sure, b/c this is one of our main assumptions.  Otherwise 
+    # violated for DBTSS.
     reads <- reads[order(as.character(seqnames(reads)), start(reads)),] 
     C <- sort(unique(as.character(seqnames(features))))
-    if(is.null(Lambda)) Lambda <- 0.04*NROW(reads)/10751533/1000 #NROW(reads)/genomeSize
+    if(is.null(Lambda)) Lambda <- 0.04*NROW(reads)/10751533/1000 
+    #NROW(reads)/genomeSize
     
     ## Run parallel version.
-    mcp <- mclapply(seq_along(C), expressedGenes_foreachChrom, C=C, features=features, reads=reads,
-                Lambda=Lambda, UnMap=UnMap, debug=debug, ...)
+    mcp <- mclapply(seq_along(C), expressedGenes_foreachChrom, C=C, 
+            features=features, reads=reads, Lambda=Lambda, UnMap=UnMap, 
+            debug=debug, ...)
 
     ## Unlist... 
     ANSgeneid <- rep("char", NROW(features))
@@ -72,7 +85,8 @@ expressedGenes <- function(features, reads, Lambda= NULL, UnMap=NULL, debug=FALS
                     nonMappablePositions= ANSunmapp, size= ANSgsize))
 }
  
-expressedGenes_foreachChrom <- function(i, C, features, reads, Lambda, UnMap, debug) {
+expressedGenes_foreachChrom <- function(i, C, features, reads, Lambda, UnMap, 
+    debug) {
         if(debug) {
             message("Doing chromosome ", C[i])
         }
@@ -82,7 +96,8 @@ expressedGenes_foreachChrom <- function(i, C, features, reads, Lambda, UnMap, de
         indxPrb <- which(as.character(seqnames(reads)) == C[i])
 
         if((NROW(indxF) >0) & (NROW(indxPrb) >0)) {
-            # Order -- Make sure, b/c this is one of our main assumptions.  Otherwise violated for DBTSS.
+            # Order -- Make sure, b/c this is one of our main assumptions.  
+            # Otherwise violated for DBTSS.
             Ford <- order(start(features[indxF,])) 
 
             # Type coersions.
@@ -102,8 +117,9 @@ expressedGenes_foreachChrom <- function(i, C, features, reads, Lambda, UnMap, de
             dim(PROBEStr)       <- c(NROW(PROBEStr),     NCOL(PROBEStr))
 
             
-            NUMReads <- .Call("CountReadsInFeatures", FeatureStart, FeatureEnd, FeatureStr, 
-                            PROBEStart, PROBEEnd, PROBEStr, PACKAGE = "groHMM")
+            NUMReads <- .Call("CountReadsInFeatures", FeatureStart, 
+                            FeatureEnd, FeatureStr, PROBEStart, PROBEEnd, 
+                            PROBEStr, PACKAGE = "groHMM")
 
 
             ## Calculate UN-MAQable regions...
@@ -126,11 +142,13 @@ expressedGenes_foreachChrom <- function(i, C, features, reads, Lambda, UnMap, de
                 }
 
                 ## Count unMAQable regions, and size of everything ... 
-                nonmappable <- .Call("CountUnMAQableReads", FeatureStart, FeatureEnd, 
-                        UnMap[[2]], CHRSTART, CHRSIZE, PACKAGE = "groHMM")
+                nonmappable <- .Call("CountUnMAQableReads", FeatureStart, 
+                    FeatureEnd, UnMap[[2]], CHRSTART, CHRSIZE, 
+                    PACKAGE = "groHMM")
 
                 ## Adjust size of gene body.
-                MappablePositions <- (FeatureEnd - FeatureStart) - nonmappable + 1
+                MappablePositions <- (FeatureEnd - FeatureStart) - 
+                                nonmappable + 1
 
                 if(debug) {
                     print(summary(nonmappable))
@@ -149,13 +167,15 @@ expressedGenes_foreachChrom <- function(i, C, features, reads, Lambda, UnMap, de
             } else {
                 ANSgeneid_c <- rep(NA, NROW(indxF)) 
             }
-             ANSpvalue_c <- ppois(NUMReads, (Lambda*MappablePositions), lower.tail=FALSE)
+             ANSpvalue_c <- ppois(NUMReads, (Lambda*MappablePositions), 
+                                    lower.tail=FALSE)
              ANScounts_c <- NUMReads
              ANSunmapp_c <- nonmappable
              ANSgsize_c <- (FeatureEnd-FeatureStart) #[indxF][Ford]
             
-            return(list(ANSgeneid= ANSgeneid_c, ANSpvalue= ANSpvalue_c, ANScounts= ANScounts_c, 
-                        ANSunmapp=  ANSunmapp_c, ANSgsize= ANSgsize_c, ord= Ford))
+            return(list(ANSgeneid= ANSgeneid_c, ANSpvalue= ANSpvalue_c, 
+                    ANScounts= ANScounts_c, ANSunmapp=  ANSunmapp_c,
+                    ANSgsize= ANSgsize_c, ord= Ford))
         }
     return(integer(0))
 }

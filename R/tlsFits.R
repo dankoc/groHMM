@@ -22,30 +22,36 @@
 
 #####################################################
 ##
-## tlsFits.R -- Total least squares fits for several functional forms, including:
+## tlsFits.R -- Total least squares fits for several functional forms, 
+## including:
 ##  -- Linear; done using Demming regression (tlsDemming), and svd (tlsSvd).
-##  -- LOESS; hacked approximation done by transforming data.  Rotats data so that the LOESS fit approximates a 
-##              given angle (by default 45 degrees; assumes varience of two data types is equal). 
+##  -- LOESS; hacked approximation done by transforming data.  Rotats data so 
+##      that the LOESS fit approximates a given angle (by default 45 degrees; 
+##      assumes varience of two data types is equal). 
 ##
 ##
 ## WARNING -- FUNCTIONS CURRENTLY EXPERIMENTAL!! USE WITH EXTREME CATION!!
 ##
-## WARNING -- CURRENTLY DEMMING AND SVD METHODS FOR FITTING TOTAL LEAST SQUARES DO NOT AGREE!!  SEE BELOW FOR MORE DISCUSSION.
+## WARNING -- CURRENTLY DEMMING AND SVD METHODS FOR FITTING TOTAL LEAST 
+##          SQUARES DO NOT AGREE!!  SEE BELOW FOR MORE DISCUSSION.
 ##
 #####################################################
 
 
-#' A 'total least squares'-like hack for LOESS.  Works by rotating points 45 degrees, fitting LOESS, and rotating back.
+#' A 'total least squares'-like hack for LOESS.  Works by rotating points 
+#' 45 degrees, fitting LOESS, and rotating back.
 #'
 #' @param x X values.
 #' @param y Y values.
-#' @param theta Amount to rotate, sets the ratio of variences that are assumed by the hack.  Default: -pi/4 radians (45 degrees) for orthogonal regression.
+#' @param theta Amount to rotate, sets the ratio of variences that are assumed 
+#' by the hack.  Default: -pi/4 radians (45 degrees) for orthogonal regression.
 #' @param span The LOESS span parameter.  Default: 1
 #' @return List of input values and LOESS predictions.
 #' @author Charles G. Danko
 ## Transform and fit LOESS!
 ## 
-## By transforming X and Y by 45 degrees, we can fit using LOESS and it's essentially "erros in variables" LOESS.
+## By transforming X and Y by 45 degrees, we can fit using LOESS and it's 
+## essentially "erros in variables" LOESS.
 ##
 ## Returns x and y values giving information on the fit...
 tlsLoess <- function(x, y, theta= -pi/4, span= 1) {

@@ -19,25 +19,34 @@
 ##
 ##########################################################################
 
-#' windowAnalysis Returns a vector of integers representing the counts of reads in a moving window.
+#' windowAnalysis Returns a vector of integers representing the counts of 
+#' reads in a moving window.
 #'
-#' Supports parallel processing using mclapply in the 'parallel' package.  To change the number of processors
-#' set the option 'mc.cores'.
+#' Supports parallel processing using mclapply in the 'parallel' package.  
+#' To change the number of processors, set the option 'mc.cores'.
 #'
-#' @param reads GenomicRanges object representing the position of reads mapping in the genome.
-#' @param strand Takes values of "+", "-", or "*".  "*" denotes collapsing reads on both strands.  Default: "*".
-#' @param windowSize Size of the moving window. Either windowSize or stepSize must be specified.
+#' @param reads GenomicRanges object representing the position of reads 
+#' mapping in the genome.
+#' @param strand Takes values of "+", "-", or "*".  "*" denotes collapsing 
+#' reads on both strands.  Default: "*".
+#' @param windowSize Size of the moving window. Either windowSize or 
+#' stepSize must be specified.
 #' @param stepSize The number of bp moved with each step.
-#' @param chrom Chromosome for which to return data.  Default: returns all avaliable data.
-#' @param limitPCRDups Counts only one read mapping to each start site.  NOTE: If set to TRUE, assumes that all reads are the same length (don't use for paired-end data).  Default: FALSE.  
+#' @param chrom Chromosome for which to return data.  
+#' Default: returns all avaliable data.
+#' @param limitPCRDups Counts only one read mapping to each start site.  
+#' NOTE: If set to TRUE, assumes that all reads are the same length 
+#' (don't use for paired-end data).  Default: FALSE.  
 #' @param ... Extra argument passed to mclapply
-#' @return Returns a list object, each element of which represents a chromosome.
+#' @return Returns a list object, each element of which represents a 
+#' chromosome.
 #' @author Charles G. Danko and Minho Chae
 #' @examples
 #' S0mR1 <- as(readGAlignments(system.file("extdata", "S0mR1.bam",
 #'      package="groHMM")), "GRanges")
 #; Fp <- windowAnalysis(S0mR1, strand="+", windowSize=50)
-windowAnalysis <- function(reads, strand="*", windowSize=stepSize, stepSize=windowSize, chrom=NULL, limitPCRDups=FALSE, ...) {
+windowAnalysis <- function(reads, strand="*", windowSize=stepSize, 
+    stepSize=windowSize, chrom=NULL, limitPCRDups=FALSE, ...) {
     if (!(windowSize > 0 & (windowSize <= max(end(reads)))))
         stop("'windowSize' is out of range!")
 
@@ -49,12 +58,14 @@ windowAnalysis <- function(reads, strand="*", windowSize=stepSize, stepSize=wind
 
     readsList <- split(reads, seqnames(reads))
     if (limitPCRDups) {
-        warning("Using limitPCRDups assumes all reads are the same size!  Don't use for paired end data!")
+        warning("Using limitPCRDups assumes all reads are the same size!  
+            Don't use for paired end data!")
         readsList <- endoapply(readsList, function(x) {
             pStarts <- unique(start(x[strand(x) == "+",]))
             mEnds <- unique(end(x[strand(x) == "-",]))
-            c(GRanges(seqnames(x)[1], IRanges(start=pStarts, width=1), strand="+"),
-              GRanges(seqnames(x)[1], IRanges(start=mEnds, width=1), strand="-"))
+            c(GRanges(seqnames(x)[1], IRanges(start=pStarts, width=1), 
+                strand="+"), GRanges(seqnames(x)[1], 
+                        IRanges(start=mEnds, width=1), strand="-"))
 
         })
     }

@@ -21,15 +21,18 @@
 
 #' limitToXkb truncates a set of genomic itnervals at a constant, maximum size.
 #'
-#' @param features A GRanges object representing a set of genomic coordinates.  The meta-plot will be centered on the start position.
-#' @param offset Starts the interval from this position relative to the start of each genomic features.
+#' @param features A GRanges object representing a set of genomic coordinates. 
+#' The meta-plot will be centered on the start position.
+#' @param offset Starts the interval from this position relative to the start 
+#' of each genomic features.
 #' @param size Specifies the size of the window.
 #' @return Returns GRanges object with new genomic coordiates.
 #' @author Minho Chae and Charles G. Danko
 #' @examples
 #' tx <- GRanges("chr7", IRanges(1000, 30000), strand="+")
 #' newTX <- limitToXkb(tx)
-##  This function limits a genomic range to a samll region relative to the transcription site.
+##  This function limits a genomic range to a samll region relative to the 
+## transcription site.
 limitToXkb <- function(features, offset=1000, size=13000) {
     w <- width(features)
 
@@ -37,7 +40,8 @@ limitToXkb <- function(features, offset=1000, size=13000) {
     # 2. offset < w and w < size
     small  <- (offset < w) & (w < size)
     if (any(small)) { 
-        features[small,] <- flank(features[small,], -1*(w[small]-offset), start=FALSE)
+        features[small,] <- flank(features[small,], -1*(w[small]-offset), 
+            start=FALSE)
     }
 
     # 2. w > size
@@ -46,31 +50,39 @@ limitToXkb <- function(features, offset=1000, size=13000) {
         features[big,] <- resize(features[big,], width=size)
 
         bigPlus <- big & as.character(strand(features))=="+"
-        if (any(bigPlus)) start(features[bigPlus,]) <- start(features[bigPlus,]) + offset 
+        if (any(bigPlus)) 
+            start(features[bigPlus,]) <- start(features[bigPlus,]) + offset 
 
         bigMinus <- big & as.character(strand(features))=="-"
-        if (any(bigMinus)) end(features[bigMinus,]) <- end(features[bigMinus,]) - offset 
+        if (any(bigMinus)) 
+            end(features[bigMinus,]) <- end(features[bigMinus,]) - offset 
     }
 
     return(features)
 }
 
-#' countMappableReadsInInterval counts the number of mappable reads in a set of genomic features.
+#' countMappableReadsInInterval counts the number of mappable reads in a set 
+#' of genomic features.
 #'
-#' Supports parallel processing using mclapply in the 'parallel' package.  To change the number of processors
-#' use the argument 'mc.cores'.
+#' Supports parallel processing using mclapply in the 'parallel' package.  
+#' To change the number of processors, use the argument 'mc.cores'.
 #'
-#' @param features A GRanges object representing a set of genomic coordinates.  The meta-plot will be centered on the start position.
-#' @param UnMap List object representing the position of un-mappable reads.  Default: not used.
-#' @param debug If set to TRUE, provides additional print options. Default: FALSE
+#' @param features A GRanges object representing a set of genomic coordinates.
+#' The meta-plot will be centered on the start position.
+#' @param UnMap List object representing the position of un-mappable reads.  
+#' Default: not used.
+#' @param debug If set to TRUE, provides additional print options. 
+#' Default: FALSE
 #' @param ... Extra argument passed to mclapply
-#' @return Returns a vector of counts, each representing the number of reads inside each genomic interval.
+#' @return Returns a vector of counts, each representing the number of reads 
+#' inside each genomic interval.
 #' @author Charles G. Danko and Minho Chae
 ##
-##  This function takes information from BED file to represent regions (as in CountReadsInInterval), and 
-##     a list structure representing unmappable positions.  Counts the number of mappable positions in 
-##     the interval.
-##      f  == features in a BED format, where columns represent: Chr, Start, End, Strand, ID.
+##  This function takes information from BED file to represent regions 
+## (as in CountReadsInInterval), and  a list structure representing unmappable 
+## positions.  Counts the number of mappable positions in  the interval.
+##      f  == features in a BED format, where columns represent: 
+##            Chr, Start, End, Strand, ID.
 ##      UnMAQ  == List structure of the un-mappable bases in the genome.
 ##
 ##  Addumptions:
@@ -104,7 +116,8 @@ countMappableReadsInInterval_foreachChrom <- function(i, C, features, UnMap) {
     indxF   <- which(as.character(seqnames(features)) == C[i])
 
     if(NROW(indxF) >0) {
-        # Order -- Make sure, b/c this is one of our main assumptions.  Otherwise violated for DBTSS.
+        # Order -- Make sure, b/c this is one of our main assumptions.  
+        # Otherwise violated for DBTSS.
         Ford <- order(start(features[indxF,]))
         
         # Type coersions.
@@ -138,7 +151,8 @@ countMappableReadsInInterval_foreachChrom <- function(i, C, features, UnMap) {
                 UnMap[[2]], CHRSTART, CHRSIZE, PACKAGE = "groHMM")
 
         ## Adjust size of gene body.
-        Difference <- (FeatureEnd - FeatureStart) - nonmappable + 1 ## Otherwise, get -1 for some.
+        Difference <- (FeatureEnd - FeatureStart) - nonmappable + 1 
+        ## Otherwise, get -1 for some.
 
         if(debug) {
             print(head(nonmappable))
@@ -154,9 +168,11 @@ countMappableReadsInInterval_foreachChrom <- function(i, C, features, UnMap) {
 
 
  
-#' readBed Returns a GenomicRanges object constrcuted from the specified bed file.
+#' readBed Returns a GenomicRanges object constrcuted from the specified bed 
+#' file.
 #'
-#' Bed file format is assumed to be either four column: seqnames, start, end, strand columns; or six column: seqnames, start, end, name, score, and strand.
+#' Bed file format is assumed to be either four column: seqnames, start, end, 
+#' strand columns; or six column: seqnames, start, end, name, score, and strand.
 #' Three column format is also possible when there is no strand information.
 #'
 #' Any additional arguments availiable to read.table can be specified.
@@ -171,11 +187,10 @@ readBed <- function(file, ...) {
                 colnames(df) <- c("seqnames", "start", "end")
                 df <- cbind(df, strand=Rle("*", NROW(df)))
         }
-        if(NCOL(df) == 4) colnames(df) <- c("seqnames", "start", "end", "strand")
-        if(NCOL(df) == 6) colnames(df) <- c("seqnames", "start", "end", "name", "score", "strand")
-        return( GRanges(seqnames = Rle(df$seqnames), ranges = IRanges(df$start, df$end),
-            strand = Rle(strand(df$strand))))
+        if(NCOL(df) == 4) colnames(df) <- c("seqnames", "start", "end", 
+                                            "strand")
+        if(NCOL(df) == 6) colnames(df) <- c("seqnames", "start", "end", 
+                                            "name", "score", "strand")
+        return( GRanges(seqnames = Rle(df$seqnames), ranges = 
+                IRanges(df$start, df$end), strand = Rle(strand(df$strand))))
 }
-
-
-

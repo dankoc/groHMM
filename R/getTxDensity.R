@@ -21,30 +21,41 @@
 
 #' getTxDensity Calculates transcript density.
 #'
-#' Calculates transcript density for transcripts which overlapps with annotations.  
-#' For 'run genes together' or 'broken up a single annotation' errors, best overlapped transcripts or annotations are used.
+#' Calculates transcript density for transcripts which overlapps with 
+#' annotations.  
+#' For 'run genes together' or 'broken up a single annotation' errors, 
+#' best overlapped transcripts or annotations are used.
 #'
-#' Supports parallel processing using mclapply in the 'parallel' package.  To change the number of processors
+#' Supports parallel processing using mclapply in the 'parallel' package.  
+#' To change the number of processors
 #' set the option 'mc.cores'.
 #'
 #' @param tx GRanges of transcripts. 
 #' @param annox GRanges of non-overlapping annotatoins.
 #' @param plot Logical.  If TRUE, plot transcript density.  Default: TRUE
-#' @param scale Numeric. Scaled size of a gene for transcript density calculation. Default: 1000L
+#' @param scale Numeric. Scaled size of a gene for transcript density 
+#' calculation. 
+#' Default: 1000L
 #' @param nSampling Numeric. Number of subsampling.  Default: 0L
-#' @param samplingRatio Numeric. Ratio of sampling for annotations.  Default: 0.1
+#' @param samplingRatio Numeric. Ratio of sampling for annotations.  
+#' Default: 0.1
 #' @param ... Extra argument passed to mclapply.
 #' @return Returns a list of FTD, TTD, PostTTS, and AUC. 
 #' @author Minho Chae
 #' @examples
-#' tx <- GRanges("chr7", IRanges(start=seq(1000,4000, by=1000), width=seq(1000, 1300, by=100)), strand=rep("+", 4))
-#' annox <- GRanges("chr7", IRanges(start=seq(1100,4100, by=1000), width=seq(900, 1200, by=100)), strand=rep("+", 4))
+#' tx <- GRanges("chr7", IRanges(start=seq(1000,4000, by=1000), 
+#' width=seq(1000, 1300, by=100)), strand=rep("+", 4))
+#' annox <- GRanges("chr7", IRanges(start=seq(1100,4100, by=1000), 
+#' width=seq(900, 1200, by=100)), strand=rep("+", 4))
 #' density <- getTxDensity(tx, annox) 
-getTxDensity <- function(tx, annox, plot=TRUE, scale=1000L, nSampling=0L, samplingRatio=0.1, ...) {
+getTxDensity <- function(tx, annox, plot=TRUE, scale=1000L, nSampling=0L, 
+    samplingRatio=0.1, ...) {
     ol <- findOverlaps(tx, annox)
 
-    runGenes <- unique(queryHits(ol[duplicated(queryHits(ol)),]))       # Count tx
-    brokenUp <- unique(subjectHits(ol[duplicated(subjectHits(ol)),]))   # Count annox
+    # Count tx
+    runGenes <- unique(queryHits(ol[duplicated(queryHits(ol)),]))       
+    # Count annox
+    brokenUp <- unique(subjectHits(ol[duplicated(subjectHits(ol)),]))   
     cat("Run genes together: ", length(runGenes), "\n")
     cat("Broken up a single annotation: ", length(brokenUp), "\n")
     cat("Overlaps between transcript and annotation:", "\n")
@@ -95,7 +106,8 @@ getTxDensity <- function(tx, annox, plot=TRUE, scale=1000L, nSampling=0L, sampli
     message("Calculate overlapping ... ", appendLF=FALSE)
     promo  <- unlist(GRangesList(mclapply(subjectHits(ol), function(x) {
                         w <- width(annox[x,])
-                        promoters(annox[x,], upstream=round(w*up), downstream=round(w*down))
+                        promoters(annox[x,], upstream=round(w*up), 
+                            downstream=round(w*down))
                     }, ... )))
 
     pintx <- pintersect(promo, olTx)
@@ -144,7 +156,8 @@ getTxDensity <- function(tx, annox, plot=TRUE, scale=1000L, nSampling=0L, sampli
         profile <- apply(M, 1, sum)/length(ol)
     }
     if (plot) {
-        plot(-(up*scale):(down*scale-1), profile, ylim=c(0, 1), type="l", xlab="Relative to TSS", ylab="Density")
+        plot(-(up*scale):(down*scale-1), profile, ylim=c(0, 1), type="l", 
+            xlab="Relative to TSS", ylab="Density")
         abline(v=0, col="blue", lty=2)
         abline(v=up*scale, col="blue", lty=2)
     }
@@ -156,7 +169,8 @@ getTxDensity <- function(tx, annox, plot=TRUE, scale=1000L, nSampling=0L, sampli
     TTD <- trap.rule(1:scale, profile[(scale+1):(scale*2)])/scale
     PostTTS <- trap.rule(1:scale, profile[(scale*2+1):(scale*3)])/scale
     AUC <- (TTD + (TTD - TTD*FTD))/(1 + TTD)
-    #message("FTD: ", round(FTD, 2), " TTD: ", round(TTD, 2), " PostTTS: ", round(PostTTS, 2), " AUC: ", round(AUC, 2))
+    #message("FTD: ", round(FTD, 2), " TTD: ", round(TTD, 2), " PostTTS: ", 
+    #           round(PostTTS, 2), " AUC: ", round(AUC, 2))
     return(list(FTD=FTD, TTD=TTD, PostTTS=PostTTS, AUC=AUC))
 }
 
@@ -201,26 +215,33 @@ getLIValues <- function (vals, n) {
 #'
 #' @param tx GRanges of transcripts predicted by HMM. 
 #' @param annox GRanges of non-overlapping annotatoins.
-#' @return a list of error information; runGenes, brokenSingleAnnotations, total, and rate.
+#' @return a list of error information; runGenes, brokenSingleAnnotations, 
+#' total, and rate.
 #' @author Minho Chae
 #' @examples
-#' tx <- GRanges("chr7", IRanges(start=seq(100, 1000, by=200), width=seq(100, 1000, by=100)), strand="+")
-#' annox <- GRanges("chr7", IRanges(start=seq(110, 1100, by=150), width=seq(100, 1000, by=150)), strand="+")
+#' tx <- GRanges("chr7", IRanges(start=seq(100, 1000, by=200), 
+#' width=seq(100, 1000, by=100)), strand="+")
+#' annox <- GRanges("chr7", IRanges(start=seq(110, 1100, by=150), 
+#' width=seq(100, 1000, by=150)), strand="+")
 #' error <- evaluateHMMInAnnotations(tx, annox)
 evaluateHMMInAnnotations <- function (tx, annox) {
     o <- findOverlaps(tx, annox)
-    runGenes <- length(unique(queryHits(o[duplicated(queryHits(o)),])))  # count tx
-    brokenUp <- length(unique(subjectHits(o[duplicated(subjectHits(o)),]))) # count annox
+    # count tx
+    runGenes <- length(unique(queryHits(o[duplicated(queryHits(o)),])))  
+    # count annox
+    brokenUp <- length(unique(subjectHits(o[duplicated(subjectHits(o)),]))) 
 
     eval <- data.frame(runGenes=runGenes, brokenUp=brokenUp,
-            total=(runGenes + brokenUp), errorRate=(runGenes + brokenUp)/(length(tx) + length(annox)),
+            total=(runGenes + brokenUp), errorRate=(runGenes + brokenUp)/
+                (length(tx) + length(annox)),
             txSize =length(tx))
 
     intx <- pintersect(tx[queryHits(o),], annox[subjectHits(o),])
     overlap <- data.frame(txRatio=width(intx)/width(tx[queryHits(o),]),
-                            annoxRatio=width(intx)/width(annox[subjectHits(o),]),
-                            overBases=width(intx),
-                            similarity=width(intx)/pmax(width(tx[queryHits(o),]), width(annox[subjectHits(o),])))
+                annoxRatio= width(intx)/width(annox[subjectHits(o),]),
+                overBases=width(intx), 
+                similarity=width(intx)/pmax(width(tx[queryHits(o),]), 
+               width(annox[subjectHits(o),])))
 
     return(list(eval=eval, overlap=overlap))
 }
