@@ -20,17 +20,18 @@
 ***************************************************************************/
 
 
-/********************************************************************************
+/*******************************************************************************
  *
  *  Source code written for GROseq package by Charles Danko.
  *
  *  2009-05-07 Started this file, writing 
  *
- ********************************************************************************/
+ ******************************************************************************/
 
 /**************************************************************
  *
- *  Associates a vector of genomic featuers (e.g. genes, CpG islands, etc.) with a table of sequence reads.
+ *  Associates a vector of genomic featuers (e.g. genes, CpG islands, etc.) with
+ *  a table of sequence reads.
  *
  **************************************************************/
 #include <R.h> 
@@ -43,29 +44,34 @@
 #include <stdlib.h>
 #include <math.h>
 
-/*****************************************************************************************
+/******************************************************************************
  *
- * CountReadsInFeatures -- Count the number of probes in each genomic feature (i.e. regions).
+ * CountReadsInFeatures -- Count the number of probes in each genomic feature 
+ * (i.e. regions).
  *
  *  Arguments:
- *  Feature_Start   -> integer vector representing the start of features along the chromosome.
- *  Feature_End -> integer vector representing the end of features along the chromosome.
+ *  Feature_Start   -> integer vector representing the start of features along 
+ *      the chromosome.
+ *  Feature_End -> integer vector representing the end of features along the 
+ *      chromosome.
  *  Feature_Chr -> chromosome of each features, either '+' or '-'.
- *  ProbeStart  -> vector of integers that represents the start of each probe along the chromosome.
+ *  ProbeStart  -> vector of integers that represents the start of each probe 
+ *      along the chromosome.
  *  ProbeEnd    -> vector of integers that represents the end of each probe.
  *  ProbeChr    -> chromosome of each read, either '+' or '-'.
  *
  *  Returns:
- *  integer array -- for each Feature, the number of Probes/Reads inside the feature, on the same strand.
+ *  integer array -- for each Feature, the number of Probes/Reads inside the 
+ *      feature, on the same strand.
  *
  *  Assumes:
  *  (1) All are on the same chromosome.
  *  (2) All Features are sorted in ascending order.
  *  (3) All Probes are sorted in ascending order.
  *
- *****************************************************************************************/
-SEXP CountReadsInFeatures(SEXP Feature_Start, SEXP Feature_End, SEXP Feature_Chr, 
-                        SEXP ProbeStart, SEXP ProbeEnd, SEXP ProbeChr) {
+ ******************************************************************************/
+SEXP CountReadsInFeatures(SEXP Feature_Start, SEXP Feature_End, 
+    SEXP Feature_Chr, SEXP ProbeStart, SEXP ProbeEnd, SEXP ProbeChr) {
     int *fSTART = INTEGER(Feature_Start);
     int *fEND = INTEGER(Feature_End);
     int *PS = INTEGER(ProbeStart);
@@ -86,9 +92,11 @@ SEXP CountReadsInFeatures(SEXP Feature_Start, SEXP Feature_End, SEXP Feature_Chr
     // Assign probes to a feature
 /*  for(int features=0;features<NFEATURES;features++) {
         fcID[features] = 0;
-        const char *feature_str = CHAR(STRING_ELT(Feature_Chr, features)); // Should NOT allocate new memory?!
+        const char *feature_str = CHAR(STRING_ELT(Feature_Chr, features)); 
+        // Should NOT allocate new memory?!
         for(int probes=0;probes<NPROBES;probes++) {
-            if((fSTART[features] <= (PE[probes])) && (fEND[features] >= PS[probes]) &&
+            if((fSTART[features] <= (PE[probes])) && 
+                (fEND[features] >= PS[probes]) &&
               (strcmp(feature_str, CHAR(STRING_ELT(ProbeChr, probes))) == 0)) {
                     fcID[features]++;
             }
@@ -96,15 +104,18 @@ SEXP CountReadsInFeatures(SEXP Feature_Start, SEXP Feature_End, SEXP Feature_Chr
     }*/
 
     // Assign probes to a feature.
-    // Tested just fine using: RefSeqNH00 <- CountReadsInInterval(f= Gbed, p= NH00[,c(1:3,6)])
+    // Tested just fine using: RefSeqNH00 <- 
+    // CountReadsInInterval(f= Gbed, p= NH00[,c(1:3,6)])
     int counter;
     int prev_counter_start=0; // Start from offset 'o'.
     for(int features=0;features<NFEATURES;features++) {
         fcID[features] = 0;
-        const char *feature_str = CHAR(STRING_ELT(Feature_Chr, features)); // Should NOT allocate new memory?!
+        const char *feature_str = CHAR(STRING_ELT(Feature_Chr, features)); 
+        // Should NOT allocate new memory?!
 
         // Figure out where to start, w/ some error checking
-        if(fSTART[features] > PE[prev_counter_start -1]) counter = prev_counter_start;
+        if(fSTART[features] > PE[prev_counter_start -1]) 
+            counter = prev_counter_start;
         else counter = 0;
 
         while((fSTART[features] > PE[counter]) && (counter < NPROBES)) 
@@ -114,7 +125,8 @@ SEXP CountReadsInFeatures(SEXP Feature_Start, SEXP Feature_End, SEXP Feature_Chr
             if(strcmp(feature_str, CHAR(STRING_ELT(ProbeChr, counter))) == 0) {
                 fcID[features]++; // Detect a decrease.
             }
-            prev_counter_start = counter; // Features are in order, so start from here next time.
+            prev_counter_start = counter; 
+            // Features are in order, so start from here next time.
             counter++;
         }
 
@@ -126,27 +138,33 @@ SEXP CountReadsInFeatures(SEXP Feature_Start, SEXP Feature_End, SEXP Feature_Chr
 }
 
 
-/*****************************************************************************************
+/*******************************************************************************
 *
 * Associates probes with genomic features -- or regions.
 *
 *   Arguments:
-*   Feature_Start   -> integer vector representing the start of features along the chromosome.
-*   Feature_End -> integer vector representing the end of features along the chromosome.
-*   ProbeStart  -> vector of integers that represents the start of each probe along the chromosome.
+*   Feature_Start   -> integer vector representing the start of features along 
+*       the chromosome.
+*   Feature_End -> integer vector representing the end of features along the 
+*       chromosome.
+*   ProbeStart  -> vector of integers that represents the start of each probe 
+*       along the chromosome.
 *   ProbeLength -> vector of probe lengths
 *
 *   Returns:
-*   integer array -- for each ProbeStart, the index of the feature that it is inside, or NA for none.
+*   integer array -- for each ProbeStart, the index of the feature that it is 
+*       inside, or NA for none.
 *
 *   Assumes:
-*   The feature table passed as Feature_Start and Feature_End are on the same chromosome.
+*   The feature table passed as Feature_Start and Feature_End are on the 
+*       same chromosome.
 *   Feature_Start and Feature_End are of the same length.
 *
 *   09-05-23 -- Copied this function to GROseq from AffyTiling.
 *
-*****************************************************************************************/
-SEXP AssociateRegionWithFeatures(SEXP Feature_Start, SEXP Feature_End, SEXP ProbeStart, SEXP ProbeLength) {
+*******************************************************************************/
+SEXP AssociateRegionWithFeatures(SEXP Feature_Start, SEXP Feature_End, 
+    SEXP ProbeStart, SEXP ProbeLength) {
     int *fSTART = INTEGER(Feature_Start);
     int *fEND = INTEGER(Feature_End);
     int *PS = INTEGER(ProbeStart);

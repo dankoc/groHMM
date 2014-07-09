@@ -20,14 +20,14 @@
 ***************************************************************************/
 
 
-/********************************************************************************
+/******************************************************************************
  *
  *  Source code written for GRO-seq package by Charles Danko.
  *
  *  2009-07-07 More funcitons added for all useful windowing analysis.
  *  2009-05-27 Started this file, specifically used to identify pausing indices 
  *
- ********************************************************************************/
+ ******************************************************************************/
 
 #include <R.h> 
 #include <S.h>
@@ -40,7 +40,7 @@
 #include <stdlib.h>
 #include <math.h>
 
-/*****************************************************************************************
+/*******************************************************************************
  *
  * DecayAlgorithm -- Returns the number of reads in each bin ...
  *
@@ -48,7 +48,7 @@
  *  Assume that DECAY is expressed in units of decay per window.
  *
  * 
- *****************************************************************************************/
+ ******************************************************************************/
 SEXP DecayAlgorithm(SEXP COUNTS, SEXP DECAY) {
 
     int *counts = INTEGER(COUNTS);
@@ -67,26 +67,29 @@ SEXP DecayAlgorithm(SEXP COUNTS, SEXP DECAY) {
     // Construct return values. Just reutrn the origional vector of counts?!?!
     modcounts[0] = counts[0];
     for(int i=0;i<size-1;i++) {
-//      modcounts[i+1] = ((double)modcounts[i]*decay<counts[i+1])?counts[i+1]:(double)modcounts[i]*decay;
+//      modcounts[i+1] = 
+//      ((double)modcounts[i]*decay<counts[i+1])?counts[i+1]:
+//          (double)modcounts[i]*decay;
         modcounts[i+1] = (double)modcounts[i]*decay+counts[i+1];
-                        /*template <class T> const T& max ( const T& a, const T& b ) {
-                          return (b<a)?a:b;     // or: return comp(b,a)?a:b; for the comp version
-                        }*/
+        /*template <class T> const T& max ( const T& a, const T& b ) {
+        return (b<a)?a:b;     // or: return comp(b,a)?a:b; for the comp version
+        }*/
     }
 
     UNPROTECT(1);
     return(ModCounts);
 }
 
-/*****************************************************************************************
+/******************************************************************************
  *
  * DEPRICATED!!!!!!!!!!!!!!!!!!!!!!!
  * 
- * getTranscriptPositions -- Converts vector of transcript positions to a bed-like file.
+ * getTranscriptPositions -- Converts vector of transcript positions to a 
+ * bed-like file.
  *
  * DEPRICATED!!!!!!!!!!!!!!!!!!!!!!!
  *
- *****************************************************************************************/
+ ******************************************************************************/
 SEXP getTranscriptPositions(SEXP Transform, SEXP Threshold, SEXP WindowSize) {
 
     const int false= 0;
@@ -117,10 +120,12 @@ SEXP getTranscriptPositions(SEXP Transform, SEXP Threshold, SEXP WindowSize) {
     PROTECT(Regions = allocVector(VECSXP, 2));
         PROTECT(COL_Names = NEW_CHARACTER(2));
 
-    SET_VECTOR_ELT(Regions, 0, RegionStarts=allocVector(INTSXP, NumberOfRegions));
+    SET_VECTOR_ELT(Regions, 0, RegionStarts=allocVector(INTSXP, 
+            NumberOfRegions));
     SET_STRING_ELT(COL_Names, 0, mkChar("Start"));
 
-    SET_VECTOR_ELT(Regions, 1, RegionEnds=allocVector(INTSXP, NumberOfRegions));
+    SET_VECTOR_ELT(Regions, 1, RegionEnds=allocVector(INTSXP, 
+            NumberOfRegions));
     SET_STRING_ELT(COL_Names, 1, mkChar("End"));
 
         setAttrib(Regions, R_NamesSymbol, COL_Names);
@@ -133,7 +138,8 @@ SEXP getTranscriptPositions(SEXP Transform, SEXP Threshold, SEXP WindowSize) {
     int RegionNumber=0;
     // Init to -1.
 
-    // use: (size-1)? -- don't include that last individual window at the end of the chrom?!?!
+    // use: (size-1)? -- don't include that last individual window at the end 
+    // of the chrom?!?!
     for(int i=0;i<(size);i++) {
         if( (transform[i] >= threshold) && !currentlyInRegion ) {
             currentlyInRegion = !currentlyInRegion;
@@ -161,13 +167,13 @@ SEXP getTranscriptPositions(SEXP Transform, SEXP Threshold, SEXP WindowSize) {
 }
 
 
-/*****************************************************************************************
+/*******************************************************************************
  *
  * vect2bed -- Converts vector of transcript positions to a bed-like file.
  *
  * Will replace getTranscriptPositions
  * 
- *****************************************************************************************/
+ ******************************************************************************/
 SEXP vect2bed(SEXP Transform, SEXP WindowSize) {
 
     double *transform = REAL(Transform);
@@ -178,7 +184,8 @@ SEXP vect2bed(SEXP Transform, SEXP WindowSize) {
     int size = Rf_nrows(Transform);
 
     // Run through once counting the size ...
-    int NumberOfRegions=1; // Include the first region ... write any time it switches...
+    int NumberOfRegions=1;  // Include the first region ... write any time it 
+                            // switches...
     for(int i=0;i<size;i++) {
         if( transform[i] != currValue ) {
             currValue=transform[i];
@@ -191,10 +198,12 @@ SEXP vect2bed(SEXP Transform, SEXP WindowSize) {
     PROTECT(Regions = allocVector(VECSXP, 3));
     PROTECT(COL_Names = NEW_CHARACTER(3));
 
-    SET_VECTOR_ELT(Regions, 0, RegionStarts=allocVector(INTSXP, NumberOfRegions));
+    SET_VECTOR_ELT(Regions, 0, RegionStarts=allocVector(INTSXP, 
+            NumberOfRegions));
     SET_STRING_ELT(COL_Names, 0, mkChar("Start"));
 
-    SET_VECTOR_ELT(Regions, 1, RegionEnds=allocVector(INTSXP, NumberOfRegions));
+    SET_VECTOR_ELT(Regions, 1, RegionEnds=allocVector(INTSXP, 
+            NumberOfRegions));
     SET_STRING_ELT(COL_Names, 1, mkChar("End"));
     
     SET_VECTOR_ELT(Regions, 2, StateID=allocVector(INTSXP, NumberOfRegions));
@@ -213,7 +222,8 @@ SEXP vect2bed(SEXP Transform, SEXP WindowSize) {
     state[RegionNumber]=transform[0];
     // Init to -1.
 
-    // use: (size-1)? -- don't include that last individual window at the end of the chrom?!?!
+    // use: (size-1)? -- 
+    // don't include that last individual window at the end of the chrom?!?!
     for(int i=0;i<size;i++) {
         if( transform[i] != currValue ) {
             if(RegionNumber < NumberOfRegions) {
@@ -223,7 +233,8 @@ SEXP vect2bed(SEXP Transform, SEXP WindowSize) {
              currValue = transform[i];
             }
             else {
-                Rprintf("WARNING! Size of variable EXCEEDED! It's really a MAJOR PROBLEM!");
+                Rprintf("WARNING! Size of variable EXCEEDED! \
+                    It's really a MAJOR PROBLEM!");
                 break;
             }
         }

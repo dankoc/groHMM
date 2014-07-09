@@ -20,14 +20,14 @@
 ***************************************************************************/
 
 
-/********************************************************************************
+/******************************************************************************
  *
  *	Source code written for GRO-seq package by Charles Danko.
  *
  *	2009-07-07 More funcitons added for all useful windowing analysis.
  *	2009-05-27 Started this file, specifically used to identify pausing indices 
  *
- ********************************************************************************/
+ ******************************************************************************/
 
 
 using namespace std;
@@ -45,24 +45,31 @@ extern "C" {
 #include <stdlib.h>
 #include <math.h>
 
-/*****************************************************************************************
+/*******************************************************************************
  *
- * SlidingWindow -- Count number of reads in a sliding window, along a chomosome w/ variable step size.
+ * SlidingWindow -- Count number of reads in a sliding window, along a chomosome
+ *  w/ variable step size.
  *
- * 2009-07-07 Written to allow comparison between GRO-seq and POLLII-ChIP-seq -- designed to cover entire chromosomes.
+ * 2009-07-07 Written to allow comparison between GRO-seq and POLLII-ChIP-seq --
+ *  designed to cover entire chromosomes.
  *
  * Arguments:
- *	(1)  Probe_Start	-> *long int, of size NProbes, indicating the start point of each probe/read.
- *	(2)  Probe_End		-> *long int, of size NProbes, indicating the end point of each probe/read.
- *	(3)  Probe_Strand	-> *char, '+' or '-', of size NProbes, indicating the strand of each probe/read.
+ *	(1)  Probe_Start	-> *long int, of size NProbes, indicating the start point 
+ *	   of each probe/read.
+ *	(2)  Probe_End		-> *long int, of size NProbes, indicating the end point of 
+ *	    each probe/read.
+ *	(3)  Probe_Strand	-> *char, '+' or '-', of size NProbes, indicating the 
+ *	    strand of each probe/read.
  *	(4)  NProbes		-> The number of probe/reads.
- *	(5)  Straind		-> The strand on which to count, pass "N" to ignore strand.
+ *	(5)  Straind		-> The strand on which to count, pass "N" to ignore 
+ *	    strand.
  *	(6)  WindowSize		-> Thesize of the sliding window (bp).
  *	(7)  StepSize		-> The size of the step between each window position (bp).
  *	(8)  StartPosition	-> Chromosome start.
  *	(9)  EndPosition	-> Chromosome end.
- *	(10) InitialIndex	-> Index of the initial point, from which to scan.  Use 0 if unsure.
- *			NOTE:  InitialIndex is not yet used, and ignored.
+ *	(10) InitialIndex	-> Index of the initial point, from which to scan.  
+ *	    Use 0 if unsure.
+ *		NOTE:  InitialIndex is not yet used, and ignored.
  *
  * Returns:
  *	(1) Vector of counts of reads for each window in the interval.
@@ -72,13 +79,15 @@ extern "C" {
  *	(2) DOES NOT CURRENTLY use probe strand information! 
  *	(3) StepSize > 0.
  *
- *****************************************************************************************/
+ ******************************************************************************/
 
-int *SlidingWindow(	int *Probe_Start, int *Probe_End, SEXP Probe_Strand, int NProbes, const char *Strand, 
-			int WindowSize, int StepSize, int StartPosition, int EndPosition, int &InitialIndex, int *counts) {
+int *SlidingWindow(	int *Probe_Start, int *Probe_End, SEXP Probe_Strand, 
+    int NProbes, const char *Strand, int WindowSize, int StepSize, 
+    int StartPosition, int EndPosition, int &InitialIndex, int *counts) {
 
 // Make a new *int counts, the proper size.
-//	Equal to the number of window START positions in the region.  Depends ONLY on step size -- not on window size.
+//	Equal to the number of window START positions in the region.  
+//	Depends ONLY on step size -- not on window size.
 	int size  = ceil((double)(EndPosition-StartPosition)/(double)StepSize);
 	for(int i=0;i<size;i++)
 		counts[i] = 0;
@@ -102,11 +111,14 @@ int *SlidingWindow(	int *Probe_Start, int *Probe_End, SEXP Probe_Strand, int NPr
 		// Find w such that probestart is in it.
 		// Find probestart ...
 		// Proof is in 7/8/09 notebook entry (January 2009 notebook).
-		int indxFirst = floor((double)(Probe_Start[p]-StartPosition-WindowSize)/(double)StepSize);
-		int indxLast  = ceil((double)(Probe_End[p]-StartPosition)/(double)StepSize);
+		int indxFirst = floor((double)
+            (Probe_Start[p]-StartPosition-WindowSize)/(double)StepSize);
+		int indxLast  = 
+            ceil((double)(Probe_End[p]-StartPosition)/(double)StepSize);
 
 		for(int w=indxFirst;w<=indxLast;w++) {
-			if(  	(w >= 0) && (w < size) && // Some error checking!  Next, check both conditions:
+			if(  	(w >= 0) && (w < size) && 
+                // Some error checking!  Next, check both conditions:
 				(Probe_End[p] >= (StepSize*w+StartPosition)) && 
 				((StepSize*w+WindowSize+StartPosition) >= Probe_Start[p]) ) 
 					counts[w]++;
@@ -116,16 +128,17 @@ int *SlidingWindow(	int *Probe_Start, int *Probe_End, SEXP Probe_Strand, int NPr
 	return counts;
 }
 
-/*****************************************************************************************
+/******************************************************************************
  *
  * WindowAnalysis -- Returns the number of reads in each bin ...
  *
  * 2009-07-08: Wrote this wrapper ...
  *
  * 
- *****************************************************************************************/
-SEXP WindowAnalysis(SEXP ProbeStart, SEXP ProbeEnd, SEXP ProbeStrand, SEXP CheckStrand,
-				SEXP windowsize, SEXP stepsize, SEXP startposition, SEXP endposition) {
+ ******************************************************************************/
+SEXP WindowAnalysis(SEXP ProbeStart, SEXP ProbeEnd, SEXP ProbeStrand, 
+    SEXP CheckStrand, SEXP windowsize, SEXP stepsize, SEXP startposition, 
+    SEXP endposition) {
 
 	int II = 0;
 
@@ -142,42 +155,56 @@ SEXP WindowAnalysis(SEXP ProbeStart, SEXP ProbeEnd, SEXP ProbeStrand, SEXP Check
 	int NProbes = INTEGER(DIM1)[0];
 
 	// Construct return values.
-	int size  = ceil((double)(EndPosition[0]-StartPosition[0])/(double)StepSize[0]);
+	int size  = 
+        ceil((double)(EndPosition[0]-StartPosition[0])/(double)StepSize[0]);
 	SEXP COUNTS;
 	PROTECT(COUNTS = allocVector(INTSXP,size));
 	int *counts = INTEGER(COUNTS);
 
-	SlidingWindow(	Probe_Start, Probe_End, ProbeStrand, NProbes, CHAR(STRING_ELT(CheckStrand, 0)), 
-			WindowSize[0], StepSize[0], StartPosition[0], EndPosition[0], II, counts);
+	SlidingWindow(	Probe_Start, Probe_End, ProbeStrand, NProbes, 
+        CHAR(STRING_ELT(CheckStrand, 0)), WindowSize[0], StepSize[0], 
+        StartPosition[0], EndPosition[0], II, counts);
 
 	UNPROTECT(1);
 	return(COUNTS);
 }
 
 
-/*****************************************************************************************
+/******************************************************************************
  *
- * MetaSlidingWindow -- Calculate number of reads in a sliding window, given genomic coordinates.
- *			Anchor points make the metagene-type analysis very convenient!
+ * MetaSlidingWindow -- Calculate number of reads in a sliding window, given 
+ *  genomic coordinates.  Anchor points make the metagene-type analysis 
+ *  very convenient!
  *
  * Arguments:
  *	(1) Anchor_Start	-> long int, indicating the start point of the anchor.
- *	(2) Anchor_Strand	-> character, '+' or '-', indicating the strand of the anchor point.
- *	(3) Probe_Start		-> *long int, of size NProbes, indicating the start point of each probe/read.
- *	(4) Probe_End		-> *long int, of size NProbes, indicating the end point of each probe/read.
- *	(5) Probe_Strand	-> *char, '+' or '-', of size NProbes, indicating the strand of each probe/read.
+ *	(2) Anchor_Strand	-> character, '+' or '-', indicating the strand of the 
+ *	    anchor point.
+ *	(3) Probe_Start		-> *long int, of size NProbes, indicating the start point 
+ *	    of each probe/read.
+ *	(4) Probe_End		-> *long int, of size NProbes, indicating the end point of 
+ *	    each probe/read.
+ *	(5) Probe_Strand	-> *char, '+' or '-', of size NProbes, indicating the 
+ *	    strand of each probe/read.
  *	(6) NProbes		-> The number of probe/reads.
  *	(7) WindowSize		-> The size of the sliding window (bp).
- *	(8) mdUpstream*		-> The distance from the sliding point to measure, upstream of the anchor point.
- *	(9) mdDownstream*	-> The distance from the sliding point to measure, downstream of the anchor point.
- *	(10) InitialIndex	-> Index of the initial point, from which to scan.  Use 0 if unsure.
- *	(11) ans		-> Pointer to pre-allocated space.  Allocating in this function causes memory problems.
+ *	(8) mdUpstream*		-> The distance from the sliding point to measure, 
+ *	    upstream of the anchor point.
+ *	(9) mdDownstream*	-> The distance from the sliding point to measure, 
+ *	    downstream of the anchor point.
+ *	(10) InitialIndex	-> Index of the initial point, from which to scan.  
+ *	    Use 0 if unsure.
+ *	(11) ans		-> Pointer to pre-allocated space.  Allocating in this function 
+ *	    causes memory problems.
  *
  * Returns:
- *	(1) A vector of counts, each separated by 1bp.  Size= mdUpstream+mdDownstream+1;
- *	(2) Return vector [size] is the index, found to be the first index in the round that just finished.
- *		Since probes are assumed to be both orderd and in the same chromosome, the index of the next gene
- *		is guaranteed to be >= Return[size].  Meant to be a time-saver.
+ *	(1) A vector of counts, each separated by 1bp.  
+ *	    Size= mdUpstream+mdDownstream+1;
+ *	(2) Return vector [size] is the index, found to be the first index in the 
+ *	    round that just finished.
+ *		Since probes are assumed to be both orderd and in the same chromosome, 
+ *		the index of the next gene is guaranteed to be >= Return[size].  
+ *		Meant to be a time-saver.
  *
  * Assumes: 
  *	(1) All positions, etc. are on the same chromosome.  
@@ -187,11 +214,12 @@ SEXP WindowAnalysis(SEXP ProbeStart, SEXP ProbeEnd, SEXP ProbeStrand, SEXP Check
  *
  * Move this function into its own cpp file --- tools, or something like that.
  *
- *****************************************************************************************/
+ ******************************************************************************/
 
 int *MetaSlidingWindow(int Anchor_Start, const char *Anchor_Strand, 
 			int *Probe_Start, int *Probe_End, SEXP Probe_Strand, int NProbes,
-			int WindowSize, int mdUpstream, int mdDownstream, int InitialIndex, int *ans) {
+			int WindowSize, int mdUpstream, int mdDownstream, int InitialIndex, 
+            int *ans) {
 
 	int First, Last;
 	if(Anchor_Strand[0] == '+') {
@@ -206,12 +234,15 @@ int *MetaSlidingWindow(int Anchor_Start, const char *Anchor_Strand,
 		error("Incorrect strand: %s",Anchor_Strand);
 	}
 
-	// Find index from InitialIndex, from which to start the search...  Run some error checking.
+	// Find index from InitialIndex, from which to start the search...  
+    // Run some error checking.
 	int INDX = InitialIndex;
 	if((INDX < 0) || (INDX >= NProbes)) INDX = 0; // Error checking ...
-	if((INDX > 0) && (Probe_Start[INDX-1] > First)) INDX = 0; // More error checking...
+	if((INDX > 0) && (Probe_Start[INDX-1] > First)) INDX = 0; 
+    // More error checking...
 
-	int size = mdUpstream + mdDownstream + 1; // Length up & down & the zero position (=1).
+	int size = mdUpstream + mdDownstream + 1; 
+    // Length up & down & the zero position (=1).
 	for(int i=0;i<(size+1);i++)		// Init all to 0.
 		ans[i]=0;
 
@@ -219,9 +250,11 @@ int *MetaSlidingWindow(int Anchor_Start, const char *Anchor_Strand,
 	int indx=0;     // Initialize
 	int InWindow=0; // FALSE
 	for(int i=INDX;i<NProbes;i++) {
-		// If ANYWHERE in the region of interest AND on the same strand as feature (alternatively, don't count the strand if 'N'); record.
+		// If ANYWHERE in the region of interest AND on the same strand as 
+        // feature (alternatively, don't count the strand if 'N'); record.
 		if((First <= (Probe_End[i])) && (Last >= Probe_Start[i]) &&
-		  ((strcmp(Anchor_Strand, CHAR(STRING_ELT(Probe_Strand, i))) == 0) || (strcmp("N", CHAR(STRING_ELT(Probe_Strand, i))) == 0) )) {
+		  ((strcmp(Anchor_Strand, CHAR(STRING_ELT(Probe_Strand, i))) == 0) || 
+          (strcmp("N", CHAR(STRING_ELT(Probe_Strand, i))) == 0) )) {
 			// Put the start of the first INDX.
 			if(!InWindow) {
 				ans[size] = i;
@@ -232,7 +265,8 @@ int *MetaSlidingWindow(int Anchor_Start, const char *Anchor_Strand,
 			for(int j=(Probe_Start[i] - First - 2*WindowSize);
 						j<(Probe_End[i] - First -1);j++) {
 				if( (j >= 0) && (j < size) ) { // Error check ... 
-					// Turn around, if '-' strand, turn around to align '+' and '-' together.
+					// Turn around, if '-' strand, turn around to align 
+                    // '+' and '-' together.
 					if (Anchor_Strand[0] == '+') indx=j;
 					else if (Anchor_Strand[0] == '-') indx=size-j-1;
 
@@ -240,27 +274,32 @@ int *MetaSlidingWindow(int Anchor_Start, const char *Anchor_Strand,
 				}
 			}
 		}
-		// Assuming that reads are in order -- cuts out after it passes the region with reads.
+		// Assuming that reads are in order -- 
+        // cuts out after it passes the region with reads.
 		else if(Probe_Start[i] > Last) {
 			return ans;
 		}
 	}
 
-	return ans; // Only gets here if it hits the end...  In this case, it should be all 0's.
+	return ans; // Only gets here if it hits the end...  
+                // In this case, it should be all 0's.
 }
 
-/*****************************************************************************************
+/*******************************************************************************
  *
  * CountUnMAQableReads -- Returns a vector of counts over the features...
  *
  * Feature*		-> Vector of information on features start and strand.
  * Read*		-> Vector of information on read start, end, and strand.
- * UnMAQ		-> Int vector representing the genomic coordinates (hg18) of non-unique 44mers.
+ * UnMAQ		-> Int vector representing the genomic coordinates (hg18) of 
+ *  non-unique 44mers.
  * offset		-> Sum of the size of all proceeding chromosomes ...
- * sizeofchr		-> Number of un-MAQable regions in the chromosome -- prevents reading past the chromosome.
+ * sizeofchr		-> Number of un-MAQable regions in the chromosome -- prevents 
+ *      reading past the chromosome.
  * 
- *****************************************************************************************/
-SEXP CountUnMAQableReads(SEXP FeatureStart, SEXP FeatureEnd, SEXP UnMAQ, SEXP offset, SEXP sizeofchr) {
+ *****************************************************************************/
+SEXP CountUnMAQableReads(SEXP FeatureStart, SEXP FeatureEnd, SEXP UnMAQ, 
+    SEXP offset, SEXP sizeofchr) {
 
 	int *fSTART = INTEGER(FeatureStart);
 	int *fEND = INTEGER(FeatureEnd);
@@ -286,7 +325,8 @@ SEXP CountUnMAQableReads(SEXP FeatureStart, SEXP FeatureEnd, SEXP UnMAQ, SEXP of
 		fcID[features] = 0;
 
 		// Figure out where to start, w/ some error checking
-		if(fSTART[features] > MAQ[prev_un_counter_start -1]) un_counter = prev_un_counter_start;
+		if(fSTART[features] > MAQ[prev_un_counter_start -1]) un_counter = 
+            prev_un_counter_start;
 		else un_counter = o[0];
 
 		while((fSTART[features] > MAQ[un_counter]) && (un_counter <= max)) 
@@ -294,7 +334,8 @@ SEXP CountUnMAQableReads(SEXP FeatureStart, SEXP FeatureEnd, SEXP UnMAQ, SEXP of
 
 		while((  fEND[features] >= MAQ[un_counter]) && (un_counter <= max)) {
 			fcID[features]++; // Detect a decrease.
-			prev_un_counter_start = un_counter; // Features are in order, so start from here next time.
+			prev_un_counter_start = un_counter; 
+            // Features are in order, so start from here next time.
 			un_counter++;
 		}
 
@@ -305,17 +346,19 @@ SEXP CountUnMAQableReads(SEXP FeatureStart, SEXP FeatureEnd, SEXP UnMAQ, SEXP of
 }
 
 
-/*****************************************************************************************
+/******************************************************************************
  *
  * HistogramOfReadsByFeature -- Returns a histogram over the feature...
  *
  * Feature.*		-> Vector of information on features start and strand.
  * Read.*		-> Vector of information on read start, end, and strand.
  * size			-> The size of the moving window (bp).
- * up			-> The distance upstream of each feature to generate the histogram for.
- * down			-> The distance downstream of each feature to make a histogram for.
+ * up			-> The distance upstream of each feature to generate the 
+ *          histogram for.
+ * down			-> The distance downstream of each feature to make a histogram 
+ *          for.
  *
- *****************************************************************************************/
+ ******************************************************************************/
 
 SEXP HistogramOfReadsByFeature(SEXP FeatureStart, SEXP FeatureStrand, 
 				SEXP ReadStart, SEXP ReadEnd, SEXP ReadStrand, 
@@ -349,8 +392,8 @@ SEXP HistogramOfReadsByFeature(SEXP FeatureStart, SEXP FeatureStrand,
 	int *ADD = (int*)R_alloc(sz, sizeof(int));
 	int InitIndex = 0;
 	for(int i=0;i<NGENES;i++) {
-		MetaSlidingWindow(gSTART[i], CHAR(STRING_ELT(FeatureStrand, i)), PS, PE, ReadStrand, NREADS, 
-										SIZE, UP, DOWN, InitIndex, ADD);
+		MetaSlidingWindow(gSTART[i], CHAR(STRING_ELT(FeatureStrand, i)), 
+            PS, PE, ReadStrand, NREADS, SIZE, UP, DOWN, InitIndex, ADD);
 
 		// Foreach ADD, sum with 
 		for(int j=0;j<sz;j++)
@@ -363,17 +406,20 @@ SEXP HistogramOfReadsByFeature(SEXP FeatureStart, SEXP FeatureStrand,
 	return(counts);
 }
 
-/*****************************************************************************************
+/*******************************************************************************
  *
- * MatrixOfReadsByFeature -- Returns a matrix representing counts of reads over the feature...
+ * MatrixOfReadsByFeature -- Returns a matrix representing counts of reads over 
+ *  the feature...
  *
  * Feature.*		-> Vector of information on features start and strand.
  * Read.*		-> Vector of information on read start, end, and strand.
  * size			-> The size of the moving window (bp).
- * up			-> The distance upstream of each feature to generate the histogram for.
- * down			-> The distance downstream of each feature to make a histogram for.
+ * up			-> The distance upstream of each feature to generate the 
+ *  histogram for.
+ * down			-> The distance downstream of each feature to make a histogram 
+ *  for.
  *
- *****************************************************************************************/
+ ******************************************************************************/
 
 SEXP MatrixOfReadsByFeature(SEXP FeatureStart, SEXP FeatureStrand, 
 				SEXP ReadStart, SEXP ReadEnd, SEXP ReadStrand, 
@@ -408,8 +454,8 @@ SEXP MatrixOfReadsByFeature(SEXP FeatureStart, SEXP FeatureStrand,
 	int *ADD = (int*)R_alloc(sz, sizeof(int));
 	int InitIndex = 0;
 	for(int i=0;i<NGENES;i++) {
-		MetaSlidingWindow(gSTART[i], CHAR(STRING_ELT(FeatureStrand, i)), PS, PE, ReadStrand, NREADS, 
-										SIZE, UP, DOWN, InitIndex, ADD);
+		MetaSlidingWindow(gSTART[i], CHAR(STRING_ELT(FeatureStrand, i)), 
+            PS, PE, ReadStrand, NREADS, SIZE, UP, DOWN, InitIndex, ADD);
 
 		// Foreach ADD, sum with 
 		for(int j=0;j<sz;j++)
@@ -422,18 +468,20 @@ SEXP MatrixOfReadsByFeature(SEXP FeatureStart, SEXP FeatureStrand,
 	return(counts);
 }
 
-/*****************************************************************************************
+/******************************************************************************
  *
- * NumberOfReadsInMaximalSlidingWindow -- Foreach feature, returns the number of reads 
- *						in the maximal sliding window in range ...
+ * NumberOfReadsInMaximalSlidingWindow -- Foreach feature, returns the number 
+ *  of reads in the maximal sliding window in range ...
  *
  * Feature.*		-> Vector of information on features start and strand.
  * Read.*		-> Vector of information on read start, end, and strand.
  * size			-> The size of the moving window (bp).
- * up			-> The distance upstream of each feature to generate the histogram for.
- * down			-> The distance downstream of each feature to make a histogram for.
+ * up			-> The distance upstream of each feature to generate the 
+ *  histogram for.
+ * down			-> The distance downstream of each feature to make a histogram 
+ *  for.
  *
- *****************************************************************************************/
+ ******************************************************************************/
 
 SEXP NumberOfReadsInMaximalSlidingWindow(SEXP FeatureStart, SEXP FeatureStrand, 
 				SEXP ReadStart, SEXP ReadEnd, SEXP ReadStrand, 
@@ -466,8 +514,8 @@ SEXP NumberOfReadsInMaximalSlidingWindow(SEXP FeatureStart, SEXP FeatureStrand,
 	int InitIndex = 0;
 	for(int i=0;i<NGENES;i++) {
 		// Run the sliding window.
-		MetaSlidingWindow(gSTART[i], CHAR(STRING_ELT(FeatureStrand, i)), PS, PE, ReadStrand, NREADS, 
-										SIZE, UP, DOWN, InitIndex, ADD);
+		MetaSlidingWindow(gSTART[i], CHAR(STRING_ELT(FeatureStrand, i)), 
+            PS, PE, ReadStrand, NREADS, SIZE, UP, DOWN, InitIndex, ADD);
 
 		// Foreach ADD, Look for the maximum 
 		for(int j=0;j<sz;j++)

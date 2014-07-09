@@ -19,7 +19,7 @@
 **
 ***************************************************************************/
 
-/********************************************************************************
+/******************************************************************************
  *
  *  Source code written for GRO-seq package by Charles Danko.
  *
@@ -27,7 +27,7 @@
  *
  *  2009-22-11 Maximum likelihood fit for gamma, and R-wrapper for testing.
  *
- ********************************************************************************/
+ ******************************************************************************/
 
 #include <R.h>
 #include <S.h>
@@ -43,14 +43,15 @@
 #include "UsefulValues.h"
 #include "hmmHeader.h" // Required for expSum and expDif functions.
 
-/******************************************************************************************
+/*******************************************************************************
  *
- *  diGamma and triGamma functions are needed to calculate MLE of gamma distribution.
+ *  diGamma and triGamma functions are needed to calculate MLE of gamma 
+ *      distribution.
  *  Numerical approximations are taken from Choi and Wette, 1969.
  *
  *  Commented: 12-3-09; Conflict with R functions of the same purpose.
  *
- ******************************************************************************************/
+ ******************************************************************************/
 /*
 static inline double digamma(double k) {
     if(k < 8) {
@@ -71,13 +72,14 @@ static inline double trigamma(double k) {
 }
 */
 
-/******************************************************************************************
+/*******************************************************************************
  *
  *  MLEGamma -- Returns (by reference) maximum likelihood estimates for 
  *  paremeters of the gamma distribution, shape (or k), and scale (or theta).
  *
- ******************************************************************************************/
-extern int MLEGamma(double N, double SumXi, double SumLogXi, double *shape, double *scale) {
+ *****************************************************************************/
+extern int MLEGamma(double N, double SumXi, double SumLogXi, double *shape, 
+    double *scale) {
     double shapeBound= VERY_LARGE_DOUBLE_VALUE;
     int maxIterations= 10000;   
 
@@ -94,8 +96,10 @@ extern int MLEGamma(double N, double SumXi, double SumLogXi, double *shape, doub
     // int counter = 0; Unused
     double kPrime;
     for( int counter=0; counter < maxIterations; counter++) {
-        kPrime=shape[0]-(log(shape[0])-digamma(shape[0])-s)/((1/shape[0])-trigamma(shape[0]));
-        if((kPrime - shape[0]) < 0.00000001 && (shape[0] - kPrime) < 0.00000001) {
+        kPrime= shape[0]-
+            (log(shape[0])-digamma(shape[0])-s)/
+                ((1/shape[0])-trigamma(shape[0]));
+        if((kPrime- shape[0]) < 0.00000001 && (shape[0] - kPrime) <0.00000001){
             shape[0] = kPrime;
             break;
         }
@@ -107,29 +111,33 @@ extern int MLEGamma(double N, double SumXi, double SumLogXi, double *shape, doub
     if(isnan(shape[0])) {
         retVal = -1;
         shape[0] = (3-s+sqrt((s-3)*(s-3)+24*s))/(12*s);
-        Rprintf("WARNING!! [MLEGamma] NaN returned from Newton's method.  Approximate value returned.\n");
+        Rprintf("WARNING!! [MLEGamma] NaN returned from Newton's method.  \
+            Approximate value returned.\n");
     }
 
     // (shape > shapeBound) Here, we are bounding shape for numerical stability.
-    // (s < 0 && shape < 0) has been observed to happen due to machine rounding error, if log(SumXi/N)~=SumLogXi/N.
-    if(isinf(shape[0]) || (shape[0] > shapeBound) || (s < 0 && shape[0] < 0)) { 
+    // (s < 0 && shape < 0) has been observed to happen due to machine rounding 
+    // error, if log(SumXi/N)~=SumLogXi/N.
+    if(isinf(shape[0]) || (shape[0] > shapeBound) || (s < 0 && shape[0] < 0)){ 
         retVal = -1;
         shape[0] = shapeBound;
-        Rprintf("WARNING!! [MLEGamma] Numerical instabillity detected, or shape outside of bounds.\n");
+        Rprintf("WARNING!! [MLEGamma] Numerical instabillity detected, \
+            or shape outside of bounds.\n");
     }
 
     // Get scale in terms of k.
     scale[0] = (SumXi/(shape[0]*N));
 
-        
-    // This was observed to happen in a case where the first state captured the entire sequence, and
-    //  N for the second and thrid state --> 0.
-    // By setting shape to 0, we are forcing any window that is not 0 to -Inf prob. 
+    // This was observed to happen in a case where the first state captured the
+    // entire sequence, and N for the second and thrid state --> 0.
+    // By setting shape to 0, we are forcing any window that is not 0 to 
+    // -Inf prob. 
     // BE CAREFUL!  THIS works ONLY in cases where all windows are set to >=1.
     if( (N==0) ) {
         retVal = -2;
         shape[0]=0; scale[0]=1;
-        Rprintf("SERIOUS WARNING!! [MLEGamma] N found to equal 0.  Shape set to 0, scale set to 1.\n");
+        Rprintf("SERIOUS WARNING!! [MLEGamma] N found to equal 0.  \
+            Shape set to 0, scale set to 1.\n");
     }
 
     Rprintf("[MLEGamma] shape=%f; scale=%f\n", shape[0], scale[0]);
@@ -157,17 +165,19 @@ SEXP RgammaMLE(SEXP n, SEXP sumxi, SEXP sumlogxi) {
     return(returnList);
 }
 
-/******************************************************************************************
+/*******************************************************************************
  *
- *  MLEGammaSHAPE1 -- Returns (by reference) maximum likelihood estimates for the
- *  shape paremeter of a gamma distribution, where the scale (theta) is constrained to 1.
+ *  MLEGammaSHAPE1 -- Returns (by reference) maximum likelihood estimates for 
+ *      the hape paremeter of a gamma distribution, where the scale (theta) is 
+ *      constrained to 1.
  *
  *  This approximates a poisson where the mean equals the variance.
  *  Scale is set to 1.
  *
- ******************************************************************************************/
-extern int MLEGamma_SCALE1(double N, double SumXi, double SumLogXi, double *shape, double *scale) {
-        int maxIterations= 10000;
+ *****************************************************************************/
+extern int MLEGamma_SCALE1(double N, double SumXi, double SumLogXi, 
+    double *shape, double *scale) {
+    int maxIterations= 10000;
 
     // Get initial value of shape (k).
     double s = SumLogXi/N;
@@ -178,7 +188,7 @@ extern int MLEGamma_SCALE1(double N, double SumXi, double SumLogXi, double *shap
     double kPrime;
     for( int counter=0; counter < maxIterations; counter++) {
         kPrime=shape[0]-((digamma(shape[0])-s)/trigamma(shape[0]));
-        if((kPrime - shape[0]) < 0.00000001 && (shape[0] - kPrime) < 0.00000001) {
+        if((kPrime - shape[0]) < 0.00000001 && (shape[0] - kPrime)<0.00000001){
             shape[0] = kPrime;
             break;
         }
@@ -190,28 +200,32 @@ extern int MLEGamma_SCALE1(double N, double SumXi, double SumLogXi, double *shap
     return(0);
 }
 
-/******************************************************************************************
+/*******************************************************************************
  *
- *  MLEGamma_SHAPEeq1overSCALE -- Returns (by reference) maximum likelihood estimates for the
- *  shape paremeter of a gamma distribution, where the scale (theta) is constrained to be 1/shape (k).
+ *  MLEGamma_SHAPEeq1overSCALE -- Returns (by reference) maximum likelihood 
+ *  estimates for the shape paremeter of a gamma distribution, where the scale 
+ *  (theta) is constrained to be 1/shape (k).
  *
- ******************************************************************************************/
-extern int MLEGamma_SHAPEeq1overSCALE(double N, double SumXi, double SumLogXi, double SumXiSq, 
-                        double *shape, double *scale) {
+ ******************************************************************************/
+extern int MLEGamma_SHAPEeq1overSCALE(double N, double SumXi, double SumLogXi, 
+    double SumXiSq, double *shape, double *scale) {
         int maxIterations= 10000;
 
     // Get initial value of shape (k).
     double s = (SumXi/N)-(SumLogXi/N);
     shape[0] = ((SumXi/N)*(SumXi/N))/( (SumXiSq/N)-((SumXi/N)*(SumXi/N)) );
-    Rprintf("[MLEGamma_SHAPEeq1overSCALE] SumXi=%f; SumLogXi=%f; SumXiSq=%f; N=%f\n", SumXi, SumLogXi, SumXiSq, N);
+    Rprintf("[MLEGamma_SHAPEeq1overSCALE] SumXi=%f; SumLogXi=%f; \ 
+        SumXiSq=%f; N=%f\n", SumXi, SumLogXi, SumXiSq, N);
 
     // Refine shape (k) using Newton's method.
     // int counter = 0; // Unused
     double kPrime;
     for( int counter=0; counter < maxIterations; counter++) {
         Rprintf("[MLEGamma_SHAPEeq1overSCALE] shape: %f\n", shape[0]);
-        kPrime=shape[0]-((digamma(shape[0])+log(1/shape[0])+(shape[0]*shape[0])+s)/(trigamma(shape[0])+3*shape[0]));
-        if((kPrime - shape[0]) < 0.00000001 && (shape[0] - kPrime) < 0.00000001) {
+        kPrime=shape[0]-
+            ((digamma(shape[0])+log(1/shape[0])+
+                (shape[0]*shape[0])+s)/(trigamma(shape[0])+3*shape[0]));
+        if((kPrime - shape[0]) < 0.00000001 && (shape[0] - kPrime)<0.00000001){
             shape[0] = kPrime;
             break;
         }
@@ -223,43 +237,50 @@ extern int MLEGamma_SHAPEeq1overSCALE(double N, double SumXi, double SumLogXi, d
     return(0);
 }
 
-/******************************************************************************************
+/*******************************************************************************
  *
- *  normal_exp_optimfn -- Returns the evaluation of the componenet of the log-likelihood function
- *                        for the Normal+Exponential component of the Rate HMM.  Used in conjunction
- *                        with a numerical minimization method (currently trying conjugate gradients).
+ *  normal_exp_optimfn -- Returns the evaluation of the componenet of the 
+ *      log-likelihood function for the Normal+Exponential component of the 
+ *      Rate HMM.  Used in conjunction with a numerical minimization method 
+ *      (currently trying conjugate gradients).
  *
- *                        Proof is at the end of the April 2011 - (?) notebook.
+ *      Proof is at the end of the April 2011 - (?) notebook.
  *
- *                        As in "Writing R Extensions" Section 6.8: typedef double optimfn(int n, double *par, void *ex)
- *                           where,  n--> number of args in par.
- *                                 par--> parameters.
- *                                  ex--> auxiliary information, in this case doubles representing emissions and weights
- *                                        encoded as: (1) n, {(2) xi, and (3) log(wi)}_n.
+ *      As in "Writing R Extensions" Section 6.8: 
+ *          typedef double optimfn(int n, double *par, void *ex)
+ *              where,  n--> number of args in par.
+ *                      par--> parameters.
+ *                     ex--> auxiliary information, in this case doubles 
+ *                          representing emissions and weights
+ *                      encoded as: (1) n, {(2) xi, and (3) log(wi)}_n.
  *
- ******************************************************************************************/
+ ******************************************************************************/
 extern double normal_exp_optimfn(int n, double *par, void *ex) {
     double *data = (double*)ex; 
     int n_x = (int)(data[0]);
     int maxn = 2*n_x+1, cnt=0;
     double value=0;
     for(int i=1;i<maxn;i+=2) {
-        value += data[i+1]*NORMAL_EXP(data[i], par, 4); // cnt is the same as (i-1)/2. Avoid division by keeping counter.
+        value += data[i+1]*NORMAL_EXP(data[i], par, 4); 
+        // cnt is the same as (i-1)/2. Avoid division by keeping counter.
         cnt++;
-    }  //   Previously -- worked in log-space.  double value = expSum(sumCpt, n_x);
+    }  //   Previously -- worked in log-space.  
+      //        double value = expSum(sumCpt, n_x);
     
-    return((-1)*value); // Since cgmin minimizes the function, have to invert to ID the maximum ... 
+    return((-1)*value); // Since cgmin minimizes the function, 
+                        // have to invert to ID the maximum ... 
 }
 
-/******************************************************************************************
+/*******************************************************************************
  *
- *  normal_exp_optimgr -- Returns (in *gr) the evaluation of the componenet of the log-likelihood function
- *                        for the Normal+Exponential component of the Rate HMM.  Used in conjunction
- *                        with a numerical minimization method (currently trying conjugate gradients).
+ *  normal_exp_optimgr -- Returns (in *gr) the evaluation of the componenet of 
+ *          the log-likelihood function for the Normal+Exponential component of 
+ *          the Rate HMM.  Used in conjunction with a numerical minimization 
+ *          method (currently trying conjugate gradients).
  *
- *                        Components of gr are: alpha, mu, sigma, lambda.
+ *          Components of gr are: alpha, mu, sigma, lambda.
  *
- ******************************************************************************************/
+ *****************************************************************************/
 extern void normal_exp_optimgr(int n, double *par, double *gr, void *ex) {
     double *data = (double*)ex; 
     int n_x = (int)(data[0]);
@@ -279,31 +300,42 @@ extern void normal_exp_optimgr(int n, double *par, double *gr, void *ex) {
       // Compute N and E and D
       N = (NORMAL(xi, &par[1], 2));
       E = (EXPONENTIAL(xi, &par[3], 1));
-      D = (NORMAL_EXP(xi, par, 4));//expSum2(log(par[0])+N,log(1-par[0])+E); // Compute (alpha*N+(1-alpha)*E).  Same as NORMAL_EXP(), but don't have to recompute N and E.
+      D = (NORMAL_EXP(xi, par, 4));//expSum2(log(par[0])+N,log(1-par[0])+E); 
+      // Compute (alpha*N+(1-alpha)*E).  
+      // Same as NORMAL_EXP(), but don't have to recompute N and E.
 
-      gr[0]+= (N>E?1:-1)*exp(lwi+expDif(N,E)-D); // expDif returns the absolute value... but N>0 and E>0, so abs shoudl be the magnitude.  N>E calculates the sign.
+      gr[0]+= (N>E?1:-1)*exp(lwi+expDif(N,E)-D); 
+      // expDif returns the absolute value... but N>0 and E>0, 
+      // so abs shoudl be the magnitude.  N>E calculates the sign.
       gr[1]+= ximm*exp(lwi+N-D);
       gr[2]+= ((ximm*ximm)/(par[2]*par[2])-1)*exp(lwi+N-D);
       
     }
     gr[0]= (-1)*gr[0];//exp(expSum(alpha,n_x));
-    gr[1]= (-1)*gr[1]*par[0]/par[2]/par[2];//exp(par[0]+expSum(mu,n_x)-par[2]-par[2]);
+    gr[1]= (-1)*gr[1]*par[0]/par[2]/par[2];
+    //exp(par[0]+expSum(mu,n_x)-par[2]-par[2]);
     gr[2]= (-1)*gr[2]*par[0]/par[2];//exp(par[0]+expSum(sigma,n_x)-par[2]);
 
-    // Lots of trouble fitting lambda.  Just use finite difference for that part...
-    double h=0.01, *parl=(double*)calloc(n, sizeof(double*)), *parr=(double*)calloc(n, sizeof(double*));
+    // Lots of trouble fitting lambda.  Just use finite difference for 
+    // that part...
+    double h=0.01, *parl=(double*)calloc(n, sizeof(double*)), 
+        *parr=(double*)calloc(n, sizeof(double*));
      for(int j=0;j<n;j++) {
        parl[j] = parr[j] = par[j];
      }
      parl[3] = par[3]-h;
      parr[3] = par[3]+h;
-     gr[3]= (normal_exp_optimfn(4, parr, ex)-normal_exp_optimfn(4, parl, ex))/(2*h); // DON'T Multiply by -1 for finitDif method.
+     gr[3]= (normal_exp_optimfn(4, parr, ex)-
+        normal_exp_optimfn(4, parl, ex))/(2*h); 
+        // DON'T Multiply by -1 for finitDif method.
 
     return;
 }
 
-extern void normal_exp_optimgr_fn_diff_approx(int n, double *par, double *gr, void *ex) {
-    double h=0.01, *parl=(double*)calloc(n, sizeof(double*)), *parr=(double*)calloc(n, sizeof(double*));
+extern void normal_exp_optimgr_fn_diff_approx(int n, double *par, 
+    double *gr, void *ex) {
+    double h=0.01, *parl=(double*)calloc(n, sizeof(double*)), 
+        *parr=(double*)calloc(n, sizeof(double*));
 
     for(int i=0;i<n;i++){
      for(int j=0;j<n;j++) {
@@ -311,18 +343,20 @@ extern void normal_exp_optimgr_fn_diff_approx(int n, double *par, double *gr, vo
      }
      parl[i] = par[i]-h;
      parr[i] = par[i]+h;
-     gr[i]= (normal_exp_optimfn(4, parr, ex)-normal_exp_optimfn(4, parl, ex))/(2*h); // DON'T Multiply by -1 for finitDif method.
+     gr[i]= (normal_exp_optimfn(4, parr, ex)-
+        normal_exp_optimfn(4, parl, ex))/(2*h); 
+        // DON'T Multiply by -1 for finitDif method.
     }
     
     return;
 }
 
-/******************************************************************************************
+/******************************************************************************
  *
- *  normal_exp_optcg -- Returns parameters of the (alpha)*normal+(1-alpha)*exponential distribution
- *                      optimized using conjugate gradient method.
+ *  normal_exp_optcg -- Returns parameters of the (alpha)*normal+(1-alpha)
+ *      *exponential distribution optimized using conjugate gradient method.
  *
- ******************************************************************************************/ 
+ *****************************************************************************/ 
 SEXP RNormExpMLE(SEXP xi, SEXP wi, SEXP init_guess, SEXP TOL, SEXP maxit) {
     int N = Rf_nrows(xi);
     double *XI = REAL(xi);
@@ -363,7 +397,8 @@ SEXP RNormExpMLE(SEXP xi, SEXP wi, SEXP init_guess, SEXP TOL, SEXP maxit) {
     int *fail= INTEGER(FAIL);
 
     // Do the minimization...
-    cgmin(4, guess, par, fmin, normal_exp_optimfn, normal_exp_optimgr, fail, tol, tol, ex, 1, 0, fncount, grcount, MAXIT);
+    cgmin(4, guess, par, fmin, normal_exp_optimfn, normal_exp_optimgr, fail, 
+        tol, tol, ex, 1, 0, fncount, grcount, MAXIT);
 
     UNPROTECT(2);
     return(returnList);
