@@ -218,7 +218,7 @@ combineTranscripts <- function(tx, annox, geneSize=1000, threshold=0.8,
             plot2Ranges(tx[ol.df[ol.df$gene == uniqGene[i], "trans"],], 
                 annox[uniqGene[i],], main="Before")
             plot2Ranges(cT[i,], annox[uniqGene[i],], main="After")
-            browser()
+            Sys.sleep(5)
         }
     }
 

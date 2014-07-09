@@ -30,51 +30,60 @@
 
 
 \section{Introduction}
-\underline{G}lobal Nuclear \underline{R}un \underline{O}n and Sequencing (GRO-seq) was 
-developed for comprehensively map transcriptional activity in cells \citep{Core2008,Hah2011}.  
-GRO-seq, which provides a genome wide `map' of the position and orientation of all
-transcriptionally active RNA polymerases, has become increasingly widely used 
-in recent years because it has numerous advantages compared to alternative methods of 
+\underline{G}lobal Nuclear \underline{R}un \underline{O}n and Sequencing 
+(GRO-seq) was developed for comprehensively map transcriptional activity in 
+cells \citep{Core2008,Hah2011}.  GRO-seq, which provides a genome wide `map' 
+of the position and orientation of all transcriptionally active RNA 
+polymerases, has become increasingly widely used in recent years because it 
+has numerous advantages compared to alternative methods of 
 transcriptome profiling, such as expression microarrays and RNA-seq.  
-Among these, GRO-seq provides information on instantaneous transactional responses 
-because it detects primary transcription, as opposed to mature, processed mRNA. 
-In addition, because it is independent of RNA polyadenylation, processing, and stability, 
-GRO-seq provides extensive information on the non-coding transcriptome, 
-including primary miRNAs, lincRNAs, enhancer RNAs, and potentially additional, yet 
-undiscovered classes of transcription occurring in cells \citep{Hah2011,Hah2013,Luo2014}.  
-Thus, GRO-seq data provides a complete and instantaneous picture of transcription, 
-and has extensive applications in deciphering the mechanisms of transcriptional regulation.
+Among these, GRO-seq provides information on instantaneous transactional 
+responses because it detects primary transcription, as opposed to mature, 
+processed mRNA.  In addition, because it is independent of RNA polyadenylation, 
+processing, and stability, GRO-seq provides extensive information on the 
+non-coding transcriptome, including primary miRNAs, lincRNAs, enhancer RNAs, 
+and potentially additional, yet undiscovered classes of transcription 
+occurring in cells \citep{Hah2011,Hah2013,Luo2014}.  
+Thus, GRO-seq data provides a complete and instantaneous picture of 
+transcription, and has extensive applications in deciphering the mechanisms 
+of transcriptional regulation.
 
-We have recently developed several important analytical approaches which make use of GRO-seq data
-to address new biological questions.  Our pipleline has been packaged and documented, resulting in 
+We have recently developed several important analytical approaches which make 
+use of GRO-seq data to address new biological questions.  
+Our pipleline has been packaged and documented, resulting in 
 the \Rpackage{groHMM} package for Bioconductor.  
 Among the more advanced features, \Rpackage{groHMM} predicts the boundaries of 
-transcriptional activity across the genome \emph{de novo} using a two-state hidden Markov 
-model (HMM).  Our model essentially divides the genome into ``transcribed'' and 
+transcriptional activity across the genome \emph{de novo} using a two-state 
+hidden Markov model (HMM).  
+Our model essentially divides the genome into ``transcribed'' and 
 ``non-transcribed'' regions in a strand specific manner \citep{Hah2011}.  
 We also use HMMs to identify the leading edge of Pol II at genes activated by a 
 stimulus in GRO-seq time course data.  This approach allows the genome-wide 
 interrogation of transcription rates in cells \citep{Danko2013}.
 
-In addition to these advanced features, \Rpackage{groHMM} provides wrapper functions for 
-counting raw reads \citep{PagesGRanges}, generating wiggle files for visualization \citep{Michael2009},
-and creating metagene (averaging) plots.  \Rpackage{groHMM} takes over all aspects of analysis after reads have been aligned 
-to a reference genome with short-read alignment tools.  Although \Rpackage{groHMM} is tailored 
-towards GRO-seq data, the same functions and analytical methodologies can, in principal, 
-be applied to a wide variety of other short read data sets since the package includes 
-a number of easily usable and extensible functions for general short read data analysis.  
+In addition to these advanced features, \Rpackage{groHMM} provides wrapper 
+functions for counting raw reads \citep{PagesGRanges}, generating wiggle 
+files for visualization \citep{Michael2009}, and creating metagene 
+(averaging) plots.  \Rpackage{groHMM} takes over all aspects of 
+analysis after reads have been aligned to a reference genome with 
+short-read alignment tools.  Although \Rpackage{groHMM} is tailored 
+towards GRO-seq data, the same functions and analytical methodologies 
+can, in principal, be applied to a wide variety of other short read data 
+sets since the package includes a number of easily usable and extensible 
+functions for general short read data analysis.  
 This guide focuses on the most common application of the package.
 
 \section{Preparation}
-The \Rpackage{groHMM} package is available in the Bioconductor and can be downloaded as follows:
+The \Rpackage{groHMM} package is available in the Bioconductor and can be 
+downloaded as follows:
 <<install groHMM, eval=FALSE>>=
 source("http://bioconductor.org/biocLite.R")
 biocLite("groHMM")
 @
 
-The following packages are not required to use \Rpackage{groHMM}, but they are used to
-download annotations and evaluate transcripts, and should be installed for
-this tutorial.
+The following packages are not required to use \Rpackage{groHMM}, but they 
+are used to download annotations and evaluate transcripts, and should be 
+installed for this tutorial.
 <<install packages, eval=FALSE>>=
 biocLite("GenomicFeatures")
 biocLite("org.Hs.eg.db")
@@ -86,28 +95,30 @@ biocLite("TxDb.Hsapiens.UCSC.hg19.knownGene")
 \subsection{Read GRO-seq Data Files}
 In this tutorial we will use example data from Hah et al. [2011] (GEO
 accession GSE27463).   This experiment was designed to assess transcriptional
-changes following treatment of MCF-7 cells with 17$\beta$ estradiol (E2).  The data
-include a time course of GRO-seq data following treatment with E2 (\emph{i.e.}, 0, 10, 40
-and 160 min.).  Two biological replicates are available for each time point.
-Bed files were obtained from GEO and lifted over to hg19 using the UCSC
-\Rpackage{liftOver} tool.  In order to make the package size more manageable, we have included
-data from chromosome 7 only.  \Rpackage{groHMM} supports parallel processing and the number of
-cores to use can be set using \Rcode{mc.cores} option.
+changes following treatment of MCF-7 cells with 17$\beta$ estradiol (E2).  
+The data include a time course of GRO-seq data following treatment with E2
+(\emph{i.e.}, 0, 10, 40 and 160 min.).  Two biological replicates are 
+available for each time point.  Bed files were obtained from GEO and lifted 
+over to hg19 using the UCSC \Rpackage{liftOver} tool.  
+In order to make the package size more manageable, we have included
+data from chromosome 7 only.  \Rpackage{groHMM} supports parallel processing 
+and the number of cores to use can be set using \Rcode{mc.cores} option.
 
 <<use groHMM, eval=TRUE>>=
 library(groHMM)
 options(mc.cores=4)
 @
 
-\Rpackage{groHMM} uses the \Rpackage{GRanges} class from the \Rpackage{GenomicRanges} packages to represent a
-collection of genomic features, allowing synergy with other useful packages in
-Bioconductor.  Most of the functions in the package take at least two
-arguments: `reads' and `features'.  Reads represent the genomic coordinates of a
+\Rpackage{groHMM} uses the \Rpackage{GRanges} class from the 
+\Rpackage{GenomicRanges} packages to represent a collection of genomic 
+features, allowing synergy with other useful packages in Bioconductor.  
+Most of the functions in the package take at least two arguments: `reads' 
+and `features'.  Reads represent the genomic coordinates of a
 set of mapped short reads.   Features represent a set of genomic coordinates
 of interest such as genes, exons, or transcripts.
 
-The example data included in this package can be loaded into \software{R} using the
-following commands.
+The example data included in this package can be loaded into \software{R} 
+using the following commands.
 
 <<load data, eval=TRUE>>=
 S0mR1 <- as(readGAlignments(system.file("extdata", "S0mR1.bam", 
@@ -129,10 +140,12 @@ S160mR2 <- as(readGAlignments(system.file("extdata", "S160mR2.bam",
 @
 
 \subsection{Create a Wiggle File}
-Wiggle files are created for each strand after replicates are combined in order to visualize GRO-seq data
-in the UCSC genome browser.    Wiggle files can be also normalized by the sequencing depth, \emph{i.e.},
-average number of reads in the dataset. \Rcode{writeWiggle} function is a wrapper of \Rcode{export} 
-in \Rpackage{rtracklayer} for generation of wiggle/bigWig type of files.
+Wiggle files are created for each strand after replicates are combined in 
+order to visualize GRO-seq data in the UCSC genome browser.    
+Wiggle files can be also normalized by the sequencing depth, \emph{i.e.},
+average number of reads in the dataset. \Rcode{writeWiggle} function is a 
+wrapper of \Rcode{export} in \Rpackage{rtracklayer} for generation of 
+wiggle/bigWig type of files.
 
 <<combine replicates, eval=TRUE>>=
 # Combine replicates
@@ -175,14 +188,17 @@ genome browser, or your visualization software of choice.
     \caption{HMM calling of GRO-seq data}
 \end{figure}
 
-In \Rpackage{groHMM}, transcribed regions are detected \emph{de novo} using a two-state 
-hidden Markov model (HMM).  The model takes GRO-seq read counts as input across the 
-genome and divides the genome into ``transcribed'' and ``non-transcribed'' state as 
-shown in Figure 1.  First, a single read set is generated by combining all samples
-for each time point.  This combined approach improves sensitivity for transcripts with
-low expression levels.   Combined reads are used to train the model parameters using the
+In \Rpackage{groHMM}, transcribed regions are detected \emph{de novo} using 
+a two-state hidden Markov model (HMM).  
+The model takes GRO-seq read counts as input across the 
+genome and divides the genome into ``transcribed'' and ``non-transcribed'' 
+state as shown in Figure 1.  First, a single read set is generated by 
+combining all samples for each time point.  This combined approach improves 
+sensitivity for transcripts with low expression levels.   
+Combined reads are used to train the model parameters using the
 Baum-Welch Expectation Maximization (EM) algorithm.  Each strand is modeled
-separately dividing the genome into non-overlapping 50 bp windows classified as either state.
+separately dividing the genome into non-overlapping 50 bp windows classified 
+as either state.
 
   
 <<transcript calling, eval=TRUE, keep.source=TRUE, results=hide>>=
@@ -196,11 +212,12 @@ head(txHMM)
 @
 
 The \Rfunction{detectTranscripts} function also uses two hold-out parameters.  
-These parameters, specified by the arguments \Rfunarg{LtProbB} and \Rfunarg{UTS}, 
-represents the log-transformed transition probability of switching
-from transcribed state to non-transcribed state and variance of the emission probability 
-for reads in the non-transcribed state, respectively.  
-Holdout parameters are used to optimize the performance of HMM predictions on known genes.
+These parameters, specified by the arguments \Rfunarg{LtProbB} and 
+\Rfunarg{UTS}, represents the log-transformed transition probability of 
+switching from transcribed state to non-transcribed state and variance of the 
+emission probability for reads in the non-transcribed state, respectively.  
+Holdout parameters are used to optimize the performance of HMM predictions 
+on known genes.
 
 \subsection{Evaluation of Transcript Calling}
 Predicted transcripts are evaluated by comparison to known annotations, making
@@ -209,10 +226,10 @@ available annotations.  Two types of error may occur, as described
 below.  The HMM parameters are evaluated by the sum of the error rates.
 The procedure involves collecting a set of high-confidence reference
 transcripts.  An annotation dataset can be constructed by downloading
-from the UCSC database or alternatively, pre-made TranscriptDb objects can be used if 
-they are available in the Bioconductor.  We will use the UCSC knownGene track and
-retrieve transcript annotations with \Rpackage{GenomicFeatures} \citep{CarsonGFeatures} 
-package.
+from the UCSC database or alternatively, pre-made TranscriptDb objects can be 
+used if they are available in the Bioconductor.  We will use the UCSC knownGene
+track and retrieve transcript annotations with 
+\Rpackage{GenomicFeatures} \citep{CarsonGFeatures} package.
 
 <<use ucsc genes, eval=TRUE>>=
 library(TxDb.Hsapiens.UCSC.hg19.knownGene)
@@ -230,9 +247,10 @@ seqlevels(kgChr7) <- seqlevelsInUse(kgChr7)
 
 Because annotations do not provide precise cell type-specific expression
 information, overlapping transcripts must be merged into a single set,
-in which each annotation represents the 5$'$- and 3$'$-most boundaries of genes.
-Different isoforms of each gene are collapsed into one using the ENTREZID.  These 
-consensus annotations are used for the evaluation of HMM calling.
+in which each annotation represents the 5$'$- and 3$'$-most boundaries of 
+genes.  Different isoforms of each gene are collapsed into one using the 
+ENTREZID.  These consensus annotations are used for the evaluation of HMM 
+calling.
 
 <<make consensus annotations, eval=TRUE, keep.source=TRUE, results=hide>>=
 # Collapse overlapping annotations
@@ -250,10 +268,11 @@ There are two types of error that can be evaluated when comparing predicted
 transcripts with annotations.  (1) The number of transcripts
 overlapping two or more annotations, (\emph{i.e.}, these transcripts `run genes
 together') and (2) the number of annotations that overlap two or more
-transcripts on the same strand (\emph{i.e.}, we say that these transcript calls `break up
-a single annotation') must be determined.   The optimal tuning parameters can be found 
-by minimizing the sum of the two errors.  This approach allows identification of the model 
-that best fits the existing annotations and should more precisely predict transcripts
+transcripts on the same strand (\emph{i.e.}, we say that these transcript 
+calls `break up a single annotation') must be determined.   The optimal tuning 
+parameters can be found by minimizing the sum of the two errors.  
+This approach allows identification of the model that best fits 
+the existing annotations and should more precisely predict transcripts
 in non-annotated parts of the genome.
 <<evaluation of transcript calling, eval=TRUE>>=
 e <- evaluateHMMInAnnotations(txHMM, kgConsensus)
@@ -261,13 +280,14 @@ e$eval
 @
 
 \subsection{HMM Tuning}
-Here we demonstrate how the optimal value for each tuning parameters can be obtained by
-running HMM multiple times over a certain range of the parameters.   Among the
-nine test cases, the sum of errors show minimal at case \#7, as shown
-below.   \#4, however, is chosen over \#7 for further analysis due to the lower error
-rate per called transcript.  The variation of errors should be greater if whole chromosomes
-are used.  Also, a larger set of the parameters might be used in practice.  This tunning step
-takes long time, so you may skip it for quick review of the package. 
+Here we demonstrate how the optimal value for each tuning parameters can be 
+obtained by running HMM multiple times over a certain range of the parameters.
+Among the nine test cases, the sum of errors show minimal at case \#7, as shown
+below.   \#4, however, is chosen over \#7 for further analysis due to the 
+lower error rate per called transcript.  The variation of errors should be 
+greater if whole chromosomes are used.  
+Also, a larger set of the parameters might be used in practice.  This tunning 
+step takes long time, so you may skip it for quick review of the package. 
 
 <<tuning HMM, eval=TRUE, results=hide>>=
 tune <- data.frame(LtProbB=c(rep(-100,3), rep(-200,3), rep(-300,3)),
@@ -291,35 +311,42 @@ which.min(tune$total)
 which.min(tune$errorRate)
 @
 
-To robustly compare transcripts with known genes, densities representing the frequency 
-of transcripts can be calculated relative to their mapped gene annotations.  
-Conceptually, the plot is divided into three distinct regions as shown in Figure 2, 
-including upstream of known gene annotations, inside genes, 
+To robustly compare transcripts with known genes, densities representing the 
+frequency of transcripts can be calculated relative to their mapped gene 
+annotations.  
+Conceptually, the plot is divided into three distinct regions as shown in 
+Figure 2, including upstream of known gene annotations, inside genes, 
 and downstream of the annotated polyadenylation site.  
 
-Metrics to evaluate the degree of overlap with gene annotations focus on the region
-upstream of gene annotations, which provides a measure of specificity, 
+Metrics to evaluate the degree of overlap with gene annotations focus on the 
+region upstream of gene annotations, which provides a measure of specificity, 
 and the region inside of genes, which provides a measure of sensitivity.  
 The region downstream of the polyadenylation site is known to contain residual 
 transcription \citep{Core2008} and consequently is not used to define quality.  
 
-The metrics are defined relative to an `ideal' transcript caller, which takes the form of a 
-step function (\emph{i.e.}, red line in the plot).  Our quality metrics represent the following 
+The metrics are defined relative to an `ideal' transcript caller, which takes 
+the form of a step function (\emph{i.e.}, red line in the plot).  
+Our quality metrics represent the following 
 (see the plot below for a graphical representation): 
 
 \begin{enumerate}
-  \item true transcript density (TTD)  = (gene annotation area under the curve) /(max area for matched transcripts),  
+  \item true transcript density (TTD)  = 
+    (gene annotation area under the curve) /(max area for matched transcripts),
   \item true non-transcript density  (TND) =  1 - TTD,
-  \item false transcript density (FTD)  = (5$'$ overhang area under the curve) /(max area for matched transcripts),
+  \item false transcript density (FTD)  = 
+    (5$'$ overhang area under the curve) /(max area for matched transcripts),
   \item false non-transcript density (FND) =  1- FTD.
 \end{enumerate}
 
-Note that these quality metrics are conceptually very similar to true positive, true negative, false positive
-and false negative, respectively.  During the comparison, only expressed annotations are used
-and genes either too small or too large in size are excluded.  And also size of transcripts and annotations are
-scaled to a smaller unit, \emph{i.e.}, 1K for a visual representation.  Here best overlapped annotations or transcripts 
-are used for either `run genes together' or  `break up a single annotation' type of error. 
-Final quality metrics are represented as an AUC number.
+Note that these quality metrics are conceptually very similar to true 
+positive, true negative, false positive and false negative, respectively.  
+During the comparison, only expressed annotations are used
+and genes either too small or too large in size are excluded.  
+And also size of transcripts and annotations are
+scaled to a smaller unit, \emph{i.e.}, 1K for a visual representation.  
+Here best overlapped annotations or transcripts 
+are used for either `run genes together' or  `break up a single annotation' 
+type of error.  Final quality metrics are represented as an AUC number.
 
 <<expressed genes, eval=TRUE>>=
 getExpressedAnnotations <- function(features, reads) {
@@ -355,11 +382,12 @@ td
 
 
 \subsection{Repairing Transcript Calling with Annotations}
-Prediction of transcripts by the HMM is not perfect.  Discrepancies with the annotations 
-will occur even after the parameters are optimally tuned.  Transcript calls can be
-`fixed' for known types of error by (1) breaking transcripts that have run together and 
-(2) combining transcripts that have been broken.  The following method will generate 
-a final set of transcripts for further analysis.
+Prediction of transcripts by the HMM is not perfect.  
+Discrepancies with the annotations will occur even after the parameters 
+are optimally tuned.  Transcript calls can be `fixed' for known types 
+of error by (1) breaking transcripts that have run together and 
+(2) combining transcripts that have been broken.  The following method will 
+generate a final set of transcripts for further analysis.
 
 <<repairing called transcripts, eval=TRUE>>=
 bPlus <- breakTranscriptsOnGenes(txHMM, kgConsensus, strand="+")
@@ -374,17 +402,20 @@ tdFinal <- getTxDensity(txFinal, conExpressed, mc.cores=getOption("mc.cores"))
 
 \subsection{Differential Analysis with \Rpackage{edgeR}}
 There are several packages in Bioconductor for differential expression
-analysis such as \Rpackage{DESeq}, \Rpackage{baySeq}, \Rpackage{DEGSeq}, or \Rpackage{edgeR}.  
+analysis such as \Rpackage{DESeq}, \Rpackage{baySeq}, \Rpackage{DEGSeq}, 
+or \Rpackage{edgeR}.  
 \Rpackage{edgeR} \citep{Robinson2010} is used for this demonstration.  
-Differential expression analysis can be done using either by
-called transcripts or known annotations depending on the nature of your research question. 
+Differential expression analysis can be done using either by called 
+transcripts or known annotations depending on the nature of your research 
+question. 
 The procedures are quite similar except reads are counted using the
 genomic locations of either called transcript or known annotations.   For
 longer transcripts or annotated genes, we use a window of +1 to +13 kb from
 the transcription start site (TSS), which was chosen in order to exclude reads
 from RNA polymerases engaged at the promoter and to allow enough time for the
-elongation of newly initiated Pol II (See Hah et al., 2011).  However, variations
-can be used, including the entire length of the called or annotated transcripts.
+elongation of newly initiated Pol II (See Hah et al., 2011).  
+However, variations can be used, including the entire length of the called or 
+annotated transcripts.
 
 
 <<DE for trascripts, eval=TRUE, echo=TRUE>>=
@@ -462,10 +493,11 @@ abline(h = c(-1,1), col="blue")
 @
 
 \subsection{Metagene Analysis}
-Metagenes show the distribution of reads near TSS of a set of regulated genes (or
-some other alignable genomic features of interest).  It can be thought as a smoothed
-average of read density weighted by expression over the set of TSS.
-The \Rfunction{runMetaGene} function has option for sampling.  If \Rcode{TRUE}, 10\% of the
+Metagenes show the distribution of reads near TSS of a set of regulated 
+genes (or some other alignable genomic features of interest).  
+It can be thought as a smoothed average of read density weighted 
+by expression over the set of TSS.  The \Rfunction{runMetaGene} 
+function has option for sampling.  If \Rcode{TRUE}, 10\% of the
 transcription units are sampled with replacement 1,000 times and median value
 at each position in the transcription unit over the samples is used for final
 metagene result.  Using subsampling results in an image is more robust to
@@ -530,5 +562,3 @@ sessionInfo()
 
 \bibliography{groHMM}
 \end{document}
-
-
