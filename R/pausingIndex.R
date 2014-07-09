@@ -68,7 +68,12 @@ approx.ratios.CI <- function(num.counts, denom.counts, alpha=0.05) {
 #'  @param ... Extra argument passed to mclapply
 #'  @return Returns a data.frame of the pausing indices for the input genes.
 #'  @author Charles G. Danko and Minho Chae.
-##  Returns the pausing index for different genes.
+#'  @return Returns the pausing index for different genes.
+#'  @examples
+#'  features <- GRanges("chr7", IRanges(2394474,2420377), strand="+") 
+#'  reads <- as(readGAlignments(system.file("extdata", "S0mR1.bam", 
+#'              package="groHMM")), "GRanges")
+#'  pi <- pausingIndex(features, reads)
 ##
 ##  Arguments:
 ##  f   -> data.frame of: CHR, START, END, STRAND.
