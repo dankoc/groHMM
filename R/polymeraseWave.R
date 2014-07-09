@@ -59,7 +59,15 @@
 #'  @param returnVal Takes value "simple" (default) or "alldata". "simple" returns a data.frame with Pol II wave end positions.  "alldata" returns all of the availiable data from each gene, including the full posterior distribution of the model after EM.
 #'  @param debug If TRUE, prints error messages.
 #'  @return Returns either a data.frame with Pol II wave end positions, or a List() structure with additional data, as specified by returnVal.
-#'  @author Charles G. Danko and Minho Chae.
+#'  @author Charles G. Danko
+#'  @examples
+#'  genes <- GRanges("chr7", IRanges(2394474,2420377), strand="+", SYMBOL="CYP2W1", ID="54905") 
+#'  reads1 <- as(readGAlignments(system.file("extdata", "S0mR1.bam",
+#'                              package="groHMM")), "GRanges")
+#'  reads2 <- as(readGAlignments(system.file("extdata", "S10mR1.bam",
+#'                              package="groHMM")), "GRanges")
+#'  approxDist <- 2000*10
+#'  pw <- polymeraseWave(reads1, reads2, genes, approxDist)
 ##  Given GRO-seq data, identifies the location of the polymerase wave in up- or down-
 ##  regulated genes.  This version is based on a full Baum-Welch EM implementation.
 ##
@@ -79,10 +87,13 @@ polymeraseWave <- function(reads1, reads2, genes, approxDist, size=50, upstreamD
         message("Analyzing windows")
     }   
 
-    Fp1 <- windowAnalysis(reads=reads1, strand="+", step_size=size, limitPCRDups=limitPCRDups, debug=FALSE)
-    Fp2 <- windowAnalysis(reads=reads2, strand="+", step_size=size, limitPCRDups=limitPCRDups, debug=FALSE)
-    Fm1 <- windowAnalysis(reads=reads1, strand="-", step_size=size, limitPCRDups=limitPCRDups, debug=FALSE)
-    Fm2 <- windowAnalysis(reads=reads2, strand="-", step_size=size, limitPCRDups=limitPCRDups, debug=FALSE)
+    genes <- as.data.frame(genes)
+    genes <- genes[,c("seqnames", "start", "end", "strand", "SYMBOL", "ID")]
+
+    Fp1 <- windowAnalysis(reads=reads1, strand="+", windowSize=size, limitPCRDups=limitPCRDups)
+    Fp2 <- windowAnalysis(reads=reads2, strand="+", windowSize=size, limitPCRDups=limitPCRDups)
+    Fm1 <- windowAnalysis(reads=reads1, strand="-", windowSize=size, limitPCRDups=limitPCRDups)
+    Fm2 <- windowAnalysis(reads=reads2, strand="-", windowSize=size, limitPCRDups=limitPCRDups)
     sizeP1 <- NROW(reads1)
     sizeP2 <- NROW(reads2)
     expCounts <- mean(NROW(reads1),NROW(reads2))
@@ -101,11 +112,11 @@ polymeraseWave <- function(reads1, reads2, genes, approxDist, size=50, upstreamD
     dataList <- list()
 
 ## Run the model separately on each gene.
-    for(i in seq_along(genes)) {
+    for(i in seq_along(NROW(genes))) {
         geneData <- list()
 
         if(debug) {
-            message("Starting HMM", genes[i,5],sep=" ")
+            message("Starting HMM: ", genes[i,5])
         }
 
     ###################################################################################
