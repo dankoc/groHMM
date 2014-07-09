@@ -1,6 +1,7 @@
 \name{metaGeneMatrix}
 \alias{metaGeneMatrix}
-\title{Returns a matrix, with rows representing read counts across a specified gene, or other features of interest.}
+\title{Returns a matrix, with rows representing read counts across a specified
+gene, or other features of interest.}
 \usage{
 metaGeneMatrix(features, reads, size = 50, up = 1000, down = up,
   debug = FALSE, ...)
@@ -31,7 +32,7 @@ genes of different length.
 }
 \description{
 Supports parallel processing using mclapply in the
-'parallel' package.  To change the number of processors use
+'parallel' package. To change the number of processors, use
 the argument 'mc.cores'.
 }
 \author{

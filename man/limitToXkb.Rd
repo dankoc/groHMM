@@ -6,7 +6,7 @@ limitToXkb(features, offset = 1000, size = 13000)
 }
 \arguments{
   \item{features}{A GRanges object representing a set of
-  genomic coordinates.  The meta-plot will be centered on
+  genomic coordinates. The meta-plot will be centered on
   the start position.}
 
   \item{offset}{Starts the interval from this position

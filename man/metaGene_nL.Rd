@@ -1,6 +1,7 @@
 \name{metaGene_nL}
 \alias{metaGene_nL}
-\title{Returns a histogram of the number of reads in each section of a moving window of variable size across genes.}
+\title{Returns a histogram of the number of reads in each section of a moving
+window of #' variable size across genes.}
 \usage{
 metaGene_nL(features, reads, n_windows = 1000, debug = FALSE, ...)
 }
@@ -25,7 +26,7 @@ genes of different length.
 }
 \description{
 Supports parallel processing using mclapply in the
-'parallel' package.  To change the number of processors use
+'parallel' package. To change the number of processors, use
 the argument 'mc.cores'.
 }
 \author{

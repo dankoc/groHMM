@@ -1,6 +1,7 @@
 \name{RgammaMLE}
 \alias{RgammaMLE}
-\title{RgammaMLE fits a gamma distribution to a specified data vector using maximum likelihood.}
+\title{RgammaMLE fits a gamma distribution to a specified data vector using maximum
+likelihood.}
 \usage{
 RgammaMLE(X)
 }

@@ -1,15 +1,16 @@
 \name{expressedGenes}
 \alias{expressedGenes}
-\title{Function identifies expressed features using the methods introduced in Core, Waterfall, Lis; Science, Dec. 2008.}
+\title{Function identifies expressed features using the methods introduced in
+Core, Waterfall, Lis; Science, Dec. 2008.}
 \usage{
 expressedGenes(features, reads, Lambda = NULL, UnMap = NULL,
   debug = FALSE, ...)
 }
 \arguments{
   \item{features}{A GRanges object representing a set of
-  genomic coordinates.  The meta-plot will be centered on
-  the start position.  There can be optional "ID" column
-  for gene ids.}
+  genomic coordinates. The meta-plot will be centered on
+  the start position. There can be optional "ID" column for
+  gene ids.}
 
   \item{reads}{A GRanges object representing a set of
   mapped reads.}
@@ -20,10 +21,10 @@ expressedGenes(features, reads, Lambda = NULL, UnMap = NULL,
   Science.).}
 
   \item{UnMap}{List object representing the position of
-  un-mappable reads.  Default: not used.}
+  un-mappable reads. Default: not used.}
 
   \item{debug}{If set to true, returns the number of
-  positions.  Default: FALSE.}
+  positions. Default: FALSE.}
 
   \item{...}{Extra argument passed to mclapply}
 }
@@ -33,10 +34,10 @@ for features of interest.
 }
 \description{
 Supports parallel processing using mclapply in the
-'parallel' package.  To change the number of processors use
+'parallel' package. To change the number of processors use
 the argument 'mc.cores'.
 }
 \author{
-Charles G. Danko and Minho Chae
+Charles G. Danko
 }
 

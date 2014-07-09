@@ -35,7 +35,8 @@ well annotated genes.
 }
 \examples{
 tx <- GRanges("chr7", IRanges(1000, 30000), strand="+")
-annox <- GRanges("chr7", IRanges(start=c(1000, 20000), width=c(10000,10000)), strand="+")
+annox <- GRanges("chr7", IRanges(start=c(1000, 20000),
+             width=c(10000,10000)), strand="+")
 bPlus <- breakTranscriptsOnGenes(tx, annox, strand="+")
 }
 \author{

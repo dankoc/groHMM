@@ -1,16 +1,17 @@
 \name{countMappableReadsInInterval}
 \alias{countMappableReadsInInterval}
-\title{countMappableReadsInInterval counts the number of mappable reads in a set of genomic features.}
+\title{countMappableReadsInInterval counts the number of mappable reads in a set
+of genomic features.}
 \usage{
 countMappableReadsInInterval(features, UnMap, debug = FALSE, ...)
 }
 \arguments{
   \item{features}{A GRanges object representing a set of
-  genomic coordinates.  The meta-plot will be centered on
+  genomic coordinates. The meta-plot will be centered on
   the start position.}
 
   \item{UnMap}{List object representing the position of
-  un-mappable reads.  Default: not used.}
+  un-mappable reads. Default: not used.}
 
   \item{debug}{If set to TRUE, provides additional print
   options. Default: FALSE}
@@ -23,7 +24,7 @@ reads inside each genomic interval.
 }
 \description{
 Supports parallel processing using mclapply in the
-'parallel' package.  To change the number of processors use
+'parallel' package. To change the number of processors, use
 the argument 'mc.cores'.
 }
 \author{

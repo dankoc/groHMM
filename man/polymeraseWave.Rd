@@ -1,7 +1,7 @@
 \name{polymeraseWave}
 \alias{polymeraseWave}
-\title{Given GRO-seq data, identifies the location of the polymerase 'wave' in up- or down-
- regulated genes.}
+\title{Given GRO-seq data, identifies the location of the polymerase 'wave' in
+ up- or down- regulated genes.}
 \usage{
 polymeraseWave(reads1, reads2, genes, approxDist, size = 50,
   upstreamDist = 10000, TSmooth = NA, NonMap = NULL, prefix = NULL,
@@ -102,12 +102,22 @@ Baum-Welch expetation maximization.
 Reference: Danko CG, Hah N, Luo X, Martins AL, Core L, Lis
 JT, Siepel A, Kraus WL. Signaling Pathways Differentially
 Affect RNA Polymerase II Initiation, Pausing, and
-Elongation Rate in Cells. Mol Cell. 2013 Mar 19. doi:pii:
+Elongation Rate in Cells. Mol Cell.  2013 Mar 19. doi:pii:
 S1097-2765(13)00171-8. 10.1016/j.molcel.2013.02.015.
 
 Arguments:
 }
+\examples{
+genes <- GRanges("chr7", IRanges(2394474,2420377), strand="+",
+ SYMBOL="CYP2W1", ID="54905")
+ reads1 <- as(readGAlignments(system.file("extdata", "S0mR1.bam",
+                             package="groHMM")), "GRanges")
+ reads2 <- as(readGAlignments(system.file("extdata", "S10mR1.bam",
+                             package="groHMM")), "GRanges")
+ approxDist <- 2000*10
+ pw <- polymeraseWave(reads1, reads2, genes, approxDist)
+}
 \author{
-Charles G. Danko and Minho Chae.
+Charles G. Danko
 }
 

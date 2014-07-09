@@ -1,6 +1,7 @@
 \name{writeWiggle}
 \alias{writeWiggle}
-\title{writeWiggle writes a wiggle track or BigWig file suitable for uploading to the UCSC genome browser.}
+\title{writeWiggle writes a wiggle track or BigWig file suitable for uploading
+to the UCSC genome browser.}
 \usage{
 writeWiggle(reads, file, strand = "*", fileType = "wig", size = 50,
   normCounts = NULL, reverse = FALSE, seqinfo = NULL,
@@ -14,7 +15,7 @@ writeWiggle(reads, file, strand = "*", fileType = "wig", size = 50,
 
   \item{strand}{Takes values of "+", "-", or "*".  Computes
   Writes a wiggle on the speicified strand.  "*" denotes
-  collapsing reads on both strands.  Default: "*".}
+  collapsing reads on both strands. Default: "*".}
 
   \item{fileType}{Takes values of "wig" or "BigWig".
   Default: "wig".}
@@ -43,8 +44,10 @@ writeWiggle writes a wiggle track or BigWig file suitable
 for uploading to the UCSC genome browser.
 }
 \examples{
-S0mR1 <- as(readGAlignments(system.file("extdata", "S0mR1.bam", package="groHMM")), "GRanges")
-writeWiggle(reads=S0mR1, file="S0mR1_Plus.wig", fileType="wig", strand="+", reverse=FALSE)
+S0mR1 <- as(readGAlignments(system.file("extdata", "S0mR1.bam",
+package="groHMM")), "GRanges")
+writeWiggle(reads=S0mR1, file="S0mR1_Plus.wig", fileType="wig",
+strand="+", reverse=FALSE)
 }
 \author{
 Minho Chae and Charles G. Danko

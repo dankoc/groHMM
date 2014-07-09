@@ -1,17 +1,18 @@
 \name{metaGene}
 \alias{metaGene}
-\title{Returns a histogram of the number of reads in each section of a moving window centered on a certain feature.}
+\title{Returns a histogram of the number of reads in each section of a moving
+window centered on a certain feature.}
 \usage{
 metaGene(features, reads = NULL, plusCVG = NULL, minusCVG = NULL,
   size = 100L, up = 10000L, down = NULL, ...)
 }
 \arguments{
   \item{features}{A GRanges object representing a set of
-  genomic coordinates.  The meta-plot will be centered on
+  genomic coordinates. The meta-plot will be centered on
   the transcription start site (TSS)}
 
   \item{reads}{A GRanges object representing a set of
-  mapped reads.  Instead of 'reads', 'plusCVG' and
+  mapped reads. Instead of 'reads', 'plusCVG' and
   'minusCVG' can be used Default: NULL}
 
   \item{plusCVG}{A RangesList object for reads with '+'
@@ -36,12 +37,13 @@ centered on a point of interest.
 }
 \description{
 Supports parallel processing using mclapply in the
-'parallel' package.  To change the number of processors set
+'parallel' package. To change the number of processors, set
 the option 'mc.cores'.
 }
 \examples{
 features <- GRanges("chr7", IRanges(1000, 1000), strand="+")
-reads <- GRanges("chr7", IRanges(start=c(1000:1004, 1100), width=rep(1, 6)), strand="+")
+reads <- GRanges("chr7", IRanges(start=c(1000:1004, 1100),
+ width=rep(1, 6)), strand="+")
 mg <- metaGene(features, reads, size=4, up=10)
 }
 \author{

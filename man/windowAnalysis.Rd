@@ -1,6 +1,7 @@
 \name{windowAnalysis}
 \alias{windowAnalysis}
-\title{windowAnalysis Returns a vector of integers representing the counts of reads in a moving window.}
+\title{windowAnalysis Returns a vector of integers representing the counts of
+reads in a moving window.}
 \usage{
 windowAnalysis(reads, strand = "*", windowSize = stepSize,
   stepSize = windowSize, chrom = NULL, limitPCRDups = FALSE, ...)
@@ -21,7 +22,7 @@ windowAnalysis(reads, strand = "*", windowSize = stepSize,
   Default: returns all avaliable data.}
 
   \item{limitPCRDups}{Counts only one read mapping to each
-  start site.  NOTE: If set to TRUE, assumes that all reads
+  start site. NOTE: If set to TRUE, assumes that all reads
   are the same length (don't use for paired-end data).
   Default: FALSE.}
 
@@ -33,7 +34,7 @@ chromosome.
 }
 \description{
 Supports parallel processing using mclapply in the
-'parallel' package.  To change the number of processors set
+'parallel' package. To change the number of processors, set
 the option 'mc.cores'.
 }
 \examples{

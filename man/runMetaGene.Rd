@@ -14,13 +14,13 @@ runMetaGene(features, reads, anchorType = "TSS", size = 100L,
 
   \item{anchorType}{Either 'TSS' or 'TTS'.  Metagene will
   be centered on the transcription start site(TSS) or
-  transcription termination site(TTS).  Default: TSS.}
+  transcription termination site(TTS). Default: TSS.}
 
   \item{size}{Numeric.  The size of the moving window.
   Default: 100L}
 
   \item{normCounts}{Numeric.  Normalization vector such as
-  average reads.  Default: 1L}
+  average reads. Default: 1L}
 
   \item{up}{Numeric. Distance upstream of each feature to
   align and histogram. Default: 1 kb}
@@ -30,7 +30,7 @@ runMetaGene(features, reads, anchorType = "TSS", size = 100L,
   Default: NULL}
 
   \item{sampling}{Logical.  If TRUE, subsampling of
-  Metagene is used.  Default: FALSE}
+  Metagene is used. Default: FALSE}
 
   \item{nSampling}{Numeric. Number of subsampling.
   Default: 1000L}
@@ -45,12 +45,14 @@ A list of integer-Rle for sense and antisene.
 }
 \description{
 Supports parallel processing using mclapply in the
-'parallel' package.  To change the number of processors set
+'parallel' package. To change the number of processors, set
 the option 'mc.cores'.
 }
 \examples{
-features <- GRanges("chr7", IRanges(start=1000:1001, width=rep(1,2)), strand=c("+", "-"))
-reads <- GRanges("chr7", IRanges(start=c(1000:1003, 1100:1101), width=rep(1, 6)), strand=rep(c("+","-"), 3))
+features <- GRanges("chr7", IRanges(start=1000:1001, width=rep(1,2)),
+ strand=c("+", "-"))
+reads <- GRanges("chr7", IRanges(start=c(1000:1003, 1100:1101),
+ width=rep(1, 6)), strand=rep(c("+","-"), 3))
 mg <- runMetaGene(features, reads, size=4, up=10)
 }
 \author{

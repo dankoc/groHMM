@@ -1,6 +1,7 @@
 \name{pausingIndex}
 \alias{pausingIndex}
-\title{Returns the pausing index for different genes.  TODO: DESCRIBE THE PAUSING INDEX.}
+\title{Returns the pausing index for different genes.  TODO: DESCRIBE THE PAUSING
+INDEX.}
 \usage{
 pausingIndex(features, reads, size = 50, up = 1000, down = 1000,
   UnMAQ = NULL, debug = FALSE, ...)
@@ -24,18 +25,26 @@ pausingIndex(features, reads, size = 50, up = 1000, down = 1000,
   of all un-mappable regions in the genome.}
 
   \item{debug}{If set to TRUE, provides additional print
-  options. Default: FALSE}
+  options.  Default: FALSE}
 
   \item{...}{Extra argument passed to mclapply}
 }
 \value{
 Returns a data.frame of the pausing indices for the input
 genes.
+
+Returns the pausing index for different genes.
 }
 \description{
 Supports parallel processing using mclapply in the
-'parallel' package.  To change the number of processors use
+'parallel' package. To change the number of processors, use
 the argument 'mc.cores'.
+}
+\examples{
+features <- GRanges("chr7", IRanges(2394474,2420377), strand="+")
+ reads <- as(readGAlignments(system.file("extdata", "S0mR1.bam",
+             package="groHMM")), "GRanges")
+ pi <- pausingIndex(features, reads)
 }
 \author{
 Charles G. Danko and Minho Chae.

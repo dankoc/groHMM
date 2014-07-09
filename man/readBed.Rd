@@ -1,6 +1,7 @@
 \name{readBed}
 \alias{readBed}
-\title{readBed Returns a GenomicRanges object constrcuted from the specified bed file.}
+\title{readBed Returns a GenomicRanges object constrcuted from the specified bed
+file.}
 \usage{
 readBed(file, ...)
 }

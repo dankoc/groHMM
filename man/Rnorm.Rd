@@ -1,6 +1,7 @@
 \name{Rnorm}
 \alias{Rnorm}
-\title{Rnorm fits a normal distribution to a specified data vector using maximum likelihood.}
+\title{Rnorm fits a normal distribution to a specified data vector using maximum
+likelihood.}
 \usage{
 Rnorm(X)
 }

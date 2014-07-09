@@ -1,6 +1,7 @@
 \name{detectTranscripts}
 \alias{detectTranscripts}
-\title{detectTranscripts detects transcripts de novo using a two-state hidden Markov model (HMM).}
+\title{detectTranscripts detects transcripts de novo using a two-state hidden
+Markov model (HMM).}
 \usage{
 detectTranscripts(reads = NULL, Fp = NULL, Fm = NULL, LtProbA = -5,
   LtProbB = -200, UTS = 5, size = 50, threshold = 0.1, debug = TRUE,
@@ -12,7 +13,7 @@ detectTranscripts(reads = NULL, Fp = NULL, Fm = NULL, LtProbA = -5,
 
   \item{Fp}{Wiggle-formatted read counts on "+" strand.
   Optionally, Fp and Fm represent list() filled with a
-  vector of counts for each chromosome.  Can detect
+  vector of counts for each chromosome. Can detect
   transcripts starting from a fixed-step wiggle.}
 
   \item{Fm}{Wiggle-formatted read counts on "-" strand.}
@@ -24,7 +25,7 @@ detectTranscripts(reads = NULL, Fp = NULL, Fm = NULL, LtProbA = -5,
   \item{LtProbB}{Log probability of t... .  Default: -200.}
 
   \item{UTS}{Varience in read counts of the untranscribed
-  sequence.  Default: 5.}
+  sequence. Default: 5.}
 
   \item{size}{Log probability of t... .  Default: -5.}
 
@@ -50,7 +51,7 @@ specified.
 }
 \details{
 Supports parallel processing using mclapply in the
-'parallel' package.  To change the number of processors set
+'parallel' package. To change the number of processors set
 the option 'mc.cores'.
 
 Reference: Hah N, Danko CG, Core L, Waterfall JJ, Siepel A,

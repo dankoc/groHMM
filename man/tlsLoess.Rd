@@ -1,6 +1,7 @@
 \name{tlsLoess}
 \alias{tlsLoess}
-\title{A 'total least squares'-like hack for LOESS.  Works by rotating points 45 degrees, fitting LOESS, and rotating back.}
+\title{A 'total least squares'-like hack for LOESS.  Works by rotating points
+45 degrees, fitting LOESS, and rotating back.}
 \usage{
 tlsLoess(x, y, theta = -pi/4, span = 1)
 }

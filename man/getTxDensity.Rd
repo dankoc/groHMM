@@ -20,7 +20,7 @@ getTxDensity(tx, annox, plot = TRUE, scale = 1000L, nSampling = 0L,
   Default: 0L}
 
   \item{samplingRatio}{Numeric. Ratio of sampling for
-  annotations.  Default: 0.1}
+  annotations. Default: 0.1}
 
   \item{...}{Extra argument passed to mclapply.}
 }
@@ -35,12 +35,14 @@ transcripts or annotations are used.
 }
 \details{
 Supports parallel processing using mclapply in the
-'parallel' package.  To change the number of processors set
+'parallel' package. To change the number of processors set
 the option 'mc.cores'.
 }
 \examples{
-tx <- GRanges("chr7", IRanges(start=seq(1000,4000, by=1000), width=seq(1000, 1300, by=100)), strand=rep("+", 4))
-annox <- GRanges("chr7", IRanges(start=seq(1100,4100, by=1000), width=seq(900, 1200, by=100)), strand=rep("+", 4))
+tx <- GRanges("chr7", IRanges(start=seq(1000,4000, by=1000),
+width=seq(1000, 1300, by=100)), strand=rep("+", 4))
+annox <- GRanges("chr7", IRanges(start=seq(1100,4100, by=1000),
+width=seq(900, 1200, by=100)), strand=rep("+", 4))
 density <- getTxDensity(tx, annox)
 }
 \author{

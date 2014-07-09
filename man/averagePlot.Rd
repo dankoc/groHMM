@@ -1,6 +1,8 @@
 \name{averagePlot}
 \alias{averagePlot}
-\title{Returns the average profile of tiling array probe intensity values or wiggle-like count data centered on a set of genomic positions (specified by 'Peaks').}
+\title{Returns the average profile of tiling array probe intensity values or
+wiggle-like count data centered on a set of genomic positions
+(specified by 'Peaks').}
 \usage{
 averagePlot(ProbeData, Peaks, size = 50, bins = seq(-1000, 1000, size))
 }
@@ -24,7 +26,7 @@ peaks of interest.
 }
 \description{
 Supports parallel processing using mclapply in the
-'parallel' package.  To change the number of processors use
+'parallel' package. To change the number of processors, use
 the argument 'mc.cores'.
 }
 \author{
