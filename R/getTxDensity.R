@@ -56,8 +56,8 @@ getTxDensity <- function(tx, annox, plot=TRUE, scale=1000L, nSampling=0L,
     runGenes <- unique(queryHits(ol[duplicated(queryHits(ol)),]))       
     # Count annox
     brokenUp <- unique(subjectHits(ol[duplicated(subjectHits(ol)),]))   
-    cat("Run genes together: ", length(runGenes), "\n")
-    cat("Broken up a single annotation: ", length(brokenUp), "\n")
+    cat("Merged annotations: ", length(runGenes), "\n")
+    cat("Dissociated a single annotation: ", length(brokenUp), "\n")
     cat("Overlaps between transcript and annotation:", "\n")
     cat("Total = ", length(ol))
 
@@ -215,7 +215,7 @@ getLIValues <- function (vals, n) {
 #'
 #' @param tx GRanges of transcripts predicted by HMM. 
 #' @param annox GRanges of non-overlapping annotatoins.
-#' @return a list of error information; runGenes, brokenSingleAnnotations, 
+#' @return a list of error information; merged annotations, dissociated annotation, 
 #' total, and rate.
 #' @author Minho Chae
 #' @examples
@@ -227,12 +227,12 @@ getLIValues <- function (vals, n) {
 evaluateHMMInAnnotations <- function (tx, annox) {
     o <- findOverlaps(tx, annox)
     # count tx
-    runGenes <- length(unique(queryHits(o[duplicated(queryHits(o)),])))  
+    merged <- length(unique(queryHits(o[duplicated(queryHits(o)),])))  
     # count annox
-    brokenUp <- length(unique(subjectHits(o[duplicated(subjectHits(o)),]))) 
+    dissociated <- length(unique(subjectHits(o[duplicated(subjectHits(o)),]))) 
 
-    eval <- data.frame(runGenes=runGenes, brokenUp=brokenUp,
-            total=(runGenes + brokenUp), errorRate=(runGenes + brokenUp)/
+    eval <- data.frame(merged=merged, dissociated=dissociated,
+            total=(merged+ dissociated), errorRate=(merged + dissociated)/
                 (length(tx) + length(annox)),
             txSize =length(tx))
 

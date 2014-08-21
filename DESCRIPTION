@@ -14,6 +14,7 @@ Depends:
     rtracklayer,
     parallel
 Suggests:
+    BiocStyle,
     GenomicFeatures,
     edgeR,
     org.Hs.eg.db,
