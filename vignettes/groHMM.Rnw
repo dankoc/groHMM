@@ -111,8 +111,9 @@ The data include a time course of GRO-seq data following treatment with E2
 available for each time point.  Bed files were obtained from GEO and lifted
 over to hg19 using the UCSC \Rpackage{liftOver} tool.
 In order to make the package size more manageable, we have included
-data from chromosome 7 only.  \Rpackage{groHMM} supports parallel processing
-and the number of cores to use can be set using \Rcode{mc.cores} option.
+data from chromosome 7 only in 0 and 10 min. conditions.  
+\Rpackage{groHMM} supports parallel processing and the number of cores to 
+use can be set using \Rcode{mc.cores} option.
 
 <<use groHMM, eval=TRUE>>=
 library(groHMM)
@@ -133,20 +134,12 @@ using the following commands.
 <<load data, eval=TRUE>>=
 S0mR1 <- as(readGAlignments(system.file("extdata", "S0mR1.bam",
         package="groHMM")), "GRanges")
-S0mR2 <- as(readGAlignments(system.file("extdata", "S0mR2.bam",
-        package="groHMM")), "GRanges")
-S10mR1 <- as(readGAlignments(system.file("extdata", "S10mR1.bam",
-        package="groHMM")), "GRanges")
-S10mR2 <- as(readGAlignments(system.file("extdata", "S10mR2.bam",
-        package="groHMM")), "GRanges")
+S0mR2 <- as(readGAlignments(system.file("extdata", "S0mR1.bam",
+        package="groHMM")), "GRanges") # Use R1 as R2
 S40mR1 <- as(readGAlignments(system.file("extdata", "S40mR1.bam",
         package="groHMM")), "GRanges")
-S40mR2 <- as(readGAlignments(system.file("extdata", "S40mR2.bam",
-        package="groHMM")), "GRanges")
-S160mR1 <- as(readGAlignments(system.file("extdata", "S160mR1.bam",
-        package="groHMM")), "GRanges")
-S160mR2 <- as(readGAlignments(system.file("extdata", "S160mR2.bam",
-        package="groHMM")), "GRanges")
+S40mR2 <- as(readGAlignments(system.file("extdata", "S40mR1.bam",
+        package="groHMM")), "GRanges") # Use R1 as R2
 @
 
 
@@ -161,9 +154,7 @@ wiggle/bigWig type of files.
 <<combine replicates, eval=TRUE>>=
 # Combine replicates
 S0m <- c(S0mR1, S0mR2)
-S10m <- c(S10mR1, S10mR2)
 S40m <- c(S40mR1, S40mR2)
-S160m <- c(S160mR1, S160mR2)
 @
 
 <<write wiggle files, eval=FALSE>>=
@@ -179,7 +170,7 @@ writeWiggle(reads=S0m, file="S0m_Minus.wig", fileType="wig", strand="-",
 #               reverse=FALSE, seqinfo=si)
 
 # Normalized wiggle files
-expCounts <- mean(c(NROW(S0m), NROW(S10m), NROW(S40m), NROW(S160m)))
+expCounts <- mean(c(NROW(S0m), NROW(S40m)))
 writeWiggle(reads=S0m, file="S0m_Plus_Norm.wig", fileType="wig", strand="+",
            normCounts=expCounts/NROW(S0m), reverse=FALSE)
 @
@@ -215,9 +206,11 @@ as either state.
 
 
 <<transcript calling, eval=TRUE, keep.source=TRUE, results=hide>>=
-Sall <- sort(c(S0m, S10m, S40m, S160m))
-hmmResult <- detectTranscripts(Sall, LtProbB=-200, UTS=5,
-                   threshold=1)
+Sall <- sort(c(S0m, S40m))
+# hmmResult <- detectTranscripts(Sall, LtProbB=-200, UTS=5,
+#                   threshold=1)
+# Load hmmResult from the saved previous run 
+load(system.file("extdata", "Vignette.RData", package="groHMM"))
 txHMM <- hmmResult$transcripts
 @
 <<called transcripts, eval=TRUE, keep.source=TRUE>>=
@@ -296,9 +289,8 @@ e$eval
 \subsection{HMM Tuning}
 Here we demonstrate how the optimal value for each tuning parameters can be
 obtained by running HMM multiple times over a certain range of the parameters.
-Among the nine test cases, the sum of errors show minimal at case \#7, as shown
-below.   \#4, however, is chosen over \#7 for further analysis due to the
-lower error rate per called transcript.  The variation of errors should be
+Among the nine test cases, both the sum of errors and error rate per called transcript 
+show minimal at case \#7, as shown below.  The variation of errors should be
 greater if whole chromosomes are used.
 Also, a larger set of the parameters might be used in practice.  This tunning
 step takes long time, so you may skip it for quick review of the package.
@@ -310,13 +302,13 @@ tune <- data.frame(LtProbB=c(rep(-100,3), rep(-200,3), rep(-300,3)),
 Fp <- windowAnalysis(Sall, strand="+", windowSize=50)
 Fm <- windowAnalysis(Sall, strand="-", windowSize=50)
 
-evals <- mclapply(seq_len(9), function(x) {
-        hmm <- detectTranscripts(Fp=Fp, Fm=Fm, LtProbB=tune$LtProbB[x],
-                  UTS=tune$UTS[x])
-        e <- evaluateHMMInAnnotations(hmm$transcripts, kgConsensus)
-        e$eval
-        }, mc.cores=getOption("mc.cores"),  mc.silent=TRUE)
-tune <- cbind(tune, do.call(rbind, evals))
+# evals <- mclapply(seq_len(9), function(x) {
+#        hmm <- detectTranscripts(Fp=Fp, Fm=Fm, LtProbB=tune$LtProbB[x],
+#                  UTS=tune$UTS[x])
+#        e <- evaluateHMMInAnnotations(hmm$transcripts, kgConsensus)
+#        e$eval
+#        }, mc.cores=getOption("mc.cores"),  mc.silent=TRUE)
+tune <- cbind(tune, do.call(rbind, evals))  # evals from the previous run
 @
 
 <<check tuning, eval=TRUE>>=
@@ -515,13 +507,13 @@ outliers, especially when the size of sample is relatively small.
 
 <<metagene analysis, eval=TRUE, keep.source=TRUE, results=hide>>=
 upGenes <- kgChr7[de==1,]
-expReads <- mean(c(NROW(S0m), NROW(S10m), NROW(S40m), NROW(S160m)))
+expReads <- mean(c(NROW(S0m), NROW(S40m)))
 # Metagene around TSS
 mg0m <- runMetaGene(features=upGenes, reads=S0m, size=100,
-                       normCounts=expReads/NROW(S0m), sampling=TRUE,
+                       normCounts=expReads/NROW(S0m), sampling=FALSE,
                mc.cores=getOption("mc.cores"))
 mg40m <- runMetaGene(features=upGenes, reads=S40m, size=100,
-                        normCounts=expReads/NROW(S40m), sampling=TRUE,
+                        normCounts=expReads/NROW(S40m), sampling=FALSE,
                 mc.cores=getOption("mc.cores"))
 @
 
@@ -550,7 +542,7 @@ dev.off()
 @
 
 <<save data for vignette, eval=FALSE, echo=FALSE, results=hide>>=
-save(tune, mg0m, mg40m, file="Vignette.RData")
+save(hmmResult, evals, file="Vignette.RData")
 @
 
 \begin{figure}
