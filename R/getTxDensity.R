@@ -47,7 +47,8 @@
 #' width=seq(1000, 1300, by=100)), strand=rep("+", 4))
 #' annox <- GRanges("chr7", IRanges(start=seq(1100,4100, by=1000), 
 #' width=seq(900, 1200, by=100)), strand=rep("+", 4))
-#' density <- getTxDensity(tx, annox) 
+#' ## Not run:
+#' # density <- getTxDensity(tx, annox) 
 getTxDensity <- function(tx, annox, plot=TRUE, scale=1000L, nSampling=0L, 
     samplingRatio=0.1, ...) {
     ol <- findOverlaps(tx, annox)

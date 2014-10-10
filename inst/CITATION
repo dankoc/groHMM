@@ -1,0 +1,23 @@
+bref <- c(bibentry(bibtype = "Manual",
+    title = "groHMM: GRO-seq Analysis Pipeline",
+    author =  c(person("Charles", "Danko", "G", role = c("aut"),
+                email="dankoc@gmail.com"),
+            person("Minho", "Chae", role = c("aut", "cre"),
+                email="minho.chae@gmail.com"),
+            person("Lee", "Kraus", "W", role = c("aut", "cre"),
+                email="lee.kraus@utsouthwestern.edu")),
+    year = "2014",
+    note = "R package version 1.00.0"
+    ),
+
+    bibentry(bibtype = "Article",
+    title = "A Rapid, Extensive, and Transient Transcriptional Response to Estrogen
+                Signaling in Breast Cancer Cells",
+    author =  c(as.person("Nasun Hah [aut], Charles G. Danko [aut], Leighton Core [aut], 
+            Joshua J. Waterfall [aut], Adam Siepel [aut], John T. Lis [aut], W. Lee Kraus [aut]")),
+    journal = "Cell",
+    year = "2011",
+    volume = "145",
+    pages = "622--634"
+    )
+)

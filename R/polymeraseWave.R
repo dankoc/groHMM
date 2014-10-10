@@ -98,10 +98,11 @@
 #'  SYMBOL="CYP2W1", ID="54905") 
 #'  reads1 <- as(readGAlignments(system.file("extdata", "S0mR1.bam",
 #'                              package="groHMM")), "GRanges")
-#'  reads2 <- as(readGAlignments(system.file("extdata", "S10mR1.bam",
+#'  reads2 <- as(readGAlignments(system.file("extdata", "S40mR1.bam",
 #'                              package="groHMM")), "GRanges")
 #'  approxDist <- 2000*10
-#'  pw <- polymeraseWave(reads1, reads2, genes, approxDist)
+#'  # Not run:
+#'  # pw <- polymeraseWave(reads1, reads2, genes, approxDist)
 ##  Given GRO-seq data, identifies the location of the polymerase wave in up- 
 ##  or down-regulated genes.  This version is based on a full Baum-Welch EM 
 ##  implementation.

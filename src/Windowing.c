@@ -30,9 +30,9 @@
  ******************************************************************************/
 
 
-using namespace std;
+/* using namespace std; */
 
-extern "C" {
+/* extern "C" { */
 
 #include <R.h> 
 #include <S.h>
@@ -81,9 +81,13 @@ extern "C" {
  *
  ******************************************************************************/
 
+//int *SlidingWindow(	int *Probe_Start, int *Probe_End, SEXP Probe_Strand, 
+//    int NProbes, const char *Strand, int WindowSize, int StepSize, 
+//    int StartPosition, int EndPosition, int &InitialIndex, int *counts) {
+
 int *SlidingWindow(	int *Probe_Start, int *Probe_End, SEXP Probe_Strand, 
     int NProbes, const char *Strand, int WindowSize, int StepSize, 
-    int StartPosition, int EndPosition, int &InitialIndex, int *counts) {
+    int StartPosition, int EndPosition, int *counts) {
 
 // Make a new *int counts, the proper size.
 //	Equal to the number of window START positions in the region.  
@@ -161,9 +165,13 @@ SEXP WindowAnalysis(SEXP ProbeStart, SEXP ProbeEnd, SEXP ProbeStrand,
 	PROTECT(COUNTS = allocVector(INTSXP,size));
 	int *counts = INTEGER(COUNTS);
 
+	// SlidingWindow(	Probe_Start, Probe_End, ProbeStrand, NProbes, 
+    //     CHAR(STRING_ELT(CheckStrand, 0)), WindowSize[0], StepSize[0], 
+    //    StartPosition[0], EndPosition[0], II, counts);
+
 	SlidingWindow(	Probe_Start, Probe_End, ProbeStrand, NProbes, 
         CHAR(STRING_ELT(CheckStrand, 0)), WindowSize[0], StepSize[0], 
-        StartPosition[0], EndPosition[0], II, counts);
+        StartPosition[0], EndPosition[0], counts);
 
 	UNPROTECT(1);
 	return(COUNTS);
@@ -529,4 +537,4 @@ SEXP NumberOfReadsInMaximalSlidingWindow(SEXP FeatureStart, SEXP FeatureStrand,
 	UNPROTECT(1);
 	return(counts);
 }
-}
+/* } */

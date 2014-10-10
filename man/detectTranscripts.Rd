@@ -57,11 +57,9 @@ doi: 10.1016/j.cell.2011.03.042.
 \examples{
 S0mR1 <- as(readGAlignments(system.file("extdata", "S0mR1.bam",
                package="groHMM")), "GRanges")
-S0mR2 <- as(readGAlignments(system.file("extdata", "S0mR2.bam",
-               package="groHMM")), "GRanges")
-S0m <- c(S0mR1, S0mR2)
-hmmResult <- detectTranscripts(S0m, LtProbB=-200, UTS=5, threshold=1)
-txHMM <- hmmResult$transcripts
+## Not run:
+# hmmResult <- detectTranscripts(S0mR1, LtProbB=-200, UTS=5, threshold=1)
+# txHMM <- hmmResult$transcripts
 }
 \author{
 Charles G. Danko and Minho Chae

@@ -45,12 +45,13 @@
 #' @examples
 #' S0mR1 <- as(readGAlignments(system.file("extdata", "S0mR1.bam", 
 #' package="groHMM")), "GRanges")
-#' writeWiggle(reads=S0mR1, file="S0mR1_Plus.wig", fileType="wig", 
-#' strand="+", reverse=FALSE)
-## library(GenomicRanges)
-## si <- seqinfo(BSgenome.Hsapiens.UCSC.hg19)
-## writeWiggle(reads=S0mR1, file="S0mR1_Plus.wig", fileType="BigWig", 
-## strand="+", reverse=FALSE, seqinfo=si)
+#' ## Not run:
+#' # writeWiggle(reads=S0mR1, file="S0mR1_Plus.wig", fileType="wig", 
+#' # strand="+", reverse=FALSE)
+## # library(GenomicRanges)
+## # si <- seqinfo(BSgenome.Hsapiens.UCSC.hg19)
+## # writeWiggle(reads=S0mR1, file="S0mR1_Plus.wig", fileType="BigWig", 
+## # strand="+", reverse=FALSE, seqinfo=si)
 writeWiggle <- function(reads, file, strand="*", fileType="wig", size=50, 
     normCounts=NULL, reverse=FALSE, seqinfo=NULL, track.type.line=FALSE, ...) {
     W <- windowAnalysis(reads = reads, strand = strand, windowSize = size, ...)

@@ -44,8 +44,9 @@ to the UCSC genome browser.
 \examples{
 S0mR1 <- as(readGAlignments(system.file("extdata", "S0mR1.bam",
 package="groHMM")), "GRanges")
-writeWiggle(reads=S0mR1, file="S0mR1_Plus.wig", fileType="wig",
-strand="+", reverse=FALSE)
+## Not run:
+# writeWiggle(reads=S0mR1, file="S0mR1_Plus.wig", fileType="wig",
+# strand="+", reverse=FALSE)
 }
 \author{
 Minho Chae and Charles G. Danko

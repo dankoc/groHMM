@@ -123,7 +123,8 @@ metaGene_foreachChrom <- function(chrom, featureList, plusCVG, minusCVG,
 #'  strand=c("+", "-"))
 #' reads <- GRanges("chr7", IRanges(start=c(1000:1003, 1100:1101), 
 #'  width=rep(1, 6)), strand=rep(c("+","-"), 3))
-#' mg <- runMetaGene(features, reads, size=4, up=10)
+#' ## Not run:
+#' # mg <- runMetaGene(features, reads, size=4, up=10)
 runMetaGene <- function(features, reads, anchorType="TSS", size=100L, 
     normCounts=1L, up=10000L, down=NULL, sampling=FALSE, nSampling=1000L,
     samplingRatio=0.1, ...) {

@@ -97,10 +97,11 @@ genes <- GRanges("chr7", IRanges(2394474,2420377), strand="+",
  SYMBOL="CYP2W1", ID="54905")
  reads1 <- as(readGAlignments(system.file("extdata", "S0mR1.bam",
                              package="groHMM")), "GRanges")
- reads2 <- as(readGAlignments(system.file("extdata", "S10mR1.bam",
+ reads2 <- as(readGAlignments(system.file("extdata", "S40mR1.bam",
                              package="groHMM")), "GRanges")
  approxDist <- 2000*10
- pw <- polymeraseWave(reads1, reads2, genes, approxDist)
+ # Not run:
+ # pw <- polymeraseWave(reads1, reads2, genes, approxDist)
 }
 \author{
 Charles G. Danko

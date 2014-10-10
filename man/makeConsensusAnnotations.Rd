@@ -32,12 +32,13 @@ Supports parallel processing using mclapply in the 'parallel' package.
 To change the number of processors, use the argument 'mc.cores'.
 }
 \examples{
-library(TxDb.Hsapiens.UCSC.hg19.knownGene)
-txdb <- TxDb.Hsapiens.UCSC.hg19.knownGene
-tx <- transcripts(txdb, vals=list(tx_chrom="chr7"),
-columns=c("gene_id", "tx_id", "tx_name"))
-tx <- tx[grep("random", as.character(seqnames(tx)), invert=TRUE),]
-ca <- makeConsensusAnnotations(tx)
+## Not run:
+# library(TxDb.Hsapiens.UCSC.hg19.knownGene)
+# txdb <- TxDb.Hsapiens.UCSC.hg19.knownGene
+# tx <- transcripts(txdb, vals=list(tx_chrom="chr7"),
+# columns=c("gene_id", "tx_id", "tx_name"))
+# tx <- tx[grep("random", as.character(seqnames(tx)), invert=TRUE),]
+# ca <- makeConsensusAnnotations(tx)
 }
 \author{
 Minho Chae

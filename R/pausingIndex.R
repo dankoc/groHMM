@@ -77,7 +77,8 @@ approx.ratios.CI <- function(num.counts, denom.counts, alpha=0.05) {
 #'  features <- GRanges("chr7", IRanges(2394474,2420377), strand="+") 
 #'  reads <- as(readGAlignments(system.file("extdata", "S0mR1.bam", 
 #'              package="groHMM")), "GRanges")
-#'  pi <- pausingIndex(features, reads)
+#'  ## Not run:
+#'  # pi <- pausingIndex(features, reads)
 ##
 ##  Arguments:
 ##  f   -> data.frame of: CHR, START, END, STRAND.
